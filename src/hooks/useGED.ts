@@ -53,6 +53,7 @@ export function useGED(folderId: string | null = null) {
     mutationFn: (id: string) => gedRepository.deleteDocument(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["ged-documents"] });
+      queryClient.invalidateQueries({ queryKey: ["organization-usage"] });
       toast.success("Documento excluído com sucesso!");
     },
     onError: (error: any) => {
