@@ -120,10 +120,10 @@ export default function Auth() {
         <div className="text-center mb-8">
           <div className="flex justify-center mb-6 w-full px-4">
             {systemLogo ? (
-              <img src={systemLogo} alt="Logo do Sistema" className="w-full max-h-[200px] md:max-h-[480px] object-contain" />
+              <img src={systemLogo} alt="Logo do Sistema" className="w-full max-h-[160px] md:max-h-[240px] object-contain" />
             ) : (
-              <div className="h-40 w-40 md:h-80 md:w-80 rounded-2xl bg-primary/10 flex items-center justify-center">
-                <Clock className="h-20 w-20 md:h-40 md:w-40 text-primary" />
+              <div className="h-32 w-32 md:h-48 md:w-48 rounded-2xl bg-primary/10 flex items-center justify-center">
+                <Clock className="h-16 w-16 md:h-24 md:w-24 text-primary" />
               </div>
             )}
           </div>
