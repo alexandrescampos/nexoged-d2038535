@@ -153,6 +153,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       email,
       password,
     });
+    
+    // Log de auditoria para login
+    if (error) {
+      await supabase.from("user_audit_log").insert({
+        action: "login_failed",
+        source: "auth-login",
+        method: "form",
+        details: { email, error: error.message }
+      });
+    } else if (data.user) {
+      await supabase.from("user_audit_log").insert({
+        performed_by: data.user.id,
+        target_user_id: data.user.id,
+        action: "login",
+        source: "auth-login",
+        method: "form",
+        details: { email }
+      });
+    }
+
     return { error };
   };
 
