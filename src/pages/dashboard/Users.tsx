@@ -593,7 +593,23 @@ export default function OrgUsersPage() {
         },
       });
 
-      if (error) throw error;
+      if (error) {
+        let errorMessage = "Não foi possível redefinir a senha.";
+        
+        if (error instanceof FunctionsHttpError) {
+          try {
+            const errorContext = await error.context.json();
+            errorMessage = errorContext.error || errorMessage;
+          } catch (e) {
+            errorMessage = error.message || errorMessage;
+          }
+        } else {
+          errorMessage = error.message || errorMessage;
+        }
+        
+        throw new Error(errorMessage);
+      }
+      
       if (data.error) throw new Error(data.error);
 
       toast({

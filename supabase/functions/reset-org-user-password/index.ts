@@ -42,12 +42,27 @@ serve(async (req) => {
 
     if (error) {
       console.error("Auth update error:", error);
-      const isWeak = (error as any).code === "weak_password" || error.message?.toLowerCase().includes("weak");
-      const friendly = isWeak
-        ? "Esta senha foi encontrada em vazamentos públicos de dados e não pode ser usada. Escolha uma senha diferente e mais original."
-        : error.message;
-      return new Response(JSON.stringify({ error: friendly }), {
-        status: 400,
+      const errorCode = (error as any).code || "";
+      const errorMessage = error.message?.toLowerCase() || "";
+      
+      let friendly = error.message;
+      let statusCode = 400;
+
+      if (errorCode === "weak_password" || errorMessage.includes("weak")) {
+        friendly = "Esta senha foi encontrada em vazamentos públicos de dados e não pode ser usada. Escolha uma senha diferente e mais original.";
+      } else if (errorCode === "session_not_found" || errorMessage.includes("expired") || errorMessage.includes("invalid token")) {
+        friendly = "Sua sessão ou token expirou. Por favor, faça login novamente.";
+        statusCode = 401;
+      } else if (errorMessage.includes("user not found")) {
+        friendly = "Usuário não encontrado no sistema.";
+        statusCode = 404;
+      } else if (errorMessage.includes("unexpected error")) {
+        friendly = "Ocorreu um erro inesperado. Tente novamente em alguns minutos.";
+        statusCode = 500;
+      }
+
+      return new Response(JSON.stringify({ error: friendly, code: errorCode }), {
+        status: statusCode,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
