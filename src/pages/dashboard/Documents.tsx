@@ -106,6 +106,30 @@ export default function DocumentsPage() {
     return <FileCode className="h-6 w-6 text-gray-500" />;
   };
 
+  const handleViewFile = async (documentId: string) => {
+    try {
+      const { url } = await getDownloadUrl(documentId);
+      window.open(url, '_blank', 'noopener,noreferrer');
+    } catch (error: any) {
+      toast.error(error?.message || "Erro ao visualizar arquivo.");
+    }
+  };
+
+  const handleDownloadFile = async (doc: any) => {
+    try {
+      const { url, fileName } = await getDownloadUrl(doc.id);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = fileName || doc.file_name || doc.title;
+      link.target = '_blank';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (error: any) {
+      toast.error(error?.message || "Erro ao baixar arquivo.");
+    }
+  };
+
   return (
     <div className="flex flex-col h-full space-y-4 animate-fade-in">
       {/* Header Profissional */}
@@ -218,14 +242,8 @@ export default function DocumentsPage() {
                       variant="ghost" 
                       size="icon" 
                       className="h-8 w-8 text-muted-foreground group-hover:text-primary"
-                      onClick={async () => {
-                        try {
-                          const url = await getDownloadUrl(doc.id);
-                          window.open(url, '_blank');
-                        } catch (error) {
-                          toast.error("Erro ao visualizar arquivo.");
-                        }
-                      }}
+                      disabled={!doc.has_file}
+                      onClick={() => handleViewFile(doc.id)}
                     >
                       <Eye className="h-4 w-4" />
                     </Button>
@@ -238,20 +256,8 @@ export default function DocumentsPage() {
                       <DropdownMenuContent align="end" className="w-48">
                         <DropdownMenuItem 
                           className="gap-2"
-                          onClick={async () => {
-                            try {
-                              const url = await getDownloadUrl(doc.id);
-                              // Força o download criando um link temporário
-                              const link = document.createElement('a');
-                              link.href = url;
-                              link.download = doc.title;
-                              document.body.appendChild(link);
-                              link.click();
-                              document.body.removeChild(link);
-                            } catch (error) {
-                              toast.error("Erro ao baixar arquivo.");
-                            }
-                          }}
+                          disabled={!doc.has_file}
+                          onClick={() => handleDownloadFile(doc)}
                         >
                           <Download className="h-4 w-4" /> Baixar
                         </DropdownMenuItem>
