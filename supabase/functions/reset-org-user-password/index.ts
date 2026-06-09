@@ -32,6 +32,8 @@ serve(async (req) => {
       });
     }
 
+    console.log(`Resetting password for user: ${userId}`);
+
     // Update user password using admin API
     const { data, error } = await supabaseAdmin.auth.admin.updateUserById(userId, {
       password: newPassword,
@@ -39,6 +41,7 @@ serve(async (req) => {
     });
 
     if (error) {
+      console.error("Auth update error:", error);
       return new Response(JSON.stringify({ error: error.message }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -60,6 +63,7 @@ serve(async (req) => {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (error: any) {
+    console.error("Unexpected error:", error);
     return new Response(JSON.stringify({ error: error.message }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },

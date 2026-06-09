@@ -396,7 +396,7 @@ export default function UsersPage() {
     setIsSaving(true);
 
     try {
-      const { data, error } = await supabase.functions.invoke('reset-user-password', {
+      const { data, error } = await supabase.functions.invoke('reset-org-user-password', {
         body: {
           userId: selectedUser.id,
           newPassword: resetPassword,
