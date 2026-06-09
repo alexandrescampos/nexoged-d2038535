@@ -51,7 +51,7 @@ export default function Dashboard() {
 
       try {
         const [docsCount, activeUsers, spaceUsage, pendingDocs] = await Promise.all([
-          supabase.from("ged_documents").select("id", { count: "exact", head: true }).eq("organization_id", organization.id),
+          supabase.from("ged_documents").select("id", { count: "exact", head: true }).eq("organization_id", organization.id).neq("status", "deleted"),
           supabase.from("profiles").select("id", { count: "exact", head: true }).eq("organization_id", organization.id).eq("is_active", true),
           supabase.rpc('sum_org_document_size', { p_org_id: organization.id }),
           supabase.from("ged_documents").select("id", { count: "exact", head: true }).eq("organization_id", organization.id).eq("status", "pending"),
