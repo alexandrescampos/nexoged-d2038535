@@ -4,7 +4,7 @@ import { gedRepository } from "@/repository/gedRepository";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 
-export function useGED(folderId: string | null = null) {
+export function useGED(folderId: string | null = null, filterFavorites: boolean = false) {
   const { organization } = useAuth();
   const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState("");
