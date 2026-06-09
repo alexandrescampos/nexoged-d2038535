@@ -66,44 +66,14 @@ const permissionsMatrix: Record<string, Module> = {
       { action: "Alterar função", description: "Modificar a role de um usuário", super_admin: true, org_admin: true, manager: false },
     ],
   },
-  epi_categories: {
-    name: "Categorias de EPI",
-    icon: Tags,
+  documents: {
+    name: "Documentos",
+    icon: FileText,
     permissions: [
-      { action: "Visualizar categorias", description: "Ver lista de categorias de EPI", super_admin: true, org_admin: true, manager: true },
-      { action: "Criar categorias", description: "Adicionar novas categorias", super_admin: true, org_admin: true, manager: false },
-      { action: "Editar categorias", description: "Modificar dados de categorias", super_admin: true, org_admin: true, manager: false },
-      { action: "Excluir categorias", description: "Remover categorias do sistema", super_admin: true, org_admin: true, manager: false },
-    ],
-  },
-  epi_catalog: {
-    name: "Catálogo de EPIs",
-    icon: HardHat,
-    permissions: [
-      { action: "Visualizar EPIs", description: "Ver catálogo de equipamentos", super_admin: true, org_admin: true, manager: true },
-      { action: "Criar EPIs", description: "Adicionar novos equipamentos", super_admin: true, org_admin: true, manager: false },
-      { action: "Editar EPIs", description: "Modificar dados de equipamentos", super_admin: true, org_admin: true, manager: false },
-      { action: "Excluir EPIs", description: "Remover equipamentos do sistema", super_admin: true, org_admin: true, manager: false },
-    ],
-  },
-  epi_deliveries: {
-    name: "Entregas de EPI",
-    icon: PackageCheck,
-    permissions: [
-      { action: "Visualizar entregas", description: "Ver lista de entregas de EPI", super_admin: true, org_admin: true, manager: true },
-      { action: "Registrar entregas", description: "Registrar novas entregas de EPI", super_admin: true, org_admin: true, manager: true },
-      { action: "Registrar devoluções", description: "Registrar devoluções de EPI", super_admin: true, org_admin: true, manager: true },
-      { action: "Excluir entregas", description: "Remover registros de entregas", super_admin: true, org_admin: true, manager: false },
-    ],
-  },
-  reports: {
-    name: "Relatórios",
-    icon: BarChart3,
-    permissions: [
-      { action: "Visualizar relatórios", description: "Acessar página de relatórios", super_admin: true, org_admin: true, manager: true },
-      { action: "Relatório por EPI", description: "Ver entregas por equipamento", super_admin: true, org_admin: true, manager: true },
-      { action: "Relatório por funcionário", description: "Ver entregas por funcionário", super_admin: true, org_admin: true, manager: true },
-      { action: "Exportar relatórios", description: "Baixar relatórios em PDF/Excel", super_admin: true, org_admin: true, manager: true },
+      { action: "Visualizar documentos", description: "Ver lista de documentos da organização", super_admin: true, org_admin: true, manager: true },
+      { action: "Fazer upload", description: "Adicionar novos documentos ao sistema", super_admin: true, org_admin: true, manager: true },
+      { action: "Editar documentos", description: "Modificar metadados de documentos", super_admin: true, org_admin: true, manager: false },
+      { action: "Excluir documentos", description: "Remover documentos do sistema", super_admin: true, org_admin: true, manager: false },
     ],
   },
   billing: {
@@ -144,7 +114,7 @@ const roleInfo: Record<Role, { label: string; icon: React.ElementType; color: st
     label: "Gestor",
     icon: UserCog,
     color: "text-green-600 bg-green-500/10 border-green-500/20",
-    description: "Registra entregas de EPI e emite relatórios",
+    description: "Gerencia documentos e emite relatórios",
   },
 };
 
