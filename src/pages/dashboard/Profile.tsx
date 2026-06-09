@@ -53,7 +53,7 @@ const getRoleBadge = (role: string) => {
     case "org_admin":
       return <Badge className="bg-primary/10 text-primary border-primary/20">Administrador</Badge>;
     case "manager":
-      return <Badge className="bg-green-500/10 text-green-600 border-green-500/20">Gestor</Badge>;
+      return <Badge className="bg-green-500/10 text-green-600 border-green-500/20">Usuário</Badge>;
     default:
       return <Badge variant="outline">{role}</Badge>;
   }
