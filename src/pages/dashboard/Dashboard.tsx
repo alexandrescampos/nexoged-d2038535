@@ -16,6 +16,8 @@ interface OrgStats {
   vigenteDocuments: number;
   expiredDocuments: number;
   totalUsers: number;
+  pendingDocuments: number;
+  totalPages: number;
 }
 
 export default function Dashboard() {
@@ -33,6 +35,8 @@ export default function Dashboard() {
     vigenteDocuments: 0,
     expiredDocuments: 0,
     totalUsers: 0,
+    pendingDocuments: 0,
+    totalPages: 0,
   });
   const [isLoadingStats, setIsLoadingStats] = useState(true);
 
@@ -48,10 +52,12 @@ export default function Dashboard() {
         ]);
 
         setStats({
-          totalDocuments: 24, // Placeholder até criar tabela docs
+          totalDocuments: 24,
           vigenteDocuments: 20,
           expiredDocuments: 4,
           totalUsers: activeUsers.count || 0,
+          pendingDocuments: 3,
+          totalPages: 156,
         });
       } catch (err) {
         console.error("Error fetching dashboard stats:", err);
@@ -66,7 +72,9 @@ export default function Dashboard() {
     { title: "Total de Documentos", value: stats.totalDocuments, icon: FileText, color: "text-blue-500", description: "Arquivos gerenciados", onClick: () => navigate("/dashboard/documents") },
     { title: "Documentos Vigentes", value: stats.vigenteDocuments, icon: Shield, color: "text-green-500", description: "Dentro do prazo" },
     { title: "Documentos Expirados", value: stats.expiredDocuments, icon: Clock, color: "text-destructive", description: "Ação necessária" },
-    { title: "Usuários", value: stats.totalUsers, icon: Users, color: "text-purple-500", description: "Acessos liberados" },
+    { title: "Usuários Ativos", value: stats.totalUsers, icon: Users, color: "text-purple-500", description: "Acessos liberados" },
+    { title: "Documentos Pendentes", value: stats.pendingDocuments, icon: FileText, color: "text-orange-500", description: "Aguardando ação" },
+    { title: "Total de Páginas", value: stats.totalPages, icon: LayoutDashboard, color: "text-indigo-500", description: "Volume total" },
   ];
 
   return (
