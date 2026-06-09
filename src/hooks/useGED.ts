@@ -72,6 +72,7 @@ export function useGED(folderId: string | null = null) {
     searchTerm,
     setSearchTerm,
     page,
-    setPage
+    setPage,
+    getDownloadUrl: (id: string) => gedRepository.getDownloadUrl(id)
   };
 }
