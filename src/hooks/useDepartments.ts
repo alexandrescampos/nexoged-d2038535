@@ -2,14 +2,16 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { departmentRepository } from "@/repository/departmentRepository";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
+import { Department } from "@/types/ged";
+
 
 export function useDepartments() {
   const { organization } = useAuth();
   const queryClient = useQueryClient();
 
-  const { data: departments = [], isLoading } = useQuery({
+  const { data: departments = [], isLoading } = useQuery<Department[]>({
     queryKey: ["departments", organization?.id],
-    queryFn: () => departmentRepository.getAll(organization!.id),
+    queryFn: () => departmentRepository.getAll(organization!.id) as Promise<Department[]>,
     enabled: !!organization?.id,
   });
 

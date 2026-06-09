@@ -1,0 +1,65 @@
+import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { gedRepository } from "@/repository/gedRepository";
+import { useAuth } from "@/hooks/useAuth";
+import { toast } from "sonner";
+
+export function useGED(folderId: string | null = null) {
+  const { organization } = useAuth();
+  const queryClient = useQueryClient();
+  const [searchTerm, setSearchTerm] = useState("");
+  const [page, setPage] = useState(0);
+
+  // Documentos
+  const { data: documentsData, isLoading: isLoadingDocs } = useQuery({
+    queryKey: ["ged-documents", organization?.id, folderId, searchTerm, page],
+    queryFn: () => gedRepository.getDocuments({
+      organizationId: organization!.id,
+      folderId,
+      searchTerm,
+      page
+    }),
+    enabled: !!organization?.id,
+  });
+
+  // Pastas
+  const { data: folders = [], isLoading: isLoadingFolders } = useQuery({
+    queryKey: ["ged-folders", organization?.id, folderId],
+    queryFn: () => gedRepository.getFolders(organization!.id, folderId),
+    enabled: !!organization?.id,
+  });
+
+  // Mutações
+  const uploadMutation = useMutation({
+    mutationFn: ({ doc, file }: { doc: any, file: File }) => gedRepository.createDocument(doc, file),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["ged-documents"] });
+      toast.success("Documento enviado com sucesso!");
+    },
+    onError: (error: any) => {
+      toast.error("Erro no upload: " + error.message);
+    }
+  });
+
+  const toggleFavoriteMutation = useMutation({
+    mutationFn: ({ id, isFavorite }: { id: string, isFavorite: boolean }) => 
+      gedRepository.logAction(organization!.id, isFavorite ? "favorited" : "unfavorited", id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["ged-documents"] });
+    }
+  });
+
+  return {
+    documents: documentsData?.data || [],
+    totalCount: documentsData?.count || 0,
+    folders,
+    isLoading: isLoadingDocs || isLoadingFolders,
+    uploadDocument: uploadMutation.mutate,
+    isUploading: uploadMutation.isPending,
+    toggleFavorite: toggleFavoriteMutation.mutate,
+    searchTerm,
+    setSearchTerm,
+    page,
+    setPage
+  };
+}
