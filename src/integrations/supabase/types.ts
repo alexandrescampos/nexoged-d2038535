@@ -70,6 +70,7 @@ export type Database = {
           document_type: string
           employee_id: string
           file_name: string
+          file_size: number | null
           file_url: string
           id: string
           organization_id: string
@@ -82,6 +83,7 @@ export type Database = {
           document_type?: string
           employee_id: string
           file_name: string
+          file_size?: number | null
           file_url: string
           id?: string
           organization_id: string
@@ -94,6 +96,7 @@ export type Database = {
           document_type?: string
           employee_id?: string
           file_name?: string
+          file_size?: number | null
           file_url?: string
           id?: string
           organization_id?: string
@@ -867,6 +870,7 @@ export type Database = {
         Args: { p_new_password: string; p_user_id: string }
         Returns: undefined
       }
+      sum_org_document_size: { Args: { p_org_id: string }; Returns: number }
     }
     Enums: {
       app_role: "super_admin" | "org_admin" | "manager" | "user"
