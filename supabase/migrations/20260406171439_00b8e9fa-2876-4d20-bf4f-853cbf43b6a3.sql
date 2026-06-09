@@ -1,0 +1,2 @@
+ALTER TABLE public.epi_requests DROP CONSTRAINT epi_requests_status_check;
+ALTER TABLE public.epi_requests ADD CONSTRAINT epi_requests_status_check CHECK (status = ANY (ARRAY['pending'::text, 'awaiting_signature'::text, 'approved'::text, 'rejected'::text, 'cancelled'::text]));

@@ -1,0 +1,1 @@
+ALTER TABLE public.profiles ADD COLUMN hourly_rate numeric DEFAULT NULL;

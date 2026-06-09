@@ -1,0 +1,1 @@
+ALTER TABLE public.epi_request_items ADD COLUMN IF NOT EXISTS expiration_date date;

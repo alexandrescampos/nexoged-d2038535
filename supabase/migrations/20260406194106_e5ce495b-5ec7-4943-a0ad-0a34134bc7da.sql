@@ -1,0 +1,1 @@
+ALTER TABLE public.epis ADD COLUMN average_cost numeric DEFAULT NULL;

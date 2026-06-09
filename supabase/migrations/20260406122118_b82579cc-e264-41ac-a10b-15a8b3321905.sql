@@ -1,0 +1,1 @@
+ALTER TABLE public.employees ADD COLUMN termination_date date NULL;

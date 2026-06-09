@@ -1,0 +1,1 @@
+ALTER TABLE public.sector_function_epis ADD COLUMN quantity integer NOT NULL DEFAULT 1;

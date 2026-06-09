@@ -1,0 +1,1 @@
+ALTER TABLE public.epi_deliveries ADD COLUMN unit_cost numeric DEFAULT NULL;

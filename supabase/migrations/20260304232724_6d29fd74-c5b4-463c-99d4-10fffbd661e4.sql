@@ -1,0 +1,1 @@
+ALTER TABLE public.organizations ADD COLUMN epi_term_text text;

@@ -1,0 +1,1 @@
+ALTER TABLE public.epis ADD COLUMN used_stock_quantity integer NOT NULL DEFAULT 0;

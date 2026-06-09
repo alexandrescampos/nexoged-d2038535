@@ -1,0 +1,1 @@
+ALTER TABLE public.epi_deliveries ADD COLUMN stock_source TEXT NOT NULL DEFAULT 'new';

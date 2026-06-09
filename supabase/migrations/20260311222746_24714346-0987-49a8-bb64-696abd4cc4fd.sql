@@ -1,0 +1,1 @@
+ALTER TABLE public.organization_cnpjs ADD COLUMN logo_url text;
