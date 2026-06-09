@@ -686,11 +686,10 @@ export default function OrganizationsPage() {
                         </Badge>
                       </TableCell>
                       <TableCell className="text-sm">
-                        <span className="font-medium">{employeeCounts[org.id] || 0}</span>
-                        <span className="text-muted-foreground">
-                          /{org.max_users === null || org.max_users >= 999999 ? "∞" : org.max_users}
+                        <span className="font-medium">
+                          {org.max_users === null || org.max_users >= 999999 ? "∞" : org.max_users}
                         </span>
-                        <span className="text-muted-foreground ml-1">funcionários</span>
+                        <span className="text-muted-foreground ml-1">usuários</span>
                       </TableCell>
                       <TableCell>
                         <DropdownMenu>
