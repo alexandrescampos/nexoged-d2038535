@@ -135,6 +135,14 @@ const App = () => {
                   </PermissionProtectedRoute>
                 } 
               />
+              <Route 
+                path="recent" 
+                element={
+                  <PermissionProtectedRoute permission="visualizar_documento">
+                    <RecentPage />
+                  </PermissionProtectedRoute>
+                } 
+              />
               <Route path="departments" element={<AdminOnlyRoute><DepartmentsPage /></AdminOnlyRoute>} />
               <Route path="users" element={<AdminOnlyRoute><OrgUsersPage /></AdminOnlyRoute>} />
               <Route path="permissions" element={<AdminOnlyRoute><PermissionsPage /></AdminOnlyRoute>} />
