@@ -76,6 +76,7 @@ const menuGroups: MenuGroup[] = [
     label: "Operacional",
     items: [
       { title: "Documentos", url: "/dashboard/documents", icon: FileText, managerAllowed: true },
+      { title: "Departamentos", url: "/dashboard/departments", icon: Building2, adminOnly: true },
     ],
   },
   {
