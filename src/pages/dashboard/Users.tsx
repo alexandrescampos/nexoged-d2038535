@@ -234,7 +234,6 @@ export default function OrgUsersPage() {
       setNewUserRole("manager");
       
       setNewUserCnpjIds([]);
-      setNewUserSectorIds([]);
       setIsAddDialogOpen(false);
 
       // Refresh user list
@@ -773,35 +772,6 @@ export default function OrgUsersPage() {
                         </div>
                       </div>
                     )}
-                    {newUserRole === "manager" && orgSectors.length > 0 && (
-                      <div className="space-y-2">
-                        <Label className="flex items-center gap-2">
-                          <MapPin className="h-4 w-4" />
-                          Setores do Gestor
-                        </Label>
-                        <p className="text-xs text-muted-foreground">Selecione quais setores este gestor poderá acessar. Se nenhum for selecionado, verá todos os funcionários dos CNPJs associados.</p>
-                        <div className="space-y-2 max-h-40 overflow-y-auto border rounded-md p-3">
-                          {orgSectors.map((sector) => (
-                            <div key={sector.id} className="flex items-center space-x-2">
-                              <Checkbox
-                                id={`new-sector-${sector.id}`}
-                                checked={newUserSectorIds.includes(sector.id)}
-                                onCheckedChange={(checked) => {
-                                  setNewUserSectorIds(prev =>
-                                    checked
-                                      ? [...prev, sector.id]
-                                      : prev.filter(id => id !== sector.id)
-                                  );
-                                }}
-                              />
-                              <Label htmlFor={`new-sector-${sector.id}`} className="text-sm font-normal cursor-pointer">
-                                {sector.name}
-                              </Label>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
                     </div>
                     <DialogFooter>
                       <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
@@ -1002,35 +972,6 @@ export default function OrgUsersPage() {
                       />
                       <Label htmlFor={`edit-cnpj-${cnpj.id}`} className="text-sm font-normal cursor-pointer">
                         {cnpj.company_name} ({formatCNPJ(cnpj.cnpj)})
-                      </Label>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-            {editingUser?.roles.includes("manager") && orgSectors.length > 0 && (
-              <div className="space-y-2">
-                <Label className="flex items-center gap-2">
-                  <MapPin className="h-4 w-4" />
-                  Setores do Gestor
-                </Label>
-                <p className="text-xs text-muted-foreground">Selecione quais setores este gestor poderá acessar. Se nenhum for selecionado, verá todos os funcionários dos CNPJs associados.</p>
-                <div className="space-y-2 max-h-40 overflow-y-auto border rounded-md p-3">
-                  {orgSectors.map((sector) => (
-                    <div key={sector.id} className="flex items-center space-x-2">
-                      <Checkbox
-                        id={`edit-sector-${sector.id}`}
-                        checked={editUserSectorIds.includes(sector.id)}
-                        onCheckedChange={(checked) => {
-                          setEditUserSectorIds(prev =>
-                            checked
-                              ? [...prev, sector.id]
-                              : prev.filter(id => id !== sector.id)
-                          );
-                        }}
-                      />
-                      <Label htmlFor={`edit-sector-${sector.id}`} className="text-sm font-normal cursor-pointer">
-                        {sector.name}
                       </Label>
                     </div>
                   ))}
