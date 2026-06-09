@@ -55,7 +55,7 @@ export default function RecentPage() {
     deleteDocument,
     toggleFavorite,
     getDownloadUrl
-  } = useGED(null, true); // null for folderId, true for filterFavorites
+  } = useGED(null, false, true); // null for folderId, false for filterFavorites, true for filterRecent
 
   const getFileIcon = (mime: string) => {
     if (mime?.includes("pdf")) return <FileText className="h-6 w-6 text-red-500" />;
