@@ -72,7 +72,7 @@ export default function SuperAdminDashboard() {
         <p className="text-muted-foreground">Visão geral do sistema Nexo GED</p>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {cards.map((card) => (
           <Card key={card.title}>
             <CardHeader className="flex flex-row items-center justify-between pb-2">
