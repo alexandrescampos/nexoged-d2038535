@@ -73,6 +73,8 @@ interface OrgFormData {
   slug: string;
   plan: string;
   max_users: number;
+  contracted_pages: number;
+  contracted_storage_gb: number;
   is_plan_managed: boolean;
   cnpj: string;
 }
@@ -82,6 +84,8 @@ interface Plan {
   name: string;
   slug: string;
   max_users: number | null;
+  max_pages: number | null;
+  max_storage_gb: number | null;
   is_active: boolean;
 }
 
@@ -108,6 +112,8 @@ export default function OrganizationsPage() {
     slug: "",
     plan: "",
     max_users: 10,
+    contracted_pages: 1000,
+    contracted_storage_gb: 10,
     is_plan_managed: false,
     cnpj: "",
   });
@@ -160,7 +166,7 @@ export default function OrganizationsPage() {
   const fetchPlans = async () => {
     const { data, error } = await supabase
       .from("plans")
-      .select("id, name, slug, max_users, is_active")
+      .select("id, name, slug, max_users, max_pages, max_storage_gb, is_active")
       .eq("is_active", true)
       .order("display_order", { ascending: true });
 
@@ -206,6 +212,8 @@ export default function OrganizationsPage() {
       slug: "", 
       plan: defaultPlan?.slug || "", 
       max_users: defaultPlan?.max_users ?? 10,
+      contracted_pages: defaultPlan?.max_pages ?? 1000,
+      contracted_storage_gb: defaultPlan?.max_storage_gb ?? 10,
       is_plan_managed: false,
       cnpj: "",
     });
@@ -227,6 +235,8 @@ export default function OrganizationsPage() {
       slug: org.slug,
       plan: org.plan || plans[0]?.slug || "",
       max_users: org.max_users ?? orgPlan?.max_users ?? 10,
+      contracted_pages: org.contracted_pages ?? orgPlan?.max_pages ?? 1000,
+      contracted_storage_gb: org.contracted_storage_gb ?? orgPlan?.max_storage_gb ?? 10,
       is_plan_managed: org.is_plan_managed ?? false,
       cnpj: org.cnpj ? formatCNPJ(org.cnpj) : "",
     });
@@ -316,6 +326,8 @@ export default function OrganizationsPage() {
           slug: formData.slug,
           plan: formData.plan,
           max_users: formData.max_users,
+          contracted_pages: formData.contracted_pages,
+          contracted_storage_gb: formData.contracted_storage_gb,
           is_plan_managed: formData.is_plan_managed,
           cnpj: cnpjCleaned || null,
           logo_url: logoUrl,
@@ -337,6 +349,8 @@ export default function OrganizationsPage() {
           slug: formData.slug,
           plan: formData.plan,
           max_users: formData.max_users,
+          contracted_pages: formData.contracted_pages,
+          contracted_storage_gb: formData.contracted_storage_gb,
           is_plan_managed: formData.is_plan_managed,
           cnpj: cnpjCleaned || null,
           status: "active",
