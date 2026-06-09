@@ -50,19 +50,27 @@ export default function Dashboard() {
       setIsLoadingStats(true);
 
       try {
-        const [docsCount, activeUsers, spaceUsage] = await Promise.all([
-          supabase.from("employee_documents").select("id", { count: "exact", head: true }).eq("organization_id", organization.id),
+        const [docsCount, activeUsers, spaceUsage, pendingDocs] = await Promise.all([
+          supabase.from("ged_documents").select("id", { count: "exact", head: true }).eq("organization_id", organization.id),
           supabase.from("profiles").select("id", { count: "exact", head: true }).eq("organization_id", organization.id).eq("is_active", true),
           supabase.rpc('sum_org_document_size', { p_org_id: organization.id }),
+          supabase.from("ged_documents").select("id", { count: "exact", head: true }).eq("organization_id", organization.id).eq("status", "pending"),
         ]);
 
+        const totalDocs = docsCount.count || 0;
+        const pagesCount = await supabase.from("ged_documents")
+          .select("page_count")
+          .eq("organization_id", organization.id);
+        
+        const totalPages = pagesCount.data?.reduce((acc, curr) => acc + (curr.page_count || 0), 0) || 0;
+
         setStats({
-          totalDocuments: docsCount.count || 0,
-          vigenteDocuments: Math.floor((docsCount.count || 0) * 0.8),
-          expiredDocuments: Math.floor((docsCount.count || 0) * 0.2),
+          totalDocuments: totalDocs,
+          vigenteDocuments: totalDocs - (pendingDocs.count || 0), // Simplificação para o protótipo
+          expiredDocuments: 0,
           totalUsers: activeUsers.count || 0,
-          pendingDocuments: 3,
-          totalPages: (docsCount.count || 0) * 5,
+          pendingDocuments: pendingDocs.count || 0,
+          totalPages: totalPages,
           usedSpace: (spaceUsage.data as number) || 0,
         });
       } catch (err) {
