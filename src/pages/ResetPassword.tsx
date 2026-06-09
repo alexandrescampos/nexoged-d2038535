@@ -88,7 +88,7 @@ export default function ResetPassword() {
       // Redirect based on role
       if (roles.includes("super_admin")) {
         navigate("/super-admin");
-      } else if (roles.includes("org_admin") || roles.includes("manager")) {
+      } else if (roles.includes("org_admin") || roles.includes("user")) {
         navigate("/dashboard");
       } else {
         navigate("/auth");

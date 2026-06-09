@@ -71,7 +71,7 @@ export default function Auth() {
 
         if (roles.includes("super_admin")) {
           navigate("/super-admin");
-        } else if (roles.includes("org_admin") || roles.includes("manager")) {
+        } else if (roles.includes("org_admin") || roles.includes("user")) {
           navigate("/dashboard");
         } else {
           navigate("/");

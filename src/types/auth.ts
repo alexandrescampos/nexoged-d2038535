@@ -1,6 +1,6 @@
 import type { User, Session } from "@supabase/supabase-js";
 
-export type AppRole = "super_admin" | "org_admin" | "manager";
+export type AppRole = "super_admin" | "org_admin" | "user";
 
 export type OrgStatus = "active" | "suspended" | "trial";
 

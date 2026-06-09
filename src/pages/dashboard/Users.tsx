@@ -69,7 +69,7 @@ export default function OrgUsersPage() {
   const [users, setUsers] = useState<UserWithRoles[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
-  const [roleFilter, setRoleFilter] = useState<"all" | "org_admin" | "manager" | "none">("all");
+  const [roleFilter, setRoleFilter] = useState<"all" | "org_admin" | "user" | "none">("all");
   
   // Add user dialog state
   const [isAddDialogOpen, setIsAddDialogOpen] = usePersistedState("users:isAddDialogOpen", false);
@@ -77,7 +77,7 @@ export default function OrgUsersPage() {
   const [newUserEmail, setNewUserEmail] = usePersistedState("users:newUserEmail", "");
   const [newUserName, setNewUserName] = usePersistedState("users:newUserName", "");
   const [newUserPassword, setNewUserPassword] = usePersistedState("users:newUserPassword", "");
-  const [newUserRole, setNewUserRole] = usePersistedState<AppRole>("users:newUserRole", "manager");
+  const [newUserRole, setNewUserRole] = usePersistedState<AppRole>("users:newUserRole", "user");
   
   // Role removal confirmation state
   const [roleRemovalConfirm, setRoleRemovalConfirm] = useState<{ userId: string; role: AppRole } | null>(null);
@@ -101,7 +101,7 @@ export default function OrgUsersPage() {
   const [tempPassword, setTempPassword] = usePersistedState("users:tempPassword", "");
   const [mustResetOnLogin, setMustResetOnLogin] = usePersistedState("users:mustResetOnLogin", true);
   const [isResettingPassword, setIsResettingPassword] = useState(false);
-  const [selectedRole, setSelectedRole] = usePersistedState<AppRole>("users:selectedRole", "manager");
+  const [selectedRole, setSelectedRole] = usePersistedState<AppRole>("users:selectedRole", "user");
   const [isDeletingUser, setIsDeletingUser] = useState(false);
   const [userToDelete, setUserToDelete] = usePersistedState<UserWithRoles | null>("users:userToDelete", null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = usePersistedState("users:isDeleteDialogOpen", false);
@@ -247,7 +247,7 @@ export default function OrgUsersPage() {
       setNewUserEmail("");
       setNewUserName("");
       setNewUserPassword("");
-      setNewUserRole("manager");
+      setNewUserRole("user");
       
       setNewUserCnpjIds([]);
       setIsAddDialogOpen(false);
@@ -288,9 +288,9 @@ export default function OrgUsersPage() {
       if (error) throw error;
 
       // Save CNPJ scope for manager OR org_admin; sectors only for manager.
-      const isManagerUser = editingUser.roles.includes("manager");
+      const isUserRole = editingUser.roles.includes("user");
       const isAdminUser = editingUser.roles.includes("org_admin");
-      if ((isManagerUser || isAdminUser) && organization?.id) {
+      if ((isUserRole || isAdminUser) && organization?.id) {
         const { error: delErr } = await supabase
           .from("manager_cnpjs" as any)
           .delete()
@@ -338,9 +338,9 @@ export default function OrgUsersPage() {
     setIsEditDialogOpen(true);
 
     // Fetch CNPJ scope (manager and admin) and sector scope (manager only)
-    const isManagerUser = user.roles.includes("manager");
+    const isUserRole = user.roles.includes("user");
     const isAdminUser = user.roles.includes("org_admin");
-    if ((isManagerUser || isAdminUser) && organization?.id) {
+    if ((isUserRole || isAdminUser) && organization?.id) {
       const cnpjRes = await supabase
         .from("manager_cnpjs" as any)
         .select("organization_cnpj_id")
@@ -354,7 +354,7 @@ export default function OrgUsersPage() {
 
   const openRoleDialog = (user: UserWithRoles) => {
     setRoleDialogUser(user);
-    setSelectedRole("manager");
+    setSelectedRole("user");
     setIsRoleDialogOpen(true);
   };
 
@@ -590,14 +590,7 @@ export default function OrgUsersPage() {
             Admin
           </Badge>
         );
-      case "manager":
-        return (
-          <Badge className="bg-green-500/10 text-green-600 border-green-500/20">
-            <Shield className="h-3 w-3 mr-1" />
-            Gestor
-          </Badge>
-        );
-      case "manager":
+      case "user":
         return (
           <Badge className="bg-green-500/10 text-green-600 border-green-500/20">
             <Shield className="h-3 w-3 mr-1" />
@@ -965,14 +958,14 @@ export default function OrgUsersPage() {
               <Input value={editingUser?.email || ""} disabled className="bg-muted" />
               <p className="text-xs text-muted-foreground">O email não pode ser alterado.</p>
             </div>
-            {(editingUser?.roles.includes("manager") || editingUser?.roles.includes("org_admin")) && orgCnpjs.length > 0 && (
+            {(editingUser?.roles.includes("user") || editingUser?.roles.includes("org_admin")) && orgCnpjs.length > 0 && (
               <div className="space-y-2">
                 <Label className="flex items-center gap-2">
                   <Building2 className="h-4 w-4" />
-                  {editingUser?.roles.includes("manager") ? "CNPJs do Usuário" : "CNPJs do Administrador"}
+                  {editingUser?.roles.includes("user") ? "CNPJs do Usuário" : "CNPJs do Administrador"}
                 </Label>
                 <p className="text-xs text-muted-foreground">
-                  {editingUser?.roles.includes("manager")
+                  {editingUser?.roles.includes("user")
                     ? "Selecione quais empresas/filiais este usuário poderá acessar"
                     : "Selecione os CNPJs deste administrador. Deixe vazio para acesso a todos os CNPJs."}
                 </p>

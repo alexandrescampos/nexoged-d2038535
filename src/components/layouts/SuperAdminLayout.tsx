@@ -118,7 +118,7 @@ function SuperAdminSidebar() {
     ? "Super Admin"
     : roles.includes("org_admin")
       ? "Admin Org"
-      : roles.includes("manager")
+      : roles.includes("user")
         ? "Gestor"
         : "Usuário";
 
