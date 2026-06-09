@@ -11,6 +11,8 @@ export interface Organization {
   status: OrgStatus;
   plan: string | null;
   max_users: number | null;
+  contracted_pages: number | null;
+  contracted_storage_gb: number | null;
   logo_url: string | null;
   cnpj: string | null;
   city: string | null;
