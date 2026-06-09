@@ -47,6 +47,7 @@ import ResumeFromPausePage from "./pages/dashboard/ResumeFromPause";
 import OrgSettingsPage from "./pages/dashboard/Settings";
 import OrgProfilePage from "./pages/dashboard/Profile";
 import PermissionsPage from "./pages/dashboard/Permissions";
+import FavoritesPage from "./pages/dashboard/Favorites";
 import TermsPage from "./pages/dashboard/Terms";
 import PrivacyPage from "./pages/dashboard/Privacy";
 import LegalPage from "./pages/super-admin/Legal";
