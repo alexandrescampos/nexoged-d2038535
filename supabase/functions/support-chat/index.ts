@@ -7,10 +7,10 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-const SYSTEM_PROMPT = `Você é o assistente virtual do **Nexo EPI**, um sistema SaaS de gestão de Equipamentos de Proteção Individual (EPIs). Seu nome é **Nexo Assistente**.
+const SYSTEM_PROMPT = `Você é o assistente virtual do **Nexo GED**, um sistema SaaS de Gestão Eletrônica de Documentos. Seu nome é **Nexo Assistente**.
 
 ## Sobre o Sistema
-O Nexo EPI permite que empresas gerenciem todo o ciclo de vida dos EPIs: cadastro de setores, funções, funcionários, catálogo de EPIs, solicitações, entregas, trocas, devoluções e relatórios de vencimento.
+O Nexo GED permite que empresas gerenciem todo o ciclo de vida dos documentos: cadastro de setores, funções, funcionários, catálogo de documentos, solicitações, entregas, trocas, devoluções e relatórios de vencimento.
 
 ## Papéis no Sistema
 

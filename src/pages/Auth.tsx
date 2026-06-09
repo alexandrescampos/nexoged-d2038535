@@ -127,7 +127,7 @@ export default function Auth() {
               </div>
             )}
           </div>
-          <p className="text-muted-foreground">Sistema de Gestão de EPI</p>
+          <p className="text-muted-foreground">Sistema de Gestão Eletrônica de Documentos</p>
         </div>
 
         <Card className="border-border shadow-lg">
@@ -189,7 +189,7 @@ export default function Auth() {
               Política de Privacidade
             </button>
           </div>
-          <p className="text-sm text-muted-foreground">© 2026 Nexo EPI. Todos os direitos reservados.</p>
+          <p className="text-sm text-muted-foreground">© 2026 Nexo GED. Todos os direitos reservados.</p>
         </div>
       </div>
 

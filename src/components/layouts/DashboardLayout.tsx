@@ -171,8 +171,8 @@ function DashboardSidebar() {
         <div className="flex items-center">
           {!isCollapsed && (
             <div className="min-w-0 flex-1">
-              <h1 className="font-bold text-sidebar-foreground truncate">{organization?.name || "Nexo EPI"}</h1>
-              <p className="text-xs text-sidebar-muted">Gestão de EPI</p>
+              <h1 className="font-bold text-sidebar-foreground truncate">{organization?.name || "Nexo GED"}</h1>
+              <p className="text-xs text-sidebar-muted">Gestão Eletrônica de Documentos</p>
             </div>
           )}
         </div>

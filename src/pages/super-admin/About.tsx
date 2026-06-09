@@ -31,7 +31,7 @@ export default function SuperAdminAboutPage() {
               {(settings?.system_name || "NE").slice(0, 2).toUpperCase()}
             </AvatarFallback>
           </Avatar>
-          <CardTitle className="text-xl">{settings?.system_name || "Nexo EPI"}</CardTitle>
+          <CardTitle className="text-xl">{settings?.system_name || "Nexo GED"}</CardTitle>
         </CardHeader>
         <CardContent>
           <dl className="grid gap-4 text-sm">

@@ -52,7 +52,7 @@ export default function SuperAdminDashboard() {
     <div className="space-y-6 animate-fade-in">
       <div>
         <h1 className="text-3xl font-bold text-foreground">Dashboard</h1>
-        <p className="text-muted-foreground">Visão geral do sistema Nexo EPI</p>
+        <p className="text-muted-foreground">Visão geral do sistema Nexo GED</p>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
