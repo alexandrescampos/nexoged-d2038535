@@ -4,22 +4,31 @@ import { gedRepository } from "@/repository/gedRepository";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 
-export function useGED(folderId: string | null = null, filterFavorites: boolean = false) {
+export function useGED(folderId: string | null = null, filterFavorites: boolean = false, filterRecent: boolean = false) {
   const { organization } = useAuth();
   const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState("");
   const [page, setPage] = useState(0);
+  const { profile } = useAuth();
 
   // Documentos
   const { data: documentsData, isLoading: isLoadingDocs } = useQuery({
-    queryKey: ["ged-documents", organization?.id, folderId, searchTerm, page, filterFavorites],
-    queryFn: () => gedRepository.getDocuments({
-      organizationId: organization!.id,
-      folderId,
-      searchTerm,
-      page,
-      isFavorite: filterFavorites
-    }),
+    queryKey: ["ged-documents", organization?.id, profile?.id, folderId, searchTerm, page, filterFavorites, filterRecent],
+    queryFn: () => {
+      if (filterRecent && profile?.id) {
+        return gedRepository.getRecentDocuments({
+          organizationId: organization!.id,
+          userId: profile.id
+        });
+      }
+      return gedRepository.getDocuments({
+        organizationId: organization!.id,
+        folderId,
+        searchTerm,
+        page,
+        isFavorite: filterFavorites
+      });
+    },
     enabled: !!organization?.id,
   });
 

@@ -48,6 +48,7 @@ import OrgSettingsPage from "./pages/dashboard/Settings";
 import OrgProfilePage from "./pages/dashboard/Profile";
 import PermissionsPage from "./pages/dashboard/Permissions";
 import FavoritesPage from "./pages/dashboard/Favorites";
+import RecentPage from "./pages/dashboard/Recent";
 import TermsPage from "./pages/dashboard/Terms";
 import PrivacyPage from "./pages/dashboard/Privacy";
 import LegalPage from "./pages/super-admin/Legal";
@@ -131,6 +132,14 @@ const App = () => {
                 element={
                   <PermissionProtectedRoute permission="visualizar_documento">
                     <FavoritesPage />
+                  </PermissionProtectedRoute>
+                } 
+              />
+              <Route 
+                path="recent" 
+                element={
+                  <PermissionProtectedRoute permission="visualizar_documento">
+                    <RecentPage />
                   </PermissionProtectedRoute>
                 } 
               />
