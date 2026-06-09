@@ -12,12 +12,13 @@ export function useGED(folderId: string | null = null, filterFavorites: boolean 
 
   // Documentos
   const { data: documentsData, isLoading: isLoadingDocs } = useQuery({
-    queryKey: ["ged-documents", organization?.id, folderId, searchTerm, page],
+    queryKey: ["ged-documents", organization?.id, folderId, searchTerm, page, filterFavorites],
     queryFn: () => gedRepository.getDocuments({
       organizationId: organization!.id,
       folderId,
       searchTerm,
-      page
+      page,
+      isFavorite: filterFavorites
     }),
     enabled: !!organization?.id,
   });
