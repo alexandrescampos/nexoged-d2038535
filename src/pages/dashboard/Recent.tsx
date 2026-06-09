@@ -153,7 +153,7 @@ export default function RecentPage() {
                     <div className={viewMode === 'list' ? 'flex-1 min-w-0' : ''}>
                       <div className="flex items-center gap-2">
                         <p className="font-semibold text-sm truncate">{doc.title}</p>
-                        <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
+                        {doc.is_favorite && <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />}
                       </div>
                       <div className="flex items-center gap-2 mt-1">
                         <Badge variant="outline" className="text-[10px] h-4 py-0 font-normal">{doc.document_type || "Geral"}</Badge>
