@@ -40,6 +40,8 @@ interface Plan {
   price_monthly: number | null;
   price_yearly: number | null;
   max_users: number | null;
+  max_pages: number | null;
+  max_storage_gb: number | null;
   features: string[];
   is_active: boolean;
   is_highlighted: boolean;
@@ -58,6 +60,8 @@ interface PlanFormData {
   price_monthly: string;
   price_yearly: string;
   max_users: string;
+  max_pages: string;
+  max_storage_gb: string;
   features: string[];
   is_active: boolean;
   is_highlighted: boolean;
@@ -71,6 +75,8 @@ const initialFormData: PlanFormData = {
   price_monthly: "",
   price_yearly: "",
   max_users: "",
+  max_pages: "1000",
+  max_storage_gb: "10",
   features: [],
   is_active: true,
   is_highlighted: false,
@@ -153,6 +159,8 @@ export default function PlansPage() {
       price_monthly: plan.price_monthly?.toString() || "",
       price_yearly: plan.price_yearly?.toString() || "",
       max_users: plan.max_users?.toString() || "",
+      max_pages: plan.max_pages?.toString() || "1000",
+      max_storage_gb: plan.max_storage_gb?.toString() || "10",
       features: plan.features,
       is_active: plan.is_active,
       is_highlighted: plan.is_highlighted,
@@ -198,6 +206,8 @@ export default function PlansPage() {
         price_monthly: formData.price_monthly ? parseInt(formData.price_monthly) : null,
         price_yearly: formData.price_yearly ? parseInt(formData.price_yearly) : null,
         max_users: formData.max_users ? parseInt(formData.max_users) : null,
+        max_pages: formData.max_pages ? parseInt(formData.max_pages) : 1000,
+        max_storage_gb: formData.max_storage_gb ? parseInt(formData.max_storage_gb) : 10,
         features: formData.features,
         is_active: formData.is_active,
         is_highlighted: formData.is_highlighted,
@@ -311,7 +321,7 @@ export default function PlansPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-foreground">Planos</h1>
-          <p className="text-muted-foreground">Gerencie os planos de assinatura por número de funcionários</p>
+          <p className="text-muted-foreground">Gerencie os planos de assinatura por volume de documentos e armazenamento</p>
         </div>
         <Button onClick={openCreateDialog}>
           <Plus className="mr-2 h-4 w-4" />
@@ -343,7 +353,8 @@ export default function PlansPage() {
                   <TableHead>Slug</TableHead>
                   <TableHead>Mensal</TableHead>
                   <TableHead>Anual</TableHead>
-                  <TableHead>Funcionários</TableHead>
+                  <TableHead>Páginas</TableHead>
+                  <TableHead>Espaço (GB)</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Stripe</TableHead>
                   <TableHead className="text-right">Ações</TableHead>
@@ -363,7 +374,8 @@ export default function PlansPage() {
                     <TableCell className="text-muted-foreground">{plan.slug}</TableCell>
                     <TableCell>{formatPrice(plan.price_monthly)}</TableCell>
                     <TableCell>{formatPrice(plan.price_yearly)}</TableCell>
-                    <TableCell>{plan.max_users ?? "∞"}</TableCell>
+                    <TableCell>{plan.max_pages?.toLocaleString() || "∞"}</TableCell>
+                    <TableCell>{plan.max_storage_gb || "∞"} GB</TableCell>
                     <TableCell>
                       <Badge variant={plan.is_active ? "default" : "secondary"}>
                         {plan.is_active ? "Ativo" : "Inativo"}
