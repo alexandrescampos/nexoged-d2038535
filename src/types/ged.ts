@@ -86,6 +86,8 @@ export interface Document {
   updated_at: string;
   // Joins
   mime_type?: string; // Do primeiro arquivo da versão
+  has_file?: boolean;
+  file_name?: string;
   versions_count?: number;
   creator_name?: string;
 }
