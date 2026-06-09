@@ -259,6 +259,13 @@ export const gedRepository = {
   },
 
   async getDownloadUrl(documentId: string) {
+    // Log the action
+    const { data: { user } } = await supabase.auth.getUser();
+    const { data: doc } = await supabase.from("ged_documents").select("organization_id").eq("id", documentId).single();
+    if (user && doc) {
+      await this.logAction(doc.organization_id, "viewed", documentId);
+    }
+
     // Buscar a versão mais recente
     const { data: version, error: versionError } = await supabase
       .from("ged_document_versions")
