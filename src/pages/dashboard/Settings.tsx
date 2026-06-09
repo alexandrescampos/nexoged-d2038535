@@ -10,7 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { toast } from "@/hooks/use-toast";
-import { Building2, Crown, Users, Shield, Upload, Loader2, Save, RotateCcw, FileText } from "lucide-react";
+import { Building2, Crown, Users, Shield, Upload, Loader2, Save, FileText } from "lucide-react";
 import OrganizationCnpjs from "@/components/dashboard/OrganizationCnpjs";
 import ApiIntegrationSettings from "@/components/dashboard/ApiIntegrationSettings";
 import UserAuditLog from "@/components/dashboard/UserAuditLog";
@@ -27,7 +27,7 @@ export default function OrgSettingsPage() {
   const [cnpj, setCnpj] = useState("");
   const [city, setCity] = useState("");
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
-  const [epiTermText, setEpiTermText] = useState("");
+  
 
   // Initialize form with organization data
   useEffect(() => {
@@ -36,7 +36,7 @@ export default function OrgSettingsPage() {
       setCnpj(organization.cnpj || "");
       setCity(organization.city || "");
       setLogoUrl(organization.logo_url || null);
-      setEpiTermText(organization.epi_term_text || "");
+      
     }
   }, [organization]);
 
@@ -133,7 +133,7 @@ export default function OrgSettingsPage() {
           cnpj: cnpj || null,
           city: city.trim() || null,
           logo_url: logoUrl,
-          epi_term_text: epiTermText.trim() || null,
+          
         })
         .eq("id", organization.id);
 
@@ -365,50 +365,6 @@ export default function OrgSettingsPage() {
           </Card>
         )}
 
-        {/* EPI Term Text - Apenas para Org Admin */}
-        {isOrgAdmin && (
-          <Card className="md:col-span-2">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <FileText className="h-5 w-5" />
-                Termo de Responsabilidade de EPI
-              </CardTitle>
-              <CardDescription>
-                Personalize o texto do termo de responsabilidade impresso nas fichas de entrega de EPI
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="epi-term-text">Texto do Termo</Label>
-                <Textarea
-                  id="epi-term-text"
-                  value={epiTermText}
-                  onChange={(e) => setEpiTermText(e.target.value)}
-                  placeholder="Deixe em branco para usar o texto padrão..."
-                  rows={6}
-                  className="resize-y"
-                />
-                <p className="text-xs text-muted-foreground">
-                  Se deixado em branco, será usado o texto padrão baseado na NR-6.
-                </p>
-              </div>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setEpiTermText(
-                  "Declaro ter recebido gratuitamente os Equipamentos de Proteção Individual (EPIs) acima descritos, " +
-                  "comprometendo-me a: usá-los apenas para a finalidade a que se destinam; responsabilizar-me pela guarda e " +
-                  "conservação dos mesmos; comunicar ao empregador qualquer alteração que os torne impróprios para uso; " +
-                  "devolvê-los ao empregador quando solicitado ou ao final do contrato de trabalho. Estou ciente de que o uso " +
-                  "dos EPIs é obrigatório conforme a NR-6 e que o descumprimento poderá acarretar sanções disciplinares."
-                )}
-              >
-                <RotateCcw className="h-4 w-4 mr-2" />
-                Restaurar texto padrão
-              </Button>
-            </CardContent>
-          </Card>
-        )}
 
         {/* CNPJs do Grupo */}
         {isOrgAdmin && (

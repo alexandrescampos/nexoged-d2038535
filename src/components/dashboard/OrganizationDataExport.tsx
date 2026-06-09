@@ -104,7 +104,7 @@ export default function OrganizationDataExport({ organizationId, organizationNam
         <CardDescription>
           Baixa um arquivo JSON com os dados cadastrais desta organização para importação em outro
           sistema. Inclui: organização, CNPJs, setores, funções e funcionários. Não inclui usuários,
-          estoque, entregas, termos assinados, documentos ou dados financeiros.
+          estoque, documentos ou dados financeiros.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-3">
