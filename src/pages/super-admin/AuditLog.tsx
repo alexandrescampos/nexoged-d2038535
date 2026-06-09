@@ -86,10 +86,10 @@ export default function AuditLogPage() {
         <div>
           <h1 className="text-2xl font-bold flex items-center gap-2">
             <Shield className="h-6 w-6 text-primary" />
-            Auditoria de Criação de Usuários
+            Auditoria de Eventos do Sistema
           </h1>
           <p className="text-muted-foreground">
-            Relatório detalhado de novos registros nos últimos 30 dias.
+            Relatório detalhado de eventos registrados nos últimos 30 dias.
           </p>
         </div>
         <Button onClick={handleExport} variant="outline" className="flex items-center gap-2">
@@ -149,7 +149,7 @@ export default function AuditLogPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{auditLogs?.length || 0}</div>
-            <p className="text-xs text-muted-foreground mt-1">Usuários criados</p>
+            <p className="text-xs text-muted-foreground mt-1">Eventos registrados</p>
           </CardContent>
         </Card>
         <Card>
