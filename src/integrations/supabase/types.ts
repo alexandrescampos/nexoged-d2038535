@@ -14,6 +14,54 @@ export type Database = {
   }
   public: {
     Tables: {
+      departments: {
+        Row: {
+          code: string | null
+          created_at: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+          organization_id: string
+          parent_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          code?: string | null
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          organization_id: string
+          parent_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          code?: string | null
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          organization_id?: string
+          parent_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "departments_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "departments_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "departments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       employee_documents: {
         Row: {
           created_at: string
@@ -355,6 +403,7 @@ export type Database = {
           avatar_url: string | null
           created_at: string
           created_by: string | null
+          department_id: string | null
           email: string | null
           full_name: string | null
           hourly_rate: number | null
@@ -370,6 +419,7 @@ export type Database = {
           avatar_url?: string | null
           created_at?: string
           created_by?: string | null
+          department_id?: string | null
           email?: string | null
           full_name?: string | null
           hourly_rate?: number | null
@@ -385,6 +435,7 @@ export type Database = {
           avatar_url?: string | null
           created_at?: string
           created_by?: string | null
+          department_id?: string | null
           email?: string | null
           full_name?: string | null
           hourly_rate?: number | null
@@ -397,6 +448,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "profiles_department_id_fkey"
+            columns: ["department_id"]
+            isOneToOne: false
+            referencedRelation: "departments"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "profiles_organization_id_fkey"
             columns: ["organization_id"]
@@ -563,6 +621,53 @@ export type Database = {
           },
         ]
       }
+      system_audit_log: {
+        Row: {
+          action: string
+          created_at: string | null
+          details: Json | null
+          entity_id: string | null
+          entity_type: string | null
+          id: string
+          ip_address: string | null
+          organization_id: string | null
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          created_at?: string | null
+          details?: Json | null
+          entity_id?: string | null
+          entity_type?: string | null
+          id?: string
+          ip_address?: string | null
+          organization_id?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          created_at?: string | null
+          details?: Json | null
+          entity_id?: string | null
+          entity_type?: string | null
+          id?: string
+          ip_address?: string | null
+          organization_id?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "system_audit_log_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       system_settings: {
         Row: {
           created_at: string | null
@@ -651,6 +756,38 @@ export type Database = {
           },
         ]
       }
+      user_permissions: {
+        Row: {
+          created_at: string | null
+          id: string
+          organization_id: string
+          permission: Database["public"]["Enums"]["ged_permission"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          organization_id: string
+          permission: Database["public"]["Enums"]["ged_permission"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          organization_id?: string
+          permission?: Database["public"]["Enums"]["ged_permission"]
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_permissions_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -699,6 +836,13 @@ export type Database = {
       get_org_user_count: { Args: { _org_id: string }; Returns: number }
       get_super_admin_ids: { Args: never; Returns: string[] }
       get_user_org_id: { Args: { _user_id: string }; Returns: string }
+      has_permission: {
+        Args: {
+          _permission: Database["public"]["Enums"]["ged_permission"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -726,6 +870,14 @@ export type Database = {
     }
     Enums: {
       app_role: "super_admin" | "org_admin" | "manager"
+      ged_permission:
+        | "visualizar_documento"
+        | "inserir_documento"
+        | "editar_documento"
+        | "excluir_documento"
+        | "restaurar_documento"
+        | "assinar_documento"
+        | "administrar_sistema"
       org_status: "active" | "suspended" | "trial"
     }
     CompositeTypes: {
@@ -855,6 +1007,15 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["super_admin", "org_admin", "manager"],
+      ged_permission: [
+        "visualizar_documento",
+        "inserir_documento",
+        "editar_documento",
+        "excluir_documento",
+        "restaurar_documento",
+        "assinar_documento",
+        "administrar_sistema",
+      ],
       org_status: ["active", "suspended", "trial"],
     },
   },
