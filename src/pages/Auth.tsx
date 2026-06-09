@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Clock } from "lucide-react";
+import { Loader2, Clock, FileText } from "lucide-react";
 import { TermsDialog } from "@/components/TermsDialog";
 
 const loginSchema = z.object({
@@ -123,11 +123,11 @@ export default function Auth() {
               <img src={systemLogo} alt="Logo do Sistema" className="w-full max-h-[160px] md:max-h-[240px] object-contain" />
             ) : (
               <div className="h-32 w-32 md:h-48 md:w-48 rounded-2xl bg-primary/10 flex items-center justify-center">
-                <Clock className="h-16 w-16 md:h-24 md:w-24 text-primary" />
+                <FileText className="h-16 w-16 md:h-24 md:w-24 text-primary" />
               </div>
             )}
           </div>
-          <p className="text-muted-foreground">Sistema de Gestão Eletrônica de Documentos</p>
+          <p className="text-muted-foreground font-medium uppercase tracking-widest text-sm">NexGED Corporate</p>
         </div>
 
         <Card className="border-border shadow-lg">
