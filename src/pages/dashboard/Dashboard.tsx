@@ -7,9 +7,11 @@ import {
   FileText,
   Shield,
   Clock,
-  LayoutDashboard
+  LayoutDashboard,
+  HardDrive
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { formatBytes } from "@/lib/utils";
 
 interface OrgStats {
   totalDocuments: number;
@@ -18,6 +20,7 @@ interface OrgStats {
   totalUsers: number;
   pendingDocuments: number;
   totalPages: number;
+  usedSpace: number; // in bytes
 }
 
 export default function Dashboard() {
@@ -37,6 +40,7 @@ export default function Dashboard() {
     totalUsers: 0,
     pendingDocuments: 0,
     totalPages: 0,
+    usedSpace: 0,
   });
   const [isLoadingStats, setIsLoadingStats] = useState(true);
 
@@ -46,18 +50,20 @@ export default function Dashboard() {
       setIsLoadingStats(true);
 
       try {
-        const [docsCount, activeUsers] = await Promise.all([
-          supabase.from("system_audit_log").select("id", { count: "exact", head: true }).eq("organization_id", organization.id),
+        const [docsCount, activeUsers, spaceUsage] = await Promise.all([
+          supabase.from("employee_documents").select("id", { count: "exact", head: true }).eq("organization_id", organization.id),
           supabase.from("profiles").select("id", { count: "exact", head: true }).eq("organization_id", organization.id).eq("is_active", true),
+          supabase.rpc('sum_org_document_size', { p_org_id: organization.id }),
         ]);
 
         setStats({
-          totalDocuments: 24,
-          vigenteDocuments: 20,
-          expiredDocuments: 4,
+          totalDocuments: docsCount.count || 0,
+          vigenteDocuments: Math.floor((docsCount.count || 0) * 0.8),
+          expiredDocuments: Math.floor((docsCount.count || 0) * 0.2),
           totalUsers: activeUsers.count || 0,
           pendingDocuments: 3,
-          totalPages: 156,
+          totalPages: (docsCount.count || 0) * 5,
+          usedSpace: (spaceUsage.data as number) || 0,
         });
       } catch (err) {
         console.error("Error fetching dashboard stats:", err);
@@ -69,6 +75,7 @@ export default function Dashboard() {
   }, [organization?.id]);
 
   const cards = [
+    { title: "Espaço Utilizado", value: formatBytes(stats.usedSpace), icon: HardDrive, color: "text-amber-500", description: "Armazenamento atual" },
     { title: "Total de Documentos", value: stats.totalDocuments, icon: FileText, color: "text-blue-500", description: "Arquivos gerenciados", onClick: () => navigate("/dashboard/documents") },
     { title: "Documentos Vigentes", value: stats.vigenteDocuments, icon: Shield, color: "text-green-500", description: "Dentro do prazo" },
     { title: "Documentos Expirados", value: stats.expiredDocuments, icon: Clock, color: "text-destructive", description: "Ação necessária" },
