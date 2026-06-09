@@ -49,6 +49,17 @@ export function useGED(folderId: string | null = null) {
     }
   });
 
+  const deleteDocumentMutation = useMutation({
+    mutationFn: (id: string) => gedRepository.deleteDocument(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["ged-documents"] });
+      toast.success("Documento excluído com sucesso!");
+    },
+    onError: (error: any) => {
+      toast.error("Erro ao excluir documento: " + error.message);
+    }
+  });
+
   return {
     documents: documentsData?.data || [],
     totalCount: documentsData?.count || 0,
@@ -57,6 +68,7 @@ export function useGED(folderId: string | null = null) {
     uploadDocument: uploadMutation.mutate,
     isUploading: uploadMutation.isPending,
     toggleFavorite: toggleFavoriteMutation.mutate,
+    deleteDocument: deleteDocumentMutation.mutate,
     searchTerm,
     setSearchTerm,
     page,

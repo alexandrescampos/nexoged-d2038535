@@ -163,5 +163,15 @@ export const gedRepository = {
       details: details || {},
     }]);
     if (error) console.error("Erro ao registrar log:", error);
+  },
+
+  async deleteDocument(documentId: string) {
+    const { error } = await supabase
+      .from("ged_documents")
+      .update({ status: 'deleted', updated_at: new Date().toISOString() })
+      .eq("id", documentId);
+
+    if (error) throw error;
+    return true;
   }
 };
