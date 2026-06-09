@@ -23,7 +23,7 @@ serve(async (req) => {
       }
     );
 
-    const { email, password, fullName, role, cnpjIds } = await req.json();
+    const { email, password, fullName, role, cnpjIds, departmentId, permissions } = await req.json();
 
     // 1. Create user in Auth
     const { data: authUser, error: authError } = await supabaseAdmin.auth.admin.createUser({
@@ -75,8 +75,10 @@ serve(async (req) => {
         organization_id: orgId,
         full_name: fullName,
         must_reset_password: true,
-        is_active: true
+        is_active: true,
+        department_id: departmentId
       })
+
       .eq("id", userId);
 
     if (updateProfileError) {
@@ -85,12 +87,14 @@ serve(async (req) => {
 
     // 3. Add Role
     if (role) {
+      // Ensure 'manager' is converted to 'user' if it comes from legacy frontend
+      const targetRole = role === "manager" ? "user" : role;
       const { error: roleError } = await supabaseAdmin
         .from("user_roles")
         .insert({
           user_id: userId,
           organization_id: orgId,
-          role: role
+          role: targetRole
         });
       
       if (roleError) {
@@ -98,7 +102,24 @@ serve(async (req) => {
       }
     }
 
-    // 4. Add CNPJ scope if provided
+    // 4. Add Permissions if provided
+    if (permissions && permissions.length > 0) {
+      const permInserts = permissions.map((p: string) => ({
+        user_id: userId,
+        permission: p,
+        organization_id: orgId
+      }));
+      
+      const { error: permError } = await supabaseAdmin
+        .from("user_permissions")
+        .insert(permInserts);
+        
+      if (permError) {
+        console.error("Error adding permissions:", permError);
+      }
+    }
+
+    // 5. Add CNPJ scope if provided
     if (cnpjIds && cnpjIds.length > 0) {
       const cnpjInserts = cnpjIds.map((cnpjId: string) => ({
         user_id: userId,
@@ -114,6 +135,7 @@ serve(async (req) => {
         console.error("Error adding CNPJ scope:", cnpjError);
       }
     }
+
 
     return new Response(JSON.stringify({ user: authUser.user }), {
       status: 200,
