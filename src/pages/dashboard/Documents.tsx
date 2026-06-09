@@ -428,7 +428,7 @@ export default function DocumentsPage() {
               }, {
                 onSuccess: () => {
                   setIsUploadOpen(false);
-                  setUploadData({ title: "", document_type: "", page_count: 1 });
+                  setUploadData({ title: "", document_type: "", page_count: 1, description: "" });
                   setSelectedFile(null);
                 }
               });
