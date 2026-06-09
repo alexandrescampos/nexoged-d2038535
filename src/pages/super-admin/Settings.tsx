@@ -177,7 +177,7 @@ export default function SuperAdminSettings() {
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
                 <Label htmlFor="system-name">Nome do Sistema</Label>
-                <Input id="system-name" value={systemName} onChange={(e) => setSystemName(e.target.value)} placeholder="Nexo EPI" disabled={isLoadingSettings} />
+                <Input id="system-name" value={systemName} onChange={(e) => setSystemName(e.target.value)} placeholder="Nexo GED" disabled={isLoadingSettings} />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="system-version">Versão</Label>
