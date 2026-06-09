@@ -7,7 +7,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { AdminOnlyRoute } from "@/components/AdminOnlyRoute";
-import { PermissionProtectedRoute } from "@/components/PermissionProtectedRoute";
+import { PermissionProtectedRoute } from "@/components/PermissionGate";
 
 // Pages
 import Auth from "./pages/Auth";
