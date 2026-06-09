@@ -137,8 +137,8 @@ export default function RecentPage() {
           <div className={viewMode === "grid" ? "grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4" : "space-y-1"}>
             {documents.length === 0 && (
               <div className="col-span-full py-20 text-center">
-                <Star className="h-12 w-12 text-muted-foreground mx-auto mb-4 opacity-20" />
-                <p className="text-muted-foreground">Você ainda não tem nenhum documento favorito.</p>
+                <Clock className="h-12 w-12 text-muted-foreground mx-auto mb-4 opacity-20" />
+                <p className="text-muted-foreground">Você ainda não acessou nenhum documento.</p>
               </div>
             )}
 
