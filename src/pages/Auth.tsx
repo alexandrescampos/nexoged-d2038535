@@ -137,13 +137,13 @@ export default function Auth() {
               </div>
             )}
           </div>
-          <p className="text-muted-foreground font-medium uppercase tracking-widest text-sm">NexGED Corporate</p>
+          <p className="text-muted-foreground font-medium uppercase tracking-widest text-sm">Nexo GED</p>
         </div>
 
         <Card className="border-border shadow-lg">
           <CardHeader className="space-y-1">
             <CardTitle className="text-2xl text-center">Acesse sua conta</CardTitle>
-            <CardDescription className="text-center">NexGED Corporate - Gestão Inteligente</CardDescription>
+            <CardDescription className="text-center">Nexo GED - Gestão Inteligente</CardDescription>
           </CardHeader>
           <CardContent>
             <Form {...loginForm}>
@@ -181,7 +181,7 @@ export default function Auth() {
                       Autenticando...
                     </>
                   ) : (
-                    "Acessar NexGED"
+                    "Acessar Nexo GED"
                   )}
                 </Button>
               </form>
