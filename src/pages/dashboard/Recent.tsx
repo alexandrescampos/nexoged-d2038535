@@ -107,7 +107,7 @@ export default function RecentPage() {
         <div className="relative flex-1 w-full">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input 
-            placeholder="Pesquisar nos favoritos..." 
+            placeholder="Pesquisar nos acessos recentes..." 
             className="pl-9 h-9"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
