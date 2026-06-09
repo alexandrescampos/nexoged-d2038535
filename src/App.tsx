@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { AdminOnlyRoute } from "@/components/AdminOnlyRoute";
+import { PermissionProtectedRoute } from "@/components/PermissionProtectedRoute";
 
 // Pages
 import Auth from "./pages/Auth";
@@ -116,7 +117,14 @@ const App = () => {
               }
             >
               <Route index element={<OrgDashboard />} />
-              <Route path="documents" element={<DocumentsPage />} />
+              <Route 
+                path="documents" 
+                element={
+                  <PermissionProtectedRoute permission="visualizar_documento">
+                    <DocumentsPage />
+                  </PermissionProtectedRoute>
+                } 
+              />
               <Route path="departments" element={<AdminOnlyRoute><DepartmentsPage /></AdminOnlyRoute>} />
               <Route path="users" element={<AdminOnlyRoute><OrgUsersPage /></AdminOnlyRoute>} />
               <Route path="permissions" element={<AdminOnlyRoute><PermissionsPage /></AdminOnlyRoute>} />
