@@ -178,10 +178,10 @@ export default function Auth() {
                   {isLoading ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Entrando...
+                      Autenticando...
                     </>
                   ) : (
-                    "Entrar"
+                    "Acessar NexGED"
                   )}
                 </Button>
               </form>
