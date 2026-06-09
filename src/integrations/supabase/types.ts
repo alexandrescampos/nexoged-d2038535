@@ -112,6 +112,267 @@ export type Database = {
           },
         ]
       }
+      folders: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+          organization_id: string
+          parent_id: string | null
+          sector_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          organization_id: string
+          parent_id?: string | null
+          sector_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          organization_id?: string
+          parent_id?: string | null
+          sector_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "folders_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "folders_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "folders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "folders_sector_id_fkey"
+            columns: ["sector_id"]
+            isOneToOne: false
+            referencedRelation: "sectors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ged_audit_log: {
+        Row: {
+          action: string
+          created_at: string | null
+          details: Json | null
+          document_id: string | null
+          id: string
+          ip_address: string | null
+          organization_id: string | null
+          user_id: string | null
+          version_id: string | null
+        }
+        Insert: {
+          action: string
+          created_at?: string | null
+          details?: Json | null
+          document_id?: string | null
+          id?: string
+          ip_address?: string | null
+          organization_id?: string | null
+          user_id?: string | null
+          version_id?: string | null
+        }
+        Update: {
+          action?: string
+          created_at?: string | null
+          details?: Json | null
+          document_id?: string | null
+          id?: string
+          ip_address?: string | null
+          organization_id?: string | null
+          user_id?: string | null
+          version_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ged_audit_log_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "ged_documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ged_audit_log_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ged_audit_log_version_id_fkey"
+            columns: ["version_id"]
+            isOneToOne: false
+            referencedRelation: "ged_document_versions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ged_document_versions: {
+        Row: {
+          checksum: string | null
+          created_at: string | null
+          created_by: string | null
+          document_id: string
+          file_name: string
+          file_path: string
+          file_size: number | null
+          id: string
+          mime_type: string | null
+          version_number: number
+        }
+        Insert: {
+          checksum?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          document_id: string
+          file_name: string
+          file_path: string
+          file_size?: number | null
+          id?: string
+          mime_type?: string | null
+          version_number: number
+        }
+        Update: {
+          checksum?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          document_id?: string
+          file_name?: string
+          file_path?: string
+          file_size?: number | null
+          id?: string
+          mime_type?: string | null
+          version_number?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ged_document_versions_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "ged_documents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ged_documents: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          deleted_at: string | null
+          description: string | null
+          document_type: string | null
+          folder_id: string | null
+          id: string
+          is_favorite: boolean | null
+          keywords: string[] | null
+          organization_id: string
+          status: string | null
+          tags: string[] | null
+          taxonomy: string | null
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          deleted_at?: string | null
+          description?: string | null
+          document_type?: string | null
+          folder_id?: string | null
+          id?: string
+          is_favorite?: boolean | null
+          keywords?: string[] | null
+          organization_id: string
+          status?: string | null
+          tags?: string[] | null
+          taxonomy?: string | null
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          deleted_at?: string | null
+          description?: string | null
+          document_type?: string | null
+          folder_id?: string | null
+          id?: string
+          is_favorite?: boolean | null
+          keywords?: string[] | null
+          organization_id?: string
+          status?: string | null
+          tags?: string[] | null
+          taxonomy?: string | null
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ged_documents_folder_id_fkey"
+            columns: ["folder_id"]
+            isOneToOne: false
+            referencedRelation: "folders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ged_documents_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ged_user_favorites: {
+        Row: {
+          created_at: string | null
+          document_id: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          document_id: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          document_id?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ged_user_favorites_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "ged_documents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       organization_api_keys: {
         Row: {
           created_at: string
@@ -460,6 +721,54 @@ export type Database = {
           },
           {
             foreignKeyName: "profiles_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sectors: {
+        Row: {
+          created_at: string | null
+          department_id: string
+          description: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+          organization_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          department_id: string
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          organization_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          department_id?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          organization_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sectors_department_id_fkey"
+            columns: ["department_id"]
+            isOneToOne: false
+            referencedRelation: "departments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sectors_organization_id_fkey"
             columns: ["organization_id"]
             isOneToOne: false
             referencedRelation: "organizations"
