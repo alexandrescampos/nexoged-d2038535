@@ -64,7 +64,10 @@ export const gedRepository = {
     // 1. Inserir documento
     const { data: document, error: docError } = await supabase
       .from("ged_documents")
-      .insert([doc])
+      .insert([{
+        ...doc,
+        page_count: doc.page_count || 1
+      }])
       .select()
       .single();
 
