@@ -9,6 +9,7 @@ export function useGED(folderId: string | null = null, filterFavorites: boolean 
   const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState("");
   const [page, setPage] = useState(0);
+  const { profile } = useAuth();
 
   // Documentos
   const { data: documentsData, isLoading: isLoadingDocs } = useQuery({
