@@ -93,11 +93,11 @@ export default function RecentPage() {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Favoritos</h1>
+          <h1 className="text-2xl font-bold tracking-tight">Últimos Acessos</h1>
           <div className="flex items-center text-sm text-muted-foreground mt-1">
             <span>Nexo GED</span>
             <ChevronRight className="h-4 w-4 mx-1" />
-            <span className="font-medium text-foreground">Favoritos</span>
+            <span className="font-medium text-foreground">Últimos Acessos</span>
           </div>
         </div>
       </div>
