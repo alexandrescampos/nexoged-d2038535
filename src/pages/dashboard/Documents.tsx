@@ -81,6 +81,7 @@ export default function DocumentsPage() {
     uploadDocument,
     isUploading,
     deleteDocument,
+    toggleFavorite,
     getDownloadUrl
   } = useGED(currentFolder);
   const { organization } = useAuth();
