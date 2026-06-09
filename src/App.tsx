@@ -33,6 +33,7 @@ import ChatbotAnalyticsPage from "./pages/super-admin/ChatbotAnalytics";
 
 // Org Dashboard Pages
 import OrgDashboard from "./pages/dashboard/Dashboard";
+import DocumentsPage from "./pages/dashboard/Documents";
 import OrgUsersPage from "./pages/dashboard/Users";
 import BillingPage from "./pages/dashboard/Billing";
 import PaymentSuccessPage from "./pages/dashboard/PaymentSuccess";
@@ -114,6 +115,7 @@ const App = () => {
               }
             >
               <Route index element={<OrgDashboard />} />
+              <Route path="documents" element={<DocumentsPage />} />
               <Route path="users" element={<AdminOnlyRoute><OrgUsersPage /></AdminOnlyRoute>} />
               <Route path="permissions" element={<AdminOnlyRoute><PermissionsPage /></AdminOnlyRoute>} />
               <Route path="billing" element={<AdminOnlyRoute><BillingPage /></AdminOnlyRoute>} />
