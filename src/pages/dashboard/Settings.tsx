@@ -366,20 +366,6 @@ export default function OrgSettingsPage() {
         )}
 
 
-        {/* CNPJs do Grupo */}
-        {isOrgAdmin && (
-          <div className="md:col-span-2">
-            <OrganizationCnpjs />
-          </div>
-        )}
-
-        {isOrgAdmin && organization?.id && (
-          <div className="md:col-span-2">
-            <ApiIntegrationSettings organizationId={organization.id} organizationName={organization.name} />
-          </div>
-        )}
-
-
         {/* Audit Log - Apenas para Org Admin */}
         {isOrgAdmin && (
           <div className="md:col-span-2">
@@ -407,6 +393,13 @@ export default function OrgSettingsPage() {
             <div className="flex justify-between items-center">
               <span className="text-muted-foreground">Email</span>
               <span className="text-sm">{profile?.email || "—"}</span>
+            </div>
+            <Separator />
+            <div className="flex justify-between items-center">
+              <span className="text-muted-foreground">Departamento</span>
+              <Badge variant="outline">
+                {profile?.department_id ? "Atribuído" : "Não informado"}
+              </Badge>
             </div>
             <Separator />
             <div className="flex justify-between items-center">
