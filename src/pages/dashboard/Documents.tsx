@@ -44,6 +44,16 @@ import {
   DialogDescription,
   DialogFooter
 } from "@/components/ui/dialog";
+import { 
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "sonner";
@@ -54,6 +64,7 @@ export default function DocumentsPage() {
   const [currentFolder, setCurrentFolder] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<"grid" | "list">("list");
   const [isUploadOpen, setIsUploadOpen] = useState(false);
+  const [documentToDelete, setDocumentToDelete] = useState<string | null>(null);
   const [uploadData, setUploadData] = useState({
     title: "",
     document_type: "",
@@ -68,7 +79,8 @@ export default function DocumentsPage() {
     searchTerm, 
     setSearchTerm,
     uploadDocument,
-    isUploading
+    isUploading,
+    deleteDocument
   } = useGED(currentFolder);
   const { organization } = useAuth();
   
@@ -215,7 +227,12 @@ export default function DocumentsPage() {
                         <DropdownMenuItem className="gap-2"><Star className="h-4 w-4" /> {doc.is_favorite ? 'Remover Favorito' : 'Favoritar'}</DropdownMenuItem>
                         <DropdownMenuItem className="gap-2"><History className="h-4 w-4" /> Versões</DropdownMenuItem>
                         <DropdownMenuSeparator />
-                        <DropdownMenuItem className="gap-2 text-destructive"><Trash2 className="h-4 w-4" /> Excluir</DropdownMenuItem>
+                        <DropdownMenuItem 
+                          className="gap-2 text-destructive"
+                          onClick={() => setDocumentToDelete(doc.id)}
+                        >
+                          <Trash2 className="h-4 w-4" /> Excluir
+                        </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </div>
@@ -225,6 +242,32 @@ export default function DocumentsPage() {
           </div>
         )}
       </ScrollArea>
+
+      {/* Confirmação de Exclusão */}
+      <AlertDialog open={!!documentToDelete} onOpenChange={(open) => !open && setDocumentToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Você tem certeza?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta ação não pode ser desfeita. O documento será marcado como excluído e não aparecerá mais na sua listagem ativa.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={() => {
+                if (documentToDelete) {
+                  deleteDocument(documentToDelete);
+                  setDocumentToDelete(null);
+                }
+              }}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Excluir
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* Modal de Upload (Simplificado para o Protótipo) */}
       <Dialog open={isUploadOpen} onOpenChange={setIsUploadOpen}>
