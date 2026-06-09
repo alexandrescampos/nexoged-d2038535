@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
+import { useSearchParams } from "react-router-dom";
 import { useGED } from "@/hooks/useGED";
 import { useAuth } from "@/hooks/useAuth";
 import { UsageIndicator } from "@/components/dashboard/UsageIndicator";
@@ -47,6 +48,8 @@ import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 export default function DocumentsPage() {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const searchInputRef = useRef<HTMLInputElement>(null);
   const [currentFolder, setCurrentFolder] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<"grid" | "list">("list");
   const [isUploadOpen, setIsUploadOpen] = useState(false);
@@ -65,6 +68,20 @@ export default function DocumentsPage() {
     isUploading
   } = useGED(currentFolder);
   const { organization } = useAuth();
+  
+  useEffect(() => {
+    const action = searchParams.get("action");
+    if (action === "new") {
+      setIsUploadOpen(true);
+      // Limpar o param para não reabrir ao dar refresh ou navegar
+      searchParams.delete("action");
+      setSearchParams(searchParams);
+    } else if (action === "search") {
+      searchInputRef.current?.focus();
+      searchParams.delete("action");
+      setSearchParams(searchParams);
+    }
+  }, [searchParams, setSearchParams]);
 
   const getFileIcon = (mime: string) => {
     if (mime?.includes("pdf")) return <FileText className="h-6 w-6 text-red-500" />;
@@ -104,6 +121,7 @@ export default function DocumentsPage() {
         <div className="relative flex-1 w-full">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input 
+            ref={searchInputRef}
             placeholder="Pesquisar em documentos, tags, conteúdos..." 
             className="pl-9 h-9"
             value={searchTerm}

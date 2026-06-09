@@ -71,8 +71,8 @@ const menuGroups: MenuGroup[] = [
     label: "Geral",
     items: [
       { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
-      { title: "Inserir Documento", url: "/dashboard/documents", icon: Plus, userAllowed: true },
-      { title: "Pesquisar", url: "/dashboard/documents", icon: Search, userAllowed: true },
+      { title: "Inserir Documento", url: "/dashboard/documents?action=new", icon: Plus, userAllowed: true },
+      { title: "Pesquisar", url: "/dashboard/documents?action=search", icon: Search, userAllowed: true },
     ],
   },
   {
