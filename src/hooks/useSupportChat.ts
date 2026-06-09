@@ -16,7 +16,7 @@ export function useSupportChat() {
   const getUserContext = useCallback(() => {
     const roleLabel = roles.includes("org_admin")
       ? "Administrador"
-      : roles.includes("manager")
+      : roles.includes("user")
         ? "Gestor"
         : "Usuário";
     return {

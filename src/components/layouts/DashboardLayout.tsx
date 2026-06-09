@@ -57,8 +57,8 @@ interface MenuItem {
   url: string;
   icon: LucideIcon;
   adminOnly?: boolean;
-  managerAllowed?: boolean;
-  hideForManager?: boolean;
+  userAllowed?: boolean;
+  hideForUser?: boolean;
 }
 
 interface MenuGroup {
@@ -71,21 +71,21 @@ const menuGroups: MenuGroup[] = [
     label: "Geral",
     items: [
       { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
-      { title: "Inserir Documento", url: "/dashboard/documents/new", icon: Plus, managerAllowed: true },
-      { title: "Pesquisar", url: "/dashboard/documents/search", icon: Search, managerAllowed: true },
+      { title: "Inserir Documento", url: "/dashboard/documents/new", icon: Plus, userAllowed: true },
+      { title: "Pesquisar", url: "/dashboard/documents/search", icon: Search, userAllowed: true },
     ],
   },
   {
     label: "Acesso Rápido",
     items: [
-      { title: "Favoritos", url: "/dashboard/favorites", icon: Star, managerAllowed: true },
-      { title: "Últimos Acessos", url: "/dashboard/recent", icon: Clock, managerAllowed: true },
+      { title: "Favoritos", url: "/dashboard/favorites", icon: Star, userAllowed: true },
+      { title: "Últimos Acessos", url: "/dashboard/recent", icon: Clock, userAllowed: true },
     ],
   },
   {
     label: "Gestão",
     items: [
-      { title: "Documentos", url: "/dashboard/documents", icon: FileText, managerAllowed: true },
+      { title: "Documentos", url: "/dashboard/documents", icon: FileText, userAllowed: true },
       { title: "Departamentos", url: "/dashboard/departments", icon: Building2, adminOnly: true },
       { title: "Usuários", url: "/dashboard/users", icon: Users, adminOnly: true },
     ],
@@ -93,7 +93,7 @@ const menuGroups: MenuGroup[] = [
   {
     label: "Configurações",
     items: [
-      { title: "Configurações", url: "/dashboard/settings", icon: Settings, hideForManager: true },
+      { title: "Configurações", url: "/dashboard/settings", icon: Settings, hideForUser: true },
       { title: "Sobre", url: "/dashboard/about", icon: Info },
     ],
   },
@@ -110,7 +110,7 @@ function findMenuItem(url: string): MenuItem | undefined {
 function DashboardSidebar() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { organization, profile, signOut, isOrgAdmin, isManager } = useAuth();
+  const { organization, profile, signOut, isOrgAdmin, isUser } = useAuth();
   const { state } = useSidebar();
   const { openTab } = useTabs();
   const isCollapsed = state === "collapsed";
@@ -145,7 +145,7 @@ function DashboardSidebar() {
       .toUpperCase()
       .slice(0, 2) || "ORG";
 
-  const roleLabel = isOrgAdmin ? "Administrador" : isManager ? "Usuário" : "Usuário";
+  const roleLabel = isOrgAdmin ? "Administrador" : isUser ? "Usuário" : "Usuário";
 
   return (
     <Sidebar collapsible="icon" className="border-r border-sidebar-border">
@@ -162,8 +162,8 @@ function DashboardSidebar() {
       <SidebarContent>
         {menuGroups.map((group) => {
           const filteredItems = group.items.filter((item) => {
-            if (item.adminOnly && !isOrgAdmin && !(item.managerAllowed && isManager)) return false;
-            if (item.hideForManager && isManager && !isOrgAdmin) return false;
+            if (item.adminOnly && !isOrgAdmin && !(item.userAllowed && isUser)) return false;
+            if (item.hideForUser && isUser && !isOrgAdmin) return false;
             return true;
           });
 
@@ -223,7 +223,7 @@ function DashboardSidebar() {
 }
 
 function DashboardHeader() {
-  const { profile, signOut, isOrgAdmin, isManager } = useAuth();
+  const { profile, signOut, isOrgAdmin, isUser } = useAuth();
   const navigate = useNavigate();
 
   const handleSignOut = async () => {
@@ -239,7 +239,7 @@ function DashboardHeader() {
       .toUpperCase()
       .slice(0, 2) || "U";
 
-  const roleLabel = isOrgAdmin ? "Administrador" : isManager ? "Usuário" : "Usuário";
+  const roleLabel = isOrgAdmin ? "Administrador" : isUser ? "Usuário" : "Usuário";
 
   return (
     <header className="h-14 border-b border-border bg-card flex items-center justify-between px-4">

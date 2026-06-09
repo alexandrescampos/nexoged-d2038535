@@ -12,13 +12,13 @@ import { useAuth } from "@/hooks/useAuth";
  * any stale/orphan associations pointing to CNPJs/sectors of other orgs.
  */
 export function useManagerCnpjs() {
-  const { user, organization, isManager, isOrgAdmin, isSuperAdmin } = useAuth();
+  const { user, organization, isUser, isOrgAdmin, isSuperAdmin } = useAuth();
   const orgId = organization?.id ?? null;
 
   // Scoped roles: manager and org_admin (both can be restricted by CNPJ).
   // Super admin is never scoped. Admin without manager_cnpjs rows = full access.
-  const isScoped = !!user?.id && !!orgId && (isManager || isOrgAdmin) && !isSuperAdmin;
-  const isManagerOnly = !!user?.id && !!orgId && isManager && !isOrgAdmin && !isSuperAdmin;
+  const isScoped = !!user?.id && !!orgId && (isUser || isOrgAdmin) && !isSuperAdmin;
+  const isUserOnly = !!user?.id && !!orgId && isUser && !isOrgAdmin && !isSuperAdmin;
 
   const { data: cnpjRows = null, isLoading: isLoadingCnpjs } = useQuery({
     queryKey: ["manager-cnpjs", user?.id, orgId],
@@ -45,7 +45,7 @@ export function useManagerCnpjs() {
       if (error) throw error;
       return (data as any[]).map((r: any) => r.sector_id as string);
     },
-    enabled: isManagerOnly, // sectors only restrict managers, never admins
+    enabled: isUserOnly, // sectors only restrict users, never admins
   });
 
   if (!isScoped) {

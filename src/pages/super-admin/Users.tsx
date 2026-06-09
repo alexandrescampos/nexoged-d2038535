@@ -67,13 +67,13 @@ const PAGE_SIZE_OPTIONS = [10, 25, 50] as const;
 const roleLabels: Record<AppRole, string> = {
   super_admin: "Super Admin",
   org_admin: "Admin Org",
-  manager: "Gestor",
+  user: "Usuário",
 };
 
 const roleColors: Record<AppRole, string> = {
   super_admin: "bg-primary/10 text-primary border-primary/20",
   org_admin: "bg-info/10 text-info border-info/20",
-  manager: "bg-green-500/10 text-green-600 border-green-500/20",
+  user: "bg-green-500/10 text-green-600 border-green-500/20",
 };
 
 interface UserWithRoles extends Profile {
@@ -97,7 +97,7 @@ export default function UsersPage() {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isResetPasswordDialogOpen, setIsResetPasswordDialogOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<UserWithRoles | null>(null);
-  const [selectedRole, setSelectedRole] = useState<AppRole>("manager");
+  const [selectedRole, setSelectedRole] = useState<AppRole>("user");
   const [selectedOrgId, setSelectedOrgId] = useState<string>("");
   const [isSaving, setIsSaving] = useState(false);
   const [isDeletingUser, setIsDeletingUser] = useState(false);
@@ -127,7 +127,7 @@ export default function UsersPage() {
   const [newUserEmail, setNewUserEmail] = useState("");
   const [newUserPassword, setNewUserPassword] = useState("");
   const [newUserFullName, setNewUserFullName] = useState("");
-  const [newUserRole, setNewUserRole] = useState<AppRole>("manager");
+  const [newUserRole, setNewUserRole] = useState<AppRole>("user");
   const [newUserOrgId, setNewUserOrgId] = useState<string>("");
   
 
@@ -247,7 +247,7 @@ export default function UsersPage() {
 
   const openRoleDialog = (user: UserWithRoles) => {
     setSelectedUser(user);
-    setSelectedRole("manager");
+    setSelectedRole("user");
     setSelectedOrgId(user.organization_id || "");
     setIsRoleDialogOpen(true);
   };

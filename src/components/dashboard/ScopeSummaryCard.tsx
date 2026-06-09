@@ -30,7 +30,7 @@ interface ScopeSummaryCardProps {
 }
 
 export function ScopeSummaryCard({ selectedCnpjId, onSelectCnpj }: ScopeSummaryCardProps) {
-  const { organization, isSuperAdmin, isOrgAdmin, isManager } = useAuth();
+  const { organization, isSuperAdmin, isOrgAdmin, isUser } = useAuth();
   const { managerCnpjIds, managerSectorIds, isLoading } = useManagerCnpjs();
   const [cnpjs, setCnpjs] = useState<CnpjOption[]>([]);
   
@@ -61,7 +61,7 @@ export function ScopeSummaryCard({ selectedCnpjId, onSelectCnpj }: ScopeSummaryC
     ? "Super Admin"
     : isOrgAdmin
     ? "Administrador"
-    : isManager
+    : isUser
     ? "Gestor"
     : "Usuário";
 
