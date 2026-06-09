@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useGED } from "@/hooks/useGED";
 import { useAuth } from "@/hooks/useAuth";
+import { UsageIndicator } from "@/components/dashboard/UsageIndicator";
 import { 
   FileText, 
   Upload, 
@@ -49,6 +50,11 @@ export default function DocumentsPage() {
   const [currentFolder, setCurrentFolder] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<"grid" | "list">("list");
   const [isUploadOpen, setIsUploadOpen] = useState(false);
+  const [uploadData, setUploadData] = useState({
+    title: "",
+    document_type: "",
+    page_count: 1
+  });
   const { 
     documents, 
     folders, 
@@ -90,6 +96,8 @@ export default function DocumentsPage() {
           </Button>
         </div>
       </div>
+
+      <UsageIndicator />
 
       {/* Toolbar com Filtros */}
       <div className="flex flex-col sm:flex-row items-center gap-4 bg-card p-3 rounded-lg border shadow-sm">
@@ -209,11 +217,33 @@ export default function DocumentsPage() {
           <div className="space-y-4 py-4">
             <div className="grid gap-2">
               <Label htmlFor="title">Título do Documento</Label>
-              <Input id="title" placeholder="Ex: Contrato_Fornecedor_A" />
+              <Input 
+                id="title" 
+                placeholder="Ex: Contrato_Fornecedor_A" 
+                value={uploadData.title}
+                onChange={(e) => setUploadData({ ...uploadData, title: e.target.value })}
+              />
             </div>
-            <div className="grid gap-2">
-              <Label htmlFor="type">Tipo Documental</Label>
-              <Input id="type" placeholder="Ex: Jurídico, Financeiro..." />
+            <div className="grid grid-cols-2 gap-4">
+              <div className="grid gap-2">
+                <Label htmlFor="type">Tipo Documental</Label>
+                <Input 
+                  id="type" 
+                  placeholder="Ex: Jurídico..." 
+                  value={uploadData.document_type}
+                  onChange={(e) => setUploadData({ ...uploadData, document_type: e.target.value })}
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="pages">Número de Páginas</Label>
+                <Input 
+                  id="pages" 
+                  type="number" 
+                  min={1} 
+                  value={uploadData.page_count}
+                  onChange={(e) => setUploadData({ ...uploadData, page_count: parseInt(e.target.value) || 1 })}
+                />
+              </div>
             </div>
             <div className="border-2 border-dashed rounded-lg p-10 flex flex-col items-center justify-center bg-muted/30">
               <Upload className="h-10 w-10 text-muted-foreground mb-4 opacity-30" />
@@ -224,11 +254,34 @@ export default function DocumentsPage() {
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsUploadOpen(false)}>Cancelar</Button>
             <Button onClick={() => {
-              // Simular upload para a UI
-              setIsUploadOpen(false);
+              if (!uploadData.title) return;
+              
+              const fileInput = document.createElement('input');
+              fileInput.type = 'file';
+              fileInput.onchange = (e) => {
+                const file = (e.target as HTMLInputElement).files?.[0];
+                if (file) {
+                  uploadDocument({
+                    doc: {
+                      title: uploadData.title,
+                      document_type: uploadData.document_type,
+                      page_count: uploadData.page_count,
+                      organization_id: organization?.id,
+                      folder_id: currentFolder,
+                      status: 'active',
+                      tags: [],
+                      keywords: []
+                    },
+                    file
+                  });
+                  setIsUploadOpen(false);
+                  setUploadData({ title: "", document_type: "", page_count: 1 });
+                }
+              };
+              fileInput.click();
             }} disabled={isUploading}>
               {isUploading ? <Loader2 className="animate-spin mr-2 h-4 w-4" /> : null}
-              Confirmar Upload
+              Selecionar Arquivo e Enviar
             </Button>
           </DialogFooter>
         </DialogContent>

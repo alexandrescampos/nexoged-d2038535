@@ -50,6 +50,13 @@ export type Database = {
             foreignKeyName: "departments_organization_id_fkey"
             columns: ["organization_id"]
             isOneToOne: false
+            referencedRelation: "organization_usage"
+            referencedColumns: ["organization_id"]
+          },
+          {
+            foreignKeyName: "departments_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
             referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
@@ -107,6 +114,13 @@ export type Database = {
             foreignKeyName: "employee_documents_organization_id_fkey"
             columns: ["organization_id"]
             isOneToOne: false
+            referencedRelation: "organization_usage"
+            referencedColumns: ["organization_id"]
+          },
+          {
+            foreignKeyName: "employee_documents_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
             referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
@@ -147,6 +161,13 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "folders_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organization_usage"
+            referencedColumns: ["organization_id"]
+          },
           {
             foreignKeyName: "folders_organization_id_fkey"
             columns: ["organization_id"]
@@ -211,6 +232,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "ged_documents"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ged_audit_log_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organization_usage"
+            referencedColumns: ["organization_id"]
           },
           {
             foreignKeyName: "ged_audit_log_organization_id_fkey"
@@ -287,6 +315,7 @@ export type Database = {
           is_favorite: boolean | null
           keywords: string[] | null
           organization_id: string
+          page_count: number | null
           status: string | null
           tags: string[] | null
           taxonomy: string | null
@@ -304,6 +333,7 @@ export type Database = {
           is_favorite?: boolean | null
           keywords?: string[] | null
           organization_id: string
+          page_count?: number | null
           status?: string | null
           tags?: string[] | null
           taxonomy?: string | null
@@ -321,6 +351,7 @@ export type Database = {
           is_favorite?: boolean | null
           keywords?: string[] | null
           organization_id?: string
+          page_count?: number | null
           status?: string | null
           tags?: string[] | null
           taxonomy?: string | null
@@ -334,6 +365,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "folders"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ged_documents_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organization_usage"
+            referencedColumns: ["organization_id"]
           },
           {
             foreignKeyName: "ged_documents_organization_id_fkey"
@@ -414,6 +452,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "organization_api_keys_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organization_usage"
+            referencedColumns: ["organization_id"]
+          },
           {
             foreignKeyName: "organization_api_keys_organization_id_fkey"
             columns: ["organization_id"]
@@ -504,6 +549,13 @@ export type Database = {
             foreignKeyName: "organization_cnpjs_organization_id_fkey"
             columns: ["organization_id"]
             isOneToOne: false
+            referencedRelation: "organization_usage"
+            referencedColumns: ["organization_id"]
+          },
+          {
+            foreignKeyName: "organization_cnpjs_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
             referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
@@ -516,6 +568,8 @@ export type Database = {
           address_number: string | null
           city: string | null
           cnpj: string | null
+          contracted_pages: number | null
+          contracted_storage_gb: number | null
           created_at: string
           email: string | null
           id: string
@@ -540,6 +594,8 @@ export type Database = {
           address_number?: string | null
           city?: string | null
           cnpj?: string | null
+          contracted_pages?: number | null
+          contracted_storage_gb?: number | null
           created_at?: string
           email?: string | null
           id?: string
@@ -564,6 +620,8 @@ export type Database = {
           address_number?: string | null
           city?: string | null
           cnpj?: string | null
+          contracted_pages?: number | null
+          contracted_storage_gb?: number | null
           created_at?: string
           email?: string | null
           id?: string
@@ -614,6 +672,8 @@ export type Database = {
           id: string
           is_active: boolean | null
           is_highlighted: boolean | null
+          max_pages: number | null
+          max_storage_gb: number | null
           max_users: number | null
           name: string
           price_monthly: number | null
@@ -632,6 +692,8 @@ export type Database = {
           id?: string
           is_active?: boolean | null
           is_highlighted?: boolean | null
+          max_pages?: number | null
+          max_storage_gb?: number | null
           max_users?: number | null
           name: string
           price_monthly?: number | null
@@ -650,6 +712,8 @@ export type Database = {
           id?: string
           is_active?: boolean | null
           is_highlighted?: boolean | null
+          max_pages?: number | null
+          max_storage_gb?: number | null
           max_users?: number | null
           name?: string
           price_monthly?: number | null
@@ -723,6 +787,13 @@ export type Database = {
             foreignKeyName: "profiles_organization_id_fkey"
             columns: ["organization_id"]
             isOneToOne: false
+            referencedRelation: "organization_usage"
+            referencedColumns: ["organization_id"]
+          },
+          {
+            foreignKeyName: "profiles_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
             referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
@@ -766,6 +837,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "departments"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sectors_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organization_usage"
+            referencedColumns: ["organization_id"]
           },
           {
             foreignKeyName: "sectors_organization_id_fkey"
@@ -818,6 +896,13 @@ export type Database = {
             foreignKeyName: "stripe_config_organization_id_fkey"
             columns: ["organization_id"]
             isOneToOne: true
+            referencedRelation: "organization_usage"
+            referencedColumns: ["organization_id"]
+          },
+          {
+            foreignKeyName: "stripe_config_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: true
             referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
@@ -858,6 +943,13 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "subscription_cancellations_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organization_usage"
+            referencedColumns: ["organization_id"]
+          },
           {
             foreignKeyName: "subscription_cancellations_organization_id_fkey"
             columns: ["organization_id"]
@@ -928,6 +1020,13 @@ export type Database = {
             foreignKeyName: "support_chat_logs_organization_id_fkey"
             columns: ["organization_id"]
             isOneToOne: false
+            referencedRelation: "organization_usage"
+            referencedColumns: ["organization_id"]
+          },
+          {
+            foreignKeyName: "support_chat_logs_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
             referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
@@ -971,6 +1070,13 @@ export type Database = {
           user_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "system_audit_log_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organization_usage"
+            referencedColumns: ["organization_id"]
+          },
           {
             foreignKeyName: "system_audit_log_organization_id_fkey"
             columns: ["organization_id"]
@@ -1049,6 +1155,13 @@ export type Database = {
             foreignKeyName: "user_audit_log_organization_id_fkey"
             columns: ["organization_id"]
             isOneToOne: false
+            referencedRelation: "organization_usage"
+            referencedColumns: ["organization_id"]
+          },
+          {
+            foreignKeyName: "user_audit_log_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
             referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
@@ -1095,6 +1208,13 @@ export type Database = {
             foreignKeyName: "user_permissions_organization_id_fkey"
             columns: ["organization_id"]
             isOneToOne: false
+            referencedRelation: "organization_usage"
+            referencedColumns: ["organization_id"]
+          },
+          {
+            foreignKeyName: "user_permissions_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
             referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
@@ -1127,6 +1247,13 @@ export type Database = {
             foreignKeyName: "user_roles_organization_id_fkey"
             columns: ["organization_id"]
             isOneToOne: false
+            referencedRelation: "organization_usage"
+            referencedColumns: ["organization_id"]
+          },
+          {
+            foreignKeyName: "user_roles_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
             referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
@@ -1134,7 +1261,18 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      organization_usage: {
+        Row: {
+          contracted_pages: number | null
+          contracted_storage_gb: number | null
+          organization_id: string | null
+          organization_name: string | null
+          used_pages: number | null
+          used_storage_bytes: number | null
+          used_storage_gb: number | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       can_org_add_user: { Args: { _org_id: string }; Returns: boolean }

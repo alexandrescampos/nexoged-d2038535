@@ -14,6 +14,8 @@ export interface Organization {
   logo_url?: string;
   status: string;
   plan: string;
+  contracted_pages: number;
+  contracted_storage_gb: number;
   created_at: string;
   updated_at: string;
 }
@@ -76,6 +78,7 @@ export interface Document {
   status: string;
   tags: string[];
   keywords: string[];
+  page_count: number;
   is_favorite: boolean;
   deleted_at?: string;
   created_by: string;
