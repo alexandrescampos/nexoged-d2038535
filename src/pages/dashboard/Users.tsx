@@ -128,6 +128,22 @@ export default function OrgUsersPage() {
     enabled: !!organization?.id,
   });
 
+  // Fetch org Departments
+  const { data: orgDepartments = [] } = useQuery({
+    queryKey: ["departments-active", organization?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("departments")
+        .select("id, name")
+        .eq("organization_id", organization!.id)
+        .eq("is_active", true)
+        .order("name");
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!organization?.id,
+  });
+
   // Calcular se atingiu o limite de usuários
   const activeUsersCount = users.filter(u => u.is_active !== false).length;
   const maxUsers = organization?.max_users || 0;
@@ -747,10 +763,11 @@ export default function OrgUsersPage() {
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="none">Nenhum</SelectItem>
-                          {/* Listagem real via query futuramente */}
-                          <SelectItem value="financeiro">Financeiro</SelectItem>
-                          <SelectItem value="juridico">Jurídico</SelectItem>
-                          <SelectItem value="ti">Tecnologia</SelectItem>
+                          {orgDepartments.map((dept: any) => (
+                            <SelectItem key={dept.id} value={dept.id}>
+                              {dept.name}
+                            </SelectItem>
+                          ))}
                         </SelectContent>
                       </Select>
                     </div>
