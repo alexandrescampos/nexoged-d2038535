@@ -65,11 +65,20 @@ export default function DocumentsPage() {
   const [viewMode, setViewMode] = useState<"grid" | "list">("list");
   const [isUploadOpen, setIsUploadOpen] = useState(false);
   const [documentToDelete, setDocumentToDelete] = useState<string | null>(null);
+  const [documentToEdit, setDocumentToEdit] = useState<any | null>(null);
   const [uploadData, setUploadData] = useState({
     title: "",
     document_type: "",
-    page_count: 1
+    page_count: 1,
+    description: ""
   });
+  const [editData, setEditData] = useState({
+    title: "",
+    document_type: "",
+    page_count: 1,
+    description: ""
+  });
+
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { 
@@ -82,8 +91,11 @@ export default function DocumentsPage() {
     isUploading,
     deleteDocument,
     toggleFavorite,
-    getDownloadUrl
+    getDownloadUrl,
+    updateDocument,
+    isUpdatingDoc
   } = useGED(currentFolder);
+
   const { organization } = useAuth();
   
   useEffect(() => {
@@ -264,8 +276,23 @@ export default function DocumentsPage() {
                         </DropdownMenuItem>
                         <DropdownMenuItem 
                           className="gap-2"
+                          onClick={() => {
+                            setDocumentToEdit(doc);
+                            setEditData({
+                              title: doc.title || "",
+                              document_type: doc.document_type || "",
+                              page_count: doc.page_count || 1,
+                              description: doc.description || ""
+                            });
+                          }}
+                        >
+                          <FileCode className="h-4 w-4" /> Editar Dados
+                        </DropdownMenuItem>
+                        <DropdownMenuItem 
+                          className="gap-2"
                           onClick={() => toggleFavorite({ id: doc.id, isFavorite: !doc.is_favorite })}
                         >
+
                           <Star className={`h-4 w-4 ${doc.is_favorite ? 'fill-yellow-400 text-yellow-400' : ''}`} /> 
                           {doc.is_favorite ? 'Remover Favorito' : 'Favoritar'}
                         </DropdownMenuItem>
@@ -412,6 +439,78 @@ export default function DocumentsPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Modal de Edição */}
+      <Dialog open={!!documentToEdit} onOpenChange={(open) => !open && setDocumentToEdit(null)}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>Editar Dados do Documento</DialogTitle>
+            <DialogDescription>
+              Atualize as informações metadados do documento.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="grid gap-2">
+              <Label htmlFor="edit-title">Título do Documento</Label>
+              <Input 
+                id="edit-title" 
+                value={editData.title}
+                onChange={(e) => setEditData({ ...editData, title: e.target.value })}
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="grid gap-2">
+                <Label htmlFor="edit-type">Tipo Documental</Label>
+                <Input 
+                  id="edit-type" 
+                  value={editData.document_type}
+                  onChange={(e) => setEditData({ ...editData, document_type: e.target.value })}
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="edit-pages">Número de Páginas</Label>
+                <Input 
+                  id="edit-pages" 
+                  type="number" 
+                  min={1} 
+                  value={editData.page_count}
+                  onChange={(e) => setEditData({ ...editData, page_count: parseInt(e.target.value) || 1 })}
+                />
+              </div>
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="edit-description">Descrição</Label>
+              <Input 
+                id="edit-description" 
+                value={editData.description}
+                onChange={(e) => setEditData({ ...editData, description: e.target.value })}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDocumentToEdit(null)}>Cancelar</Button>
+            <Button 
+              onClick={() => {
+                if (!editData.title) {
+                  toast.error("O título é obrigatório.");
+                  return;
+                }
+                updateDocument({
+                  id: documentToEdit.id,
+                  updates: editData
+                }, {
+                  onSuccess: () => setDocumentToEdit(null)
+                });
+              }} 
+              disabled={isUpdatingDoc}
+            >
+              {isUpdatingDoc ? <Loader2 className="animate-spin mr-2 h-4 w-4" /> : null}
+              Salvar Alterações
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
+

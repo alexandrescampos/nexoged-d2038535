@@ -156,6 +156,22 @@ export const gedRepository = {
     return document;
   },
 
+  async updateDocument(id: string, updates: any) {
+    const { data, error } = await supabase
+      .from("ged_documents")
+      .update({
+        ...updates,
+        updated_at: new Date().toISOString()
+      })
+      .eq("id", id)
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data;
+  },
+
+
   async uploadVersion(documentId: string, versionNumber: number, file: File) {
     // Sanitiza o nome do arquivo: remove acentos, espaços e caracteres especiais
     const sanitizedName = file.name

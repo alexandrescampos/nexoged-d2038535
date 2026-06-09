@@ -72,6 +72,17 @@ export function useGED(folderId: string | null = null, filterFavorites: boolean 
     }
   });
 
+  const updateDocumentMutation = useMutation({
+    mutationFn: ({ id, updates }: { id: string, updates: any }) => gedRepository.updateDocument(id, updates),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["ged-documents"] });
+      toast.success("Documento atualizado com sucesso!");
+    },
+    onError: (error: any) => {
+      toast.error("Erro ao atualizar documento: " + error.message);
+    }
+  });
+
   return {
     documents: documentsData?.data || [],
     totalCount: documentsData?.count || 0,
@@ -81,7 +92,10 @@ export function useGED(folderId: string | null = null, filterFavorites: boolean 
     isUploading: uploadMutation.isPending,
     toggleFavorite: toggleFavoriteMutation.mutate,
     deleteDocument: deleteDocumentMutation.mutate,
+    updateDocument: updateDocumentMutation.mutate,
+    isUpdatingDoc: updateDocumentMutation.isPending,
     searchTerm,
+
     setSearchTerm,
     page,
     setPage,
