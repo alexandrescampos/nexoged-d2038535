@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -56,10 +56,23 @@ const formatDateTime = (value: string | null) => {
 
 export default function ApiIntegrationSettings({ organizationId, organizationName }: ApiIntegrationSettingsProps) {
   const queryClient = useQueryClient();
-  const { isSuperAdmin } = useAuth();
+  const { isSuperAdmin, user, organization } = useAuth();
   const [revealedKey, setRevealedKey] = useState<string | null>(null);
   const [logEndpointFilter, setLogEndpointFilter] = useState<string>("all");
   const [logDaysFilter, setLogDaysFilter] = useState<string>("30");
+
+  useEffect(() => {
+    if (user?.id && organization?.id) {
+      supabase.from("user_audit_log").insert({
+        performed_by: user.id,
+        organization_id: organization.id,
+        action: "api_settings_view",
+        source: "api-settings",
+        target_user_id: user.id,
+        details: { organization_id: organizationId }
+      } as any).then(() => {});
+    }
+  }, [organizationId, user?.id, organization?.id]);
 
   const apiEndpoints = useMemo(
     () => {
