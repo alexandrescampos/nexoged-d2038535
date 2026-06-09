@@ -16,11 +16,11 @@ export function TopBrandBar({
   const systemLogo = systemSettings?.system_logo;
 
   return (
-    <div className="h-40 md:h-60 border-b border-border bg-card flex items-center justify-between px-4 md:px-6 shadow-md relative z-10">
+    <div className="h-28 md:h-36 border-b border-border bg-card flex items-center justify-between px-4 md:px-6 shadow-md relative z-10">
       {/* Esquerda: Logo da Organização (apenas se não for SuperAdmin) */}
       <div className="flex-1 flex items-center">
         {!isSuperAdmin && (
-          <Avatar className="h-32 w-32 md:h-56 md:w-56">
+          <Avatar className="h-24 w-24 md:h-32 md:w-32">
             <AvatarImage src={organizationLogo || undefined} alt={organizationName} />
             <AvatarFallback className="bg-primary/10 text-primary text-2xl font-medium">
               {organizationName?.slice(0, 2).toUpperCase() || "ORG"}
@@ -38,11 +38,11 @@ export function TopBrandBar({
           <img 
             src={systemLogo} 
             alt="Logo do Sistema" 
-            className="h-28 md:h-52 w-auto max-w-full object-contain"
+            className="h-20 md:h-28 w-auto max-w-full object-contain"
           />
         ) : (
-          <div className="h-28 w-28 md:h-52 md:w-52 rounded bg-primary/10 flex items-center justify-center">
-            <span className="text-2xl md:text-4xl font-bold text-primary">NW</span>
+          <div className="h-20 w-20 md:h-28 md:w-28 rounded bg-primary/10 flex items-center justify-center">
+            <span className="text-xl md:text-2xl font-bold text-primary">NW</span>
           </div>
         )}
       </div>
