@@ -80,7 +80,8 @@ export default function DocumentsPage() {
     setSearchTerm,
     uploadDocument,
     isUploading,
-    deleteDocument
+    deleteDocument,
+    getDownloadUrl
   } = useGED(currentFolder);
   const { organization } = useAuth();
   
@@ -213,7 +214,19 @@ export default function DocumentsPage() {
                   </div>
 
                   <div className="flex items-center gap-1">
-                    <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground group-hover:text-primary">
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      className="h-8 w-8 text-muted-foreground group-hover:text-primary"
+                      onClick={async () => {
+                        try {
+                          const url = await getDownloadUrl(doc.id);
+                          window.open(url, '_blank');
+                        } catch (error) {
+                          toast.error("Erro ao visualizar arquivo.");
+                        }
+                      }}
+                    >
                       <Eye className="h-4 w-4" />
                     </Button>
                     <DropdownMenu>
@@ -223,7 +236,25 @@ export default function DocumentsPage() {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end" className="w-48">
-                        <DropdownMenuItem className="gap-2"><Download className="h-4 w-4" /> Baixar</DropdownMenuItem>
+                        <DropdownMenuItem 
+                          className="gap-2"
+                          onClick={async () => {
+                            try {
+                              const url = await getDownloadUrl(doc.id);
+                              // Força o download criando um link temporário
+                              const link = document.createElement('a');
+                              link.href = url;
+                              link.download = doc.title;
+                              document.body.appendChild(link);
+                              link.click();
+                              document.body.removeChild(link);
+                            } catch (error) {
+                              toast.error("Erro ao baixar arquivo.");
+                            }
+                          }}
+                        >
+                          <Download className="h-4 w-4" /> Baixar
+                        </DropdownMenuItem>
                         <DropdownMenuItem className="gap-2"><Star className="h-4 w-4" /> {doc.is_favorite ? 'Remover Favorito' : 'Favoritar'}</DropdownMenuItem>
                         <DropdownMenuItem className="gap-2"><History className="h-4 w-4" /> Versões</DropdownMenuItem>
                         <DropdownMenuSeparator />
