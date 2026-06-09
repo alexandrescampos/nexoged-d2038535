@@ -17,6 +17,9 @@ const ACTION_LABELS: Record<string, string> = {
   reactivated: "Reativado",
   role_changed: "Role alterada",
   password_reset: "Senha redefinida",
+  login: "Login",
+  logout: "Logout",
+  login_failed: "Falha de Login",
 };
 
 const SOURCE_LABELS: Record<string, string> = {
@@ -32,6 +35,8 @@ function getActionBadgeVariant(action: string) {
     case "created": return "default";
     case "deactivated": return "destructive";
     case "reactivated": return "secondary";
+    case "login": return "outline";
+    case "login_failed": return "destructive";
     default: return "outline";
   }
 }
@@ -135,9 +140,12 @@ export default function UserAuditLog() {
               <SelectItem value="all">Todas ações</SelectItem>
               <SelectItem value="created">Criado</SelectItem>
               <SelectItem value="deactivated">Desativado</SelectItem>
-              <SelectItem value="reactivated">Reativado</SelectItem>
-              <SelectItem value="role_changed">Role alterada</SelectItem>
-              <SelectItem value="password_reset">Senha redefinida</SelectItem>
+               <SelectItem value="reactivated">Reativado</SelectItem>
+               <SelectItem value="role_changed">Role alterada</SelectItem>
+               <SelectItem value="password_reset">Senha redefinida</SelectItem>
+               <SelectItem value="login">Login</SelectItem>
+               <SelectItem value="logout">Logout</SelectItem>
+               <SelectItem value="login_failed">Falha de Login</SelectItem>
             </SelectContent>
           </Select>
           <Select value={sourceFilter} onValueChange={setSourceFilter}>
