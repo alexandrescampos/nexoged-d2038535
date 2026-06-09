@@ -85,7 +85,15 @@ export const gedRepository = {
 
     // 2. Se houver arquivo, fazer upload e criar versão
     if (file && document) {
-      await this.uploadVersion(document.id, 1, file);
+      try {
+        await this.uploadVersion(document.id, 1, file);
+      } catch (error) {
+        await supabase
+          .from("ged_documents")
+          .update({ status: 'deleted', updated_at: new Date().toISOString() })
+          .eq("id", document.id);
+        throw error;
+      }
     }
 
     return document;
