@@ -1038,7 +1038,7 @@ export default function OrgUsersPage() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="org_admin">Administrador</SelectItem>
-                  <SelectItem value="manager">Gestor</SelectItem>
+                  <SelectItem value="manager">Usuário</SelectItem>
                 </SelectContent>
               </Select>
             </div>
