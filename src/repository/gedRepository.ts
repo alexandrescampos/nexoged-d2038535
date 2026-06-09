@@ -173,5 +173,25 @@ export const gedRepository = {
 
     if (error) throw error;
     return true;
+  },
+
+  async getDownloadUrl(documentId: string) {
+    // Buscar a versão mais recente
+    const { data: version, error: versionError } = await supabase
+      .from("ged_document_versions")
+      .select("file_path")
+      .eq("document_id", documentId)
+      .order("version_number", { ascending: false })
+      .limit(1)
+      .single();
+
+    if (versionError) throw versionError;
+
+    const { data, error } = await supabase.storage
+      .from("ged_files")
+      .createSignedUrl(version.file_path, 3600); // URL válida por 1 hora
+
+    if (error) throw error;
+    return data.signedUrl;
   }
 };
