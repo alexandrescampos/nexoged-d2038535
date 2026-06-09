@@ -16,7 +16,7 @@ export const gedRepository = {
       .from("ged_documents")
       .select(`
         *,
-        versions:ged_document_versions(mime_type, version_number)
+        versions:ged_document_versions(mime_type, version_number, file_name)
       `, { count: "exact" })
       .eq("organization_id", params.organizationId);
 
@@ -52,10 +52,17 @@ export const gedRepository = {
       .range(from, to);
 
     if (error) throw error;
-    const formattedData = (data || []).map(doc => ({
-      ...doc,
-      mime_type: (doc as any).versions?.[0]?.mime_type || 'application/octet-stream'
-    }));
+    const formattedData = (data || []).map(doc => {
+      const versions = (doc as any).versions || [];
+      const latestVersion = [...versions].sort((a, b) => (b.version_number || 0) - (a.version_number || 0))[0];
+
+      return {
+        ...doc,
+        has_file: versions.length > 0,
+        file_name: latestVersion?.file_name,
+        mime_type: latestVersion?.mime_type || 'application/octet-stream'
+      };
+    });
 
     return { data: formattedData as unknown as Document[], count };
   },
@@ -179,19 +186,22 @@ export const gedRepository = {
     // Buscar a versão mais recente
     const { data: version, error: versionError } = await supabase
       .from("ged_document_versions")
-      .select("file_path")
+      .select("file_path, file_name")
       .eq("document_id", documentId)
       .order("version_number", { ascending: false })
       .limit(1)
-      .single();
+      .maybeSingle();
 
     if (versionError) throw versionError;
+    if (!version?.file_path) {
+      throw new Error("Este documento não possui arquivo anexado.");
+    }
 
     const { data, error } = await supabase.storage
       .from("ged_files")
       .createSignedUrl(version.file_path, 3600); // URL válida por 1 hora
 
     if (error) throw error;
-    return data.signedUrl;
+    return { url: data.signedUrl, fileName: version.file_name };
   }
 };
