@@ -601,7 +601,7 @@ export default function OrgUsersPage() {
         return (
           <Badge className="bg-green-500/10 text-green-600 border-green-500/20">
             <Shield className="h-3 w-3 mr-1" />
-            Gestor
+            Usuário
           </Badge>
         );
       default:
@@ -666,7 +666,7 @@ export default function OrgUsersPage() {
                 <SelectContent>
                   <SelectItem value="all">Todos os tipos</SelectItem>
                   <SelectItem value="org_admin">Administrador</SelectItem>
-                  <SelectItem value="manager">Gestor</SelectItem>
+                  <SelectItem value="manager">Usuário</SelectItem>
                   <SelectItem value="none">Sem role</SelectItem>
                 </SelectContent>
               </Select>
