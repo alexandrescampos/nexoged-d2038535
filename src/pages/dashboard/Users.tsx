@@ -1132,7 +1132,7 @@ export default function OrgUsersPage() {
             <AlertDialogDescription>
               Esta ação não pode ser desfeita. O usuário <strong>{userToDelete?.full_name}</strong> será permanentemente removido do sistema.
               <br /><br />
-              <em>Nota: Somente usuários sem histórico de entregas ou solicitações podem ser excluídos.</em>
+              <em>Nota: Somente usuários sem histórico relevante podem ser excluídos.</em>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
