@@ -505,7 +505,34 @@ export default function PlansPage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="max_users">Max Funcionários</Label>
+                <Label htmlFor="max_pages">Páginas Máx.</Label>
+                <Input
+                  id="max_pages"
+                  type="number"
+                  value={formData.max_pages}
+                  onChange={(e) =>
+                    setFormData((prev) => ({ ...prev, max_pages: e.target.value }))
+                  }
+                  placeholder="1000"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="max_storage_gb">Espaço Máx. (GB)</Label>
+                <Input
+                  id="max_storage_gb"
+                  type="number"
+                  value={formData.max_storage_gb}
+                  onChange={(e) =>
+                    setFormData((prev) => ({ ...prev, max_storage_gb: e.target.value }))
+                  }
+                  placeholder="10"
+                />
+              </div>
+              <div className="space-y-2 opacity-50">
+                <Label htmlFor="max_users">Max Funcionários (Legacy)</Label>
                 <Input
                   id="max_users"
                   type="number"
