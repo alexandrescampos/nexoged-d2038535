@@ -90,7 +90,14 @@ export default function Dashboard() {
     { title: "Documentos Vigentes", value: stats.vigenteDocuments, icon: Shield, color: "text-green-500", description: "Dentro do prazo" },
     { title: "Documentos Expirados", value: stats.expiredDocuments, icon: Clock, color: "text-destructive", description: "Ação necessária" },
     { title: "Usuários Ativos", value: stats.totalUsers, icon: Users, color: "text-purple-500", description: "Acessos liberados" },
-    { title: "Documentos Pendentes", value: stats.pendingDocuments, icon: FileText, color: "text-orange-500", description: "Aguardando ação" },
+    { 
+      title: "Documentos Pendentes", 
+      value: stats.pendingDocuments, 
+      icon: FileText, 
+      color: "text-orange-500", 
+      description: "Aguardando ação",
+      tooltip: "Documentos cadastrados na organização cujo status é 'pending' (pendente). São arquivos que foram criados/enviados mas ainda requerem alguma ação para serem considerados ativos — por exemplo: aprovação, classificação, revisão, assinatura ou conclusão do upload. O cálculo é feito contando todos os registros em ged_documents da sua organização com status = 'pending'."
+    },
     { title: "Total de Páginas", value: stats.totalPages, icon: LayoutDashboard, color: "text-indigo-500", description: "Volume total" },
   ];
 
