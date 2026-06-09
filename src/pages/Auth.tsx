@@ -118,12 +118,12 @@ export default function Auth() {
       <div className="w-full max-w-md animate-fade-in">
         {/* Logo/Brand */}
         <div className="text-center mb-8">
-          <div className="flex justify-center mb-6 w-full">
+          <div className="flex justify-center mb-6 w-full px-4">
             {systemLogo ? (
-              <img src={systemLogo} alt="Logo do Sistema" className="w-full max-h-[480px] object-contain" />
+              <img src={systemLogo} alt="Logo do Sistema" className="w-full max-h-[200px] md:max-h-[480px] object-contain" />
             ) : (
-              <div className="h-80 w-80 rounded-2xl bg-primary/10 flex items-center justify-center">
-                <Clock className="h-40 w-40 text-primary" />
+              <div className="h-40 w-40 md:h-80 md:w-80 rounded-2xl bg-primary/10 flex items-center justify-center">
+                <Clock className="h-20 w-20 md:h-40 md:w-40 text-primary" />
               </div>
             )}
           </div>
