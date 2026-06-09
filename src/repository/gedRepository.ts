@@ -67,6 +67,63 @@ export const gedRepository = {
     return { data: formattedData as unknown as Document[], count };
   },
 
+  async getRecentDocuments(params: {
+    organizationId: string;
+    userId: string;
+    limit?: number;
+  }) {
+    // Get recent actions from audit log for this user
+    const { data: recentActions, error: logError } = await supabase
+      .from("ged_audit_log")
+      .select("document_id, created_at")
+      .eq("organization_id", params.organizationId)
+      .eq("user_id", params.userId)
+      .not("document_id", "is", null)
+      .in("action", ["viewed", "downloaded", "uploaded", "created"])
+      .order("created_at", { ascending: false })
+      .limit(params.limit || 50);
+
+    if (logError) throw logError;
+
+    if (!recentActions || recentActions.length === 0) {
+      return { data: [], count: 0 };
+    }
+
+    // Extract unique document IDs in order of recency
+    const documentIds = Array.from(new Set(recentActions.map(a => a.document_id)));
+    
+    // Fetch the actual documents
+    const { data: docs, error: docError } = await supabase
+      .from("ged_documents")
+      .select(`
+        *,
+        versions:ged_document_versions(mime_type, version_number, file_name)
+      `)
+      .in("id", documentIds)
+      .neq("status", "deleted");
+
+    if (docError) throw docError;
+
+    // Sort documents according to the order in documentIds (recency)
+    const sortedDocs = documentIds
+      .map(id => docs.find(d => d.id === id))
+      .filter(Boolean) as any[];
+
+    const formattedData = sortedDocs.map(doc => {
+      const versions = doc.versions || [];
+      const latestVersion = [...versions].sort((a, b) => (b.version_number || 0) - (a.version_number || 0))[0];
+
+      return {
+        ...doc,
+        has_file: versions.length > 0,
+        file_name: latestVersion?.file_name,
+        mime_type: latestVersion?.mime_type || 'application/octet-stream'
+      };
+    });
+
+    return { data: formattedData as unknown as Document[], count: formattedData.length };
+  },
+
   async createDocument(doc: any, file?: File) {
     // 1. Inserir documento
     const { data: { user } } = await supabase.auth.getUser();
