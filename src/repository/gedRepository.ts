@@ -179,6 +179,16 @@ export const gedRepository = {
     }]);
     if (error) console.error("Erro ao registrar log:", error);
   },
+  
+  async toggleFavorite(documentId: string, isFavorite: boolean) {
+    const { error } = await supabase
+      .from("ged_documents")
+      .update({ is_favorite: isFavorite, updated_at: new Date().toISOString() })
+      .eq("id", documentId);
+
+    if (error) throw error;
+    return true;
+  },
 
   async deleteDocument(documentId: string) {
     const nowIso = new Date().toISOString();
