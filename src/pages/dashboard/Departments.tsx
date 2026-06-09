@@ -1,17 +1,17 @@
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import { useDepartments } from "@/hooks/useDepartments";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { 
   Plus, 
   Search, 
   FolderTree, 
-  MoreVertical, 
   Pencil, 
   Trash2,
-  ChevronRight,
-  ChevronDown
+  Loader2,
+  CheckCircle2
 } from "lucide-react";
 import {
   Table,
@@ -22,17 +22,42 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { useAuth } from "@/hooks/useAuth";
 
 export default function DepartmentsPage() {
-  const { departments, isLoading } = useDepartments();
+  const { organization } = useAuth();
+  const { departments, isLoading, createDepartment, isCreating } = useDepartments();
   const [searchTerm, setSearchTerm] = useState("");
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [newDeptName, setNewDeptName] = useState("");
+  const [newDeptCode, setNewDeptCode] = useState("");
 
-  const filteredDepartments = useMemo(() => {
-    return departments.filter(d => 
-      d.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      d.code?.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-  }, [departments, searchTerm]);
+  const filteredDepartments = departments.filter(d => 
+    d.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    d.code?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const handleCreate = () => {
+    if (!newDeptName.trim() || !organization?.id) return;
+    createDepartment({
+      name: newDeptName.trim(),
+      code: newDeptCode.trim() || null,
+      organization_id: organization.id,
+      is_active: true,
+      parent_id: null
+    });
+    setNewDeptName("");
+    setNewDeptCode("");
+    setIsAddDialogOpen(false);
+  };
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -41,7 +66,7 @@ export default function DepartmentsPage() {
           <h1 className="text-3xl font-bold text-foreground">Departamentos</h1>
           <p className="text-muted-foreground">Gerencie a estrutura organizacional da sua empresa</p>
         </div>
-        <Button className="gap-2">
+        <Button className="gap-2" onClick={() => setIsAddDialogOpen(true)}>
           <Plus className="h-4 w-4" />
           Novo Departamento
         </Button>
@@ -49,16 +74,14 @@ export default function DepartmentsPage() {
 
       <Card>
         <CardHeader>
-          <div className="flex items-center gap-2">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Buscar por nome ou código..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
-              />
-            </div>
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Buscar por nome ou código..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10"
+            />
           </div>
         </CardHeader>
         <CardContent>
@@ -74,7 +97,9 @@ export default function DepartmentsPage() {
             <TableBody>
               {isLoading ? (
                 <TableRow>
-                  <TableCell colSpan={4} className="text-center py-8">Carregando...</TableCell>
+                  <TableCell colSpan={4} className="text-center py-8">
+                    <Loader2 className="h-6 w-6 animate-spin mx-auto text-muted-foreground" />
+                  </TableCell>
                 </TableRow>
               ) : filteredDepartments.length === 0 ? (
                 <TableRow>
@@ -112,6 +137,44 @@ export default function DepartmentsPage() {
           </Table>
         </CardContent>
       </Card>
+
+      <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Novo Departamento</DialogTitle>
+            <DialogDescription>
+              Crie um novo departamento para organizar seus documentos e usuários.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="name">Nome do Departamento</Label>
+              <Input 
+                id="name" 
+                value={newDeptName} 
+                onChange={(e) => setNewDeptName(e.target.value)} 
+                placeholder="Ex: Financeiro, Jurídico..." 
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="code">Código Interno (Opcional)</Label>
+              <Input 
+                id="code" 
+                value={newDeptCode} 
+                onChange={(e) => setNewDeptCode(e.target.value)} 
+                placeholder="Ex: FIN-01" 
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>Cancelar</Button>
+            <Button onClick={handleCreate} disabled={isCreating || !newDeptName.trim()}>
+              {isCreating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <CheckCircle2 className="mr-2 h-4 w-4" />}
+              Criar Departamento
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
