@@ -27,7 +27,7 @@ import {
   SidebarTrigger,
   useSidebar,
 } from "@/components/ui/sidebar";
-import { LayoutDashboard, Building2, CreditCard, Users, Settings, LogOut, HelpCircle, ChevronDown, User, FileText, Shield, LucideIcon, Info, Database, MessageSquare } from "lucide-react";
+import { LayoutDashboard, Building2, CreditCard, Users, Settings, LogOut, HelpCircle, ChevronDown, User, FileText, Shield, LucideIcon, Info, MessageSquare } from "lucide-react";
 import { TabsProvider, useTabs } from "@/contexts/TabsContext";
 import { TabsBar } from "@/components/TabsBar";
 import { SupportChatWidget } from "@/components/dashboard/SupportChatWidget";
@@ -57,7 +57,6 @@ const menuGroups: MenuGroup[] = [
       { title: "Usuários", url: "/super-admin/users", icon: Users },
       { title: "Documentos Legais", url: "/super-admin/legal", icon: FileText },
       { title: "Auditoria", url: "/super-admin/audit", icon: Shield },
-      { title: "Base CAEPI", url: "/super-admin/caepi", icon: Database },
       { title: "Análise Chatbot", url: "/super-admin/chatbot-analytics", icon: MessageSquare },
     ],
   },

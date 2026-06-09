@@ -26,7 +26,7 @@ import StripeSettingsPage from "./pages/super-admin/StripeSettings";
 import SuperAdminSettings from "./pages/super-admin/Settings";
 import SuperAdminProfile from "./pages/super-admin/Profile";
 import AuditLogPage from "./pages/super-admin/AuditLog";
-import CaepiSyncPage from "./pages/super-admin/CaepiSync";
+
 import ChatbotAnalyticsPage from "./pages/super-admin/ChatbotAnalytics";
 
 
@@ -34,23 +34,6 @@ import ChatbotAnalyticsPage from "./pages/super-admin/ChatbotAnalytics";
 // Org Dashboard Pages
 import OrgDashboard from "./pages/dashboard/Dashboard";
 import OrgUsersPage from "./pages/dashboard/Users";
-import EpiCategoriesPage from "./pages/dashboard/EpiCategories";
-import EpiCatalogPage from "./pages/dashboard/EpiCatalog";
-import EpiDeliveriesPage from "./pages/dashboard/EpiDeliveries";
-import SectorsPage from "./pages/dashboard/Sectors";
-import JobFunctionsPage from "./pages/dashboard/JobFunctions";
-import EmployeesPage from "./pages/dashboard/Employees";
-import SectorFunctionEpisPage from "./pages/dashboard/SectorFunctionEpis";
-import EpiExchangesPage from "./pages/dashboard/EpiExchanges";
-import EpiExpiringReportPage from "./pages/dashboard/EpiExpiringReport";
-import EpiRequestsPage from "./pages/dashboard/EpiRequests";
-import EpiDamageReportPage from "./pages/dashboard/EpiDamageReport";
-import JobFunctionsWithoutEpisReportPage from "./pages/dashboard/JobFunctionsWithoutEpisReport";
-import DuplicateJobFunctionsPage from "./pages/dashboard/DuplicateJobFunctions";
-import DuplicateEpisPage from "./pages/dashboard/DuplicateEpis";
-import CnpjStockSharingPage from "./pages/dashboard/CnpjStockSharing";
-
-
 import BillingPage from "./pages/dashboard/Billing";
 import PaymentSuccessPage from "./pages/dashboard/PaymentSuccess";
 import PaymentCanceledPage from "./pages/dashboard/PaymentCanceled";
@@ -116,7 +99,7 @@ const App = () => {
               <Route path="settings" element={<SuperAdminSettings />} />
               <Route path="profile" element={<SuperAdminProfile />} />
               <Route path="audit" element={<AuditLogPage />} />
-              <Route path="caepi" element={<CaepiSyncPage />} />
+              
               <Route path="chatbot-analytics" element={<ChatbotAnalyticsPage />} />
               <Route path="about" element={<SuperAdminAboutPage />} />
             </Route>
@@ -131,22 +114,6 @@ const App = () => {
               }
             >
               <Route index element={<OrgDashboard />} />
-              <Route path="epi-categories" element={<AdminOnlyRoute><EpiCategoriesPage /></AdminOnlyRoute>} />
-              <Route path="epi-catalog" element={<EpiCatalogPage />} />
-              <Route path="epi-deliveries" element={<EpiDeliveriesPage />} />
-              <Route path="epi-exchanges" element={<EpiExchangesPage />} />
-              <Route path="epi-expiring-report" element={<EpiExpiringReportPage />} />
-              <Route path="sector-function-epis" element={<AdminOnlyRoute><SectorFunctionEpisPage /></AdminOnlyRoute>} />
-              <Route path="sectors" element={<AdminOnlyRoute><SectorsPage /></AdminOnlyRoute>} />
-              <Route path="job-functions" element={<AdminOnlyRoute><JobFunctionsPage /></AdminOnlyRoute>} />
-              <Route path="employees" element={<EmployeesPage />} />
-              <Route path="epi-requests" element={<EpiRequestsPage />} />
-              <Route path="epi-damage-report" element={<AdminOnlyRoute><EpiDamageReportPage /></AdminOnlyRoute>} />
-              <Route path="job-functions-without-epis" element={<AdminOnlyRoute><JobFunctionsWithoutEpisReportPage /></AdminOnlyRoute>} />
-              <Route path="duplicate-job-functions" element={<AdminOnlyRoute><DuplicateJobFunctionsPage /></AdminOnlyRoute>} />
-              <Route path="duplicate-epis" element={<AdminOnlyRoute><DuplicateEpisPage /></AdminOnlyRoute>} />
-              <Route path="cnpj-stock-sharing" element={<AdminOnlyRoute><CnpjStockSharingPage /></AdminOnlyRoute>} />
-              
               <Route path="users" element={<AdminOnlyRoute><OrgUsersPage /></AdminOnlyRoute>} />
               <Route path="permissions" element={<AdminOnlyRoute><PermissionsPage /></AdminOnlyRoute>} />
               <Route path="billing" element={<AdminOnlyRoute><BillingPage /></AdminOnlyRoute>} />

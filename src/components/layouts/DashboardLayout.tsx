@@ -29,7 +29,6 @@ import {
 } from "@/components/ui/sidebar";
 import {
   LayoutDashboard,
-  HardHat,
   PackageCheck,
   Tags,
   ClipboardList,
@@ -42,11 +41,8 @@ import {
   Shield,
   FileText,
   Building2,
-  Briefcase,
-  UserCheck,
   LucideIcon,
   RefreshCw,
-  AlertTriangle,
   Info,
   Copy,
   Share2,
@@ -79,37 +75,18 @@ const menuGroups: MenuGroup[] = [
   {
     label: "Operacional",
     items: [
-      { title: "Solicitações de EPI", url: "/dashboard/epi-requests", icon: FileText, managerAllowed: true },
-      { title: "Entregas de EPI", url: "/dashboard/epi-deliveries", icon: PackageCheck, hideForManager: true },
-      { title: "Troca de EPI", url: "/dashboard/epi-exchanges", icon: RefreshCw, hideForManager: true },
+      { title: "Documentos", url: "/dashboard/documents", icon: FileText, managerAllowed: true },
     ],
   },
   {
-    label: "Gestão e Relatórios",
+    label: "Gestão",
     items: [
-      { title: "Relatório Vencimento", url: "/dashboard/epi-expiring-report", icon: ClipboardList },
-      { title: "Análise de Danos", url: "/dashboard/epi-damage-report", icon: AlertTriangle, adminOnly: true },
-      { title: "Funções sem EPIs", url: "/dashboard/job-functions-without-epis", icon: Briefcase, adminOnly: true },
-      { title: "Funções Duplicadas", url: "/dashboard/duplicate-job-functions", icon: Copy, adminOnly: true },
-      { title: "EPIs Duplicados", url: "/dashboard/duplicate-epis", icon: Copy, adminOnly: true },
-    ],
-  },
-  {
-    label: "Cadastros Base",
-    items: [
-      { title: "Setores", url: "/dashboard/sectors", icon: Building2, adminOnly: true },
-      { title: "Funções", url: "/dashboard/job-functions", icon: Briefcase, adminOnly: true },
-      { title: "Funcionários", url: "/dashboard/employees", icon: UserCheck, managerAllowed: true },
-      { title: "Categorias de EPI", url: "/dashboard/epi-categories", icon: Tags, adminOnly: true },
-      { title: "Catálogo de EPIs", url: "/dashboard/epi-catalog", icon: HardHat, hideForManager: true },
-      { title: "EPIs por Função", url: "/dashboard/sector-function-epis", icon: ClipboardList, adminOnly: true },
       { title: "Usuários", url: "/dashboard/users", icon: Users, adminOnly: true },
     ],
   },
   {
     label: "Configurações",
     items: [
-      { title: "Compart. de Estoque", url: "/dashboard/cnpj-stock-sharing", icon: Share2, adminOnly: true },
       { title: "Planos", url: "/dashboard/billing", icon: CreditCard, adminOnly: true },
       { title: "Configurações", url: "/dashboard/settings", icon: Settings, hideForManager: true },
       { title: "Sobre", url: "/dashboard/about", icon: Info },
