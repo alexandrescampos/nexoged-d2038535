@@ -181,9 +181,10 @@ export const gedRepository = {
   },
 
   async deleteDocument(documentId: string) {
+    const nowIso = new Date().toISOString();
     const { error } = await supabase
       .from("ged_documents")
-      .update({ status: 'deleted', updated_at: new Date().toISOString() })
+      .update({ status: 'deleted', deleted_at: nowIso, updated_at: nowIso })
       .eq("id", documentId);
 
     if (error) throw error;
