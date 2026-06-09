@@ -188,9 +188,10 @@ export default function RecentPage() {
                         </DropdownMenuItem>
                         <DropdownMenuItem 
                           className="gap-2"
-                          onClick={() => toggleFavorite({ id: doc.id, isFavorite: false })}
+                          onClick={() => toggleFavorite({ id: doc.id, isFavorite: !doc.is_favorite })}
                         >
-                          <Star className="h-4 w-4" /> Remover Favorito
+                          <Star className={`h-4 w-4 ${doc.is_favorite ? 'fill-yellow-400 text-yellow-400' : ''}`} /> 
+                          {doc.is_favorite ? 'Remover Favorito' : 'Favoritar'}
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem 
