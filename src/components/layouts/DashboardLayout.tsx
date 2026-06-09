@@ -29,9 +29,10 @@ import {
 } from "@/components/ui/sidebar";
 import {
   LayoutDashboard,
-  PackageCheck,
-  Tags,
-  ClipboardList,
+  Search,
+  Star,
+  Clock,
+  Plus,
   Users,
   Settings,
   LogOut,
@@ -67,27 +68,31 @@ interface MenuGroup {
 
 const menuGroups: MenuGroup[] = [
   {
-    label: "Visão Geral",
+    label: "Geral",
     items: [
       { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
+      { title: "Inserir Documento", url: "/dashboard/documents/new", icon: Plus, managerAllowed: true },
+      { title: "Pesquisar", url: "/dashboard/documents/search", icon: Search, managerAllowed: true },
     ],
   },
   {
-    label: "Operacional",
+    label: "Acesso Rápido",
     items: [
-      { title: "Documentos", url: "/dashboard/documents", icon: FileText, managerAllowed: true },
+      { title: "Favoritos", url: "/dashboard/favorites", icon: Star, managerAllowed: true },
+      { title: "Últimos Acessos", url: "/dashboard/recent", icon: Clock, managerAllowed: true },
     ],
   },
   {
     label: "Gestão",
     items: [
+      { title: "Documentos", url: "/dashboard/documents", icon: FileText, managerAllowed: true },
+      { title: "Departamentos", url: "/dashboard/departments", icon: Building2, adminOnly: true },
       { title: "Usuários", url: "/dashboard/users", icon: Users, adminOnly: true },
     ],
   },
   {
     label: "Configurações",
     items: [
-      { title: "Planos", url: "/dashboard/billing", icon: CreditCard, adminOnly: true },
       { title: "Configurações", url: "/dashboard/settings", icon: Settings, hideForManager: true },
       { title: "Sobre", url: "/dashboard/about", icon: Info },
     ],

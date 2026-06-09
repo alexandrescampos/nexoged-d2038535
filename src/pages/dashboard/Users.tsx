@@ -739,39 +739,42 @@ export default function OrgUsersPage() {
                           </SelectContent>
                         </Select>
                     </div>
-                    {(newUserRole === "manager" || newUserRole === "org_admin") && orgCnpjs.length > 0 && (
-                      <div className="space-y-2">
-                        <Label className="flex items-center gap-2">
-                          <Building2 className="h-4 w-4" />
-                          {newUserRole === "manager" ? "CNPJs do Gestor" : "CNPJs do Administrador"}
-                        </Label>
-                        <p className="text-xs text-muted-foreground">
-                          {newUserRole === "manager"
-                            ? "Selecione quais empresas/filiais este gestor poderá acessar"
-                            : "Selecione os CNPJs deste administrador. Deixe vazio para acesso a todos os CNPJs."}
-                        </p>
-                        <div className="space-y-2 max-h-40 overflow-y-auto border rounded-md p-3">
-                          {orgCnpjs.map((cnpj) => (
-                            <div key={cnpj.id} className="flex items-center space-x-2">
-                              <Checkbox
-                                id={`new-cnpj-${cnpj.id}`}
-                                checked={newUserCnpjIds.includes(cnpj.id)}
-                                onCheckedChange={(checked) => {
-                                  setNewUserCnpjIds(prev =>
-                                    checked
-                                      ? [...prev, cnpj.id]
-                                      : prev.filter(id => id !== cnpj.id)
-                                  );
-                                }}
-                              />
-                              <Label htmlFor={`new-cnpj-${cnpj.id}`} className="text-sm font-normal cursor-pointer">
-                                {cnpj.company_name} ({formatCNPJ(cnpj.cnpj)})
-                              </Label>
-                            </div>
-                          ))}
+                    <div className="space-y-2">
+                      <Label>Departamento</Label>
+                      <Select>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione um departamento" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="none">Nenhum</SelectItem>
+                          {/* Listagem real via query futuramente */}
+                          <SelectItem value="financeiro">Financeiro</SelectItem>
+                          <SelectItem value="juridico">Jurídico</SelectItem>
+                          <SelectItem value="ti">Tecnologia</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Permissões Especiais</Label>
+                      <div className="grid grid-cols-2 gap-2 border rounded-md p-3">
+                        <div className="flex items-center space-x-2">
+                          <Checkbox id="perm-view" defaultChecked />
+                          <Label htmlFor="perm-view" className="text-xs font-normal">Visualizar Documentos</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <Checkbox id="perm-insert" />
+                          <Label htmlFor="perm-insert" className="text-xs font-normal">Inserir Documentos</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <Checkbox id="perm-edit" />
+                          <Label htmlFor="perm-edit" className="text-xs font-normal">Editar Documentos</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <Checkbox id="perm-admin" />
+                          <Label htmlFor="perm-admin" className="text-xs font-normal">Administrar Sistema</Label>
                         </div>
                       </div>
-                    )}
+                    </div>
                     </div>
                     <DialogFooter>
                       <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>

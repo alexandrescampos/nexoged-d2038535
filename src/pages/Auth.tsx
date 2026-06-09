@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Clock } from "lucide-react";
+import { Loader2, Clock, FileText } from "lucide-react";
 import { TermsDialog } from "@/components/TermsDialog";
 
 const loginSchema = z.object({
@@ -88,10 +88,20 @@ export default function Auth() {
 
     if (error) {
       setIsLoading(false);
+      let errorMessage = "Email ou senha incorretos";
+      
+      if (error.message.includes("Invalid login credentials")) {
+        errorMessage = "Email ou senha incorretos";
+      } else if (error.message.includes("locked")) {
+        errorMessage = "Conta bloqueada por múltiplas tentativas. Tente novamente em alguns minutos.";
+      } else {
+        errorMessage = error.message;
+      }
+
       toast({
         variant: "destructive",
         title: "Erro ao entrar",
-        description: error.message === "Invalid login credentials" ? "Email ou senha incorretos" : error.message,
+        description: errorMessage,
       });
     }
   };
@@ -123,17 +133,17 @@ export default function Auth() {
               <img src={systemLogo} alt="Logo do Sistema" className="w-full max-h-[160px] md:max-h-[240px] object-contain" />
             ) : (
               <div className="h-32 w-32 md:h-48 md:w-48 rounded-2xl bg-primary/10 flex items-center justify-center">
-                <Clock className="h-16 w-16 md:h-24 md:w-24 text-primary" />
+                <FileText className="h-16 w-16 md:h-24 md:w-24 text-primary" />
               </div>
             )}
           </div>
-          <p className="text-muted-foreground">Sistema de Gestão Eletrônica de Documentos</p>
+          <p className="text-muted-foreground font-medium uppercase tracking-widest text-sm">NexGED Corporate</p>
         </div>
 
         <Card className="border-border shadow-lg">
           <CardHeader className="space-y-1">
             <CardTitle className="text-2xl text-center">Acesse sua conta</CardTitle>
-            <CardDescription className="text-center">Entre com suas credenciais para continuar</CardDescription>
+            <CardDescription className="text-center">NexGED Corporate - Gestão Inteligente</CardDescription>
           </CardHeader>
           <CardContent>
             <Form {...loginForm}>
@@ -168,10 +178,10 @@ export default function Auth() {
                   {isLoading ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Entrando...
+                      Autenticando...
                     </>
                   ) : (
-                    "Entrar"
+                    "Acessar NexGED"
                   )}
                 </Button>
               </form>
