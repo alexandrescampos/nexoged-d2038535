@@ -39,7 +39,7 @@ import {
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { toast } from "@/hooks/use-toast";
-import { Search, Plus, UserPlus, Shield, ShieldCheck, Pencil, Loader2, KeyRound, AlertCircle, Building2, MapPin, Trash2, FileText } from "lucide-react";
+import { Search, Plus, UserPlus, Shield, ShieldCheck, Pencil, Loader2, KeyRound, AlertCircle, Building2, Trash2, FileText } from "lucide-react";
 import { useTableSort } from "@/hooks/useTableSort";
 import { SortableTableHead } from "@/components/SortableTableHead";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
