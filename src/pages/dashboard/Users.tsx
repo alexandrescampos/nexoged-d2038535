@@ -318,7 +318,7 @@ export default function OrgUsersPage() {
     setEditingUser(user);
     setEditUserName(user.full_name || "");
     setEditUserCnpjIds([]);
-    setEditUserSectorIds([]);
+    
     setIsEditDialogOpen(true);
 
     // Fetch CNPJ scope (manager and admin) and sector scope (manager only)
