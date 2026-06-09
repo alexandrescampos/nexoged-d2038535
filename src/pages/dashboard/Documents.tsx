@@ -1,5 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { FileText, Upload, Shield, Clock } from "lucide-react";
+import { FileText, Upload, Shield, Clock, Pencil, Trash2 } from "lucide-react";
+import { PermissionGate } from "@/components/PermissionGate";
+import { Button } from "@/components/ui/button";
 
 export default function DocumentsPage() {
   const documents = [
@@ -15,10 +17,12 @@ export default function DocumentsPage() {
           <h1 className="text-3xl font-bold text-foreground">Documentos</h1>
           <p className="text-muted-foreground">Gerencie seus documentos eletrônicos</p>
         </div>
-        <button className="flex items-center gap-2 bg-primary text-primary-foreground px-4 py-2 rounded-md hover:bg-primary/90 transition-colors">
-          <Upload className="h-4 w-4" />
-          Novo Documento
-        </button>
+        <PermissionGate permission="inserir_documento">
+          <Button className="gap-2">
+            <Upload className="h-4 w-4" />
+            Novo Documento
+          </Button>
+        </PermissionGate>
       </div>
 
       <div className="grid gap-4 md:grid-cols-3">
@@ -64,6 +68,7 @@ export default function DocumentsPage() {
                   <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">Tipo</th>
                   <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">Data</th>
                   <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">Status</th>
+                  <th className="h-12 px-4 text-right align-middle font-medium text-muted-foreground">Ações</th>
                 </tr>
               </thead>
               <tbody className="[&_tr:last-child]:border-0">
@@ -76,6 +81,18 @@ export default function DocumentsPage() {
                       <span className={`px-2 py-1 rounded-full text-xs ${doc.status === 'Vigente' ? 'bg-success/10 text-success' : 'bg-destructive/10 text-destructive'}`}>
                         {doc.status}
                       </span>
+                    </td>
+                    <td className="p-4 align-middle text-right space-x-2">
+                      <PermissionGate permission="editar_documento">
+                        <Button variant="ghost" size="icon" className="h-8 w-8">
+                          <Pencil className="h-3 w-3" />
+                        </Button>
+                      </PermissionGate>
+                      <PermissionGate permission="excluir_documento">
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive">
+                          <Trash2 className="h-3 w-3" />
+                        </Button>
+                      </PermissionGate>
                     </td>
                   </tr>
                 ))}
