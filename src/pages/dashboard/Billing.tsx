@@ -397,12 +397,6 @@ export default function Billing() {
                           <span>{plan.max_storage_gb}GB de armazenamento</span>
                         </li>
                       )}
-                      {plan.max_users && plan.max_users < 999999 && (
-                        <li className="flex items-center gap-2 opacity-60">
-                          <Check className="h-4 w-4 text-green-500" />
-                          <span>Até {plan.max_users} funcionários (legacy)</span>
-                        </li>
-                      )}
                       {plan.features.map((feature, index) => (
                         <li key={index} className="flex items-center gap-2">
                           <Check className="h-4 w-4 text-green-500" />
