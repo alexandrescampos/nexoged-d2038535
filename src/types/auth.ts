@@ -15,7 +15,7 @@ export interface Organization {
   cnpj: string | null;
   city: string | null;
   is_plan_managed: boolean | null;
-  epi_term_text: string | null;
+  
   created_at: string;
   updated_at: string;
 }
