@@ -1,3 +1,12 @@
+export type GedPermission = 
+  | 'visualizar_documento'
+  | 'inserir_documento'
+  | 'editar_documento'
+  | 'excluir_documento'
+  | 'restaurar_documento'
+  | 'assinar_documento'
+  | 'administrar_sistema';
+
 export interface Organization {
   id: string;
   name: string;

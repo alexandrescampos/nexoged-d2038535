@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { Document, Folder, Sector } from "@/types/ged";
 
 export const gedRepository = {
   // Documentos
@@ -15,8 +16,7 @@ export const gedRepository = {
       .from("ged_documents")
       .select(`
         *,
-        versions:ged_document_versions(count),
-        creator:profiles!ged_documents_created_by_fkey(full_name)
+        versions:ged_document_versions(mime_type, version_number)
       `, { count: "exact" })
       .eq("organization_id", params.organizationId);
 
@@ -52,7 +52,12 @@ export const gedRepository = {
       .range(from, to);
 
     if (error) throw error;
-    return { data, count };
+    const formattedData = (data || []).map(doc => ({
+      ...doc,
+      mime_type: (doc as any).versions?.[0]?.mime_type || 'application/octet-stream'
+    }));
+
+    return { data: formattedData as unknown as Document[], count };
   },
 
   async createDocument(doc: any, file?: File) {
