@@ -88,10 +88,20 @@ export default function Auth() {
 
     if (error) {
       setIsLoading(false);
+      let errorMessage = "Email ou senha incorretos";
+      
+      if (error.message.includes("Invalid login credentials")) {
+        errorMessage = "Email ou senha incorretos";
+      } else if (error.message.includes("locked")) {
+        errorMessage = "Conta bloqueada por múltiplas tentativas. Tente novamente em alguns minutos.";
+      } else {
+        errorMessage = error.message;
+      }
+
       toast({
         variant: "destructive",
         title: "Erro ao entrar",
-        description: error.message === "Invalid login credentials" ? "Email ou senha incorretos" : error.message,
+        description: errorMessage,
       });
     }
   };
@@ -133,7 +143,7 @@ export default function Auth() {
         <Card className="border-border shadow-lg">
           <CardHeader className="space-y-1">
             <CardTitle className="text-2xl text-center">Acesse sua conta</CardTitle>
-            <CardDescription className="text-center">Entre com suas credenciais para continuar</CardDescription>
+            <CardDescription className="text-center">NexGED Corporate - Gestão Inteligente</CardDescription>
           </CardHeader>
           <CardContent>
             <Form {...loginForm}>
