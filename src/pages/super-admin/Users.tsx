@@ -527,7 +527,7 @@ export default function UsersPage() {
     setNewUserEmail("");
     setNewUserPassword("");
     setNewUserFullName("");
-    setNewUserRole("manager");
+    setNewUserRole("user");
     setNewUserOrgId("");
     
   };
