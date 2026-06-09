@@ -467,7 +467,7 @@ export default function OrgUsersPage() {
         if (error.message?.includes("HISTORY_EXISTS") || (error as any).error === "HISTORY_EXISTS") {
           toast({
             title: "Não é possível excluir",
-            description: "Este usuário possui histórico de entregas, solicitações ou outras ações e não pode ser removido.",
+            description: "Este usuário possui histórico no sistema e não pode ser removido.",
             variant: "destructive",
           });
         } else {
