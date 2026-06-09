@@ -1,106 +1,238 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { FileText, Upload, Shield, Clock, Pencil, Trash2 } from "lucide-react";
-import { PermissionGate } from "@/components/PermissionGate";
+import { useState } from "react";
+import { useGED } from "@/hooks/useGED";
+import { useAuth } from "@/hooks/useAuth";
+import { 
+  FileText, 
+  Upload, 
+  Search, 
+  Filter, 
+  MoreVertical, 
+  Star, 
+  Folder, 
+  Plus,
+  LayoutGrid,
+  List,
+  ChevronRight,
+  Download,
+  Eye,
+  Trash2,
+  History,
+  FileCode,
+  FileSpreadsheet,
+  FileImage,
+  Loader2
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator
+} from "@/components/ui/dropdown-menu";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogHeader, 
+  DialogTitle, 
+  DialogDescription,
+  DialogFooter
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 export default function DocumentsPage() {
-  const documents = [
-    { id: 1, name: "Contrato Social.pdf", type: "Jurídico", date: "10/06/2026", status: "Vigente" },
-    { id: 2, name: "Alvará de Funcionamento.pdf", type: "Licença", date: "05/06/2026", status: "Vigente" },
-    { id: 3, name: "PPRA 2025.pdf", type: "Segurança", date: "01/01/2025", status: "Expirado" },
-  ];
+  const [currentFolder, setCurrentFolder] = useState<string | null>(null);
+  const [viewMode, setViewMode] = useState<"grid" | "list">("list");
+  const [isUploadOpen, setIsUploadOpen] = useState(false);
+  const { 
+    documents, 
+    folders, 
+    isLoading, 
+    searchTerm, 
+    setSearchTerm,
+    uploadDocument,
+    isUploading
+  } = useGED(currentFolder);
+  const { organization } = useAuth();
+
+  const getFileIcon = (mime: string) => {
+    if (mime?.includes("pdf")) return <FileText className="h-6 w-6 text-red-500" />;
+    if (mime?.includes("spreadsheet") || mime?.includes("excel")) return <FileSpreadsheet className="h-6 w-6 text-green-600" />;
+    if (mime?.includes("image")) return <FileImage className="h-6 w-6 text-blue-500" />;
+    return <FileCode className="h-6 w-6 text-gray-500" />;
+  };
 
   return (
-    <div className="space-y-6 animate-fade-in">
-      <div className="flex items-center justify-between">
+    <div className="flex flex-col h-full space-y-4 animate-fade-in">
+      {/* Header Profissional */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">Documentos</h1>
-          <p className="text-muted-foreground">Gerencie seus documentos eletrônicos</p>
-        </div>
-        <PermissionGate permission="inserir_documento">
-          <Button className="gap-2">
-            <Upload className="h-4 w-4" />
-            Novo Documento
-          </Button>
-        </PermissionGate>
-      </div>
-
-      <div className="grid gap-4 md:grid-cols-3">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Total de Documentos</CardTitle>
-            <FileText className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{documents.length}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Documentos Vigentes</CardTitle>
-            <Shield className="h-4 w-4 text-success" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">2</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Expirados / Próximos</CardTitle>
-            <Clock className="h-4 w-4 text-destructive" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">1</div>
-          </CardContent>
-        </Card>
-      </div>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Documentos Recentes</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="relative w-full overflow-auto">
-            <table className="w-full caption-bottom text-sm">
-              <thead className="[&_tr]:border-b">
-                <tr className="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted">
-                  <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">Nome</th>
-                  <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">Tipo</th>
-                  <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">Data</th>
-                  <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">Status</th>
-                  <th className="h-12 px-4 text-right align-middle font-medium text-muted-foreground">Ações</th>
-                </tr>
-              </thead>
-              <tbody className="[&_tr:last-child]:border-0">
-                {documents.map((doc) => (
-                  <tr key={doc.id} className="border-b transition-colors hover:bg-muted/50">
-                    <td className="p-4 align-middle font-medium">{doc.name}</td>
-                    <td className="p-4 align-middle">{doc.type}</td>
-                    <td className="p-4 align-middle">{doc.date}</td>
-                    <td className="p-4 align-middle">
-                      <span className={`px-2 py-1 rounded-full text-xs ${doc.status === 'Vigente' ? 'bg-success/10 text-success' : 'bg-destructive/10 text-destructive'}`}>
-                        {doc.status}
-                      </span>
-                    </td>
-                    <td className="p-4 align-middle text-right space-x-2">
-                      <PermissionGate permission="editar_documento">
-                        <Button variant="ghost" size="icon" className="h-8 w-8">
-                          <Pencil className="h-3 w-3" />
-                        </Button>
-                      </PermissionGate>
-                      <PermissionGate permission="excluir_documento">
-                        <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive">
-                          <Trash2 className="h-3 w-3" />
-                        </Button>
-                      </PermissionGate>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <h1 className="text-2xl font-bold tracking-tight">Gestão de Documentos</h1>
+          <div className="flex items-center text-sm text-muted-foreground mt-1">
+            <span className="hover:text-primary cursor-pointer" onClick={() => setCurrentFolder(null)}>Nexo GED</span>
+            <ChevronRight className="h-4 w-4 mx-1" />
+            <span className="font-medium text-foreground">Explorar</span>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+        
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" className="hidden sm:flex">
+            <History className="mr-2 h-4 w-4" /> Histórico
+          </Button>
+          <Button size="sm" onClick={() => setIsUploadOpen(true)} className="gap-2">
+            <Upload className="h-4 w-4" />
+            <span className="hidden sm:inline">Upload</span>
+          </Button>
+        </div>
+      </div>
+
+      {/* Toolbar com Filtros */}
+      <div className="flex flex-col sm:flex-row items-center gap-4 bg-card p-3 rounded-lg border shadow-sm">
+        <div className="relative flex-1 w-full">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input 
+            placeholder="Pesquisar em documentos, tags, conteúdos..." 
+            className="pl-9 h-9"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </div>
+        
+        <div className="flex items-center gap-2 w-full sm:w-auto">
+          <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as any)} className="w-auto">
+            <TabsList className="h-9">
+              <TabsTrigger value="list" className="h-7 px-3"><List className="h-4 w-4" /></TabsTrigger>
+              <TabsTrigger value="grid" className="h-7 px-3"><LayoutGrid className="h-4 w-4" /></TabsTrigger>
+            </TabsList>
+          </Tabs>
+          <Button variant="outline" size="sm" className="h-9">
+            <Filter className="mr-2 h-4 w-4" /> Filtros
+          </Button>
+        </div>
+      </div>
+
+      {/* Grid de Pastas/Documentos */}
+      <ScrollArea className="flex-1">
+        {isLoading ? (
+          <div className="flex items-center justify-center py-20">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          </div>
+        ) : (
+          <div className={viewMode === "grid" ? "grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4" : "space-y-1"}>
+            {/* Render Pastas */}
+            {folders.map((folder) => (
+              <Card 
+                key={folder.id} 
+                className={`cursor-pointer transition-all hover:bg-accent/50 group ${viewMode === 'list' ? 'border-none shadow-none bg-transparent rounded-md' : ''}`}
+                onClick={() => setCurrentFolder(folder.id)}
+              >
+                <CardContent className={viewMode === 'list' ? 'p-2 flex items-center gap-3' : 'p-4 flex flex-col items-center gap-2 text-center'}>
+                  <Folder className="h-8 w-8 text-amber-500 fill-amber-500/20" />
+                  <div className={viewMode === 'list' ? 'flex-1' : ''}>
+                    <p className="font-medium text-sm truncate max-w-[150px]">{folder.name}</p>
+                    {viewMode === 'list' && <p className="text-xs text-muted-foreground">Pasta de arquivos</p>}
+                  </div>
+                  {viewMode === 'list' && <MoreVertical className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100" />}
+                </CardContent>
+              </Card>
+            ))}
+
+            {/* Render Documentos */}
+            {documents.length === 0 && folders.length === 0 && (
+              <div className="col-span-full py-20 text-center">
+                <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4 opacity-20" />
+                <p className="text-muted-foreground">Nenhum documento encontrado nesta pasta.</p>
+                <Button variant="link" onClick={() => setIsUploadOpen(true)}>Fazer meu primeiro upload</Button>
+              </div>
+            )}
+
+            {documents.map((doc) => (
+              <Card 
+                key={doc.id} 
+                className={`transition-all hover:bg-accent/50 group ${viewMode === 'list' ? 'border-none shadow-none bg-transparent rounded-md border-b' : ''}`}
+              >
+                <CardContent className={viewMode === 'list' ? 'p-3 flex items-center gap-4' : 'p-4 flex flex-col items-center gap-3 text-center h-full justify-between'}>
+                  <div className={viewMode === 'list' ? 'flex items-center gap-4 flex-1 min-w-0' : 'flex flex-col items-center gap-2'}>
+                    {getFileIcon(doc.mime_type)}
+                    <div className={viewMode === 'list' ? 'flex-1 min-w-0' : ''}>
+                      <div className="flex items-center gap-2">
+                        <p className="font-semibold text-sm truncate">{doc.title}</p>
+                        {doc.is_favorite && <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />}
+                      </div>
+                      <div className="flex items-center gap-2 mt-1">
+                        <Badge variant="outline" className="text-[10px] h-4 py-0 font-normal">{doc.document_type || "Geral"}</Badge>
+                        <span className="text-[10px] text-muted-foreground">{new Date(doc.updated_at).toLocaleDateString()}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-1">
+                    <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground group-hover:text-primary">
+                      <Eye className="h-4 w-4" />
+                    </Button>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-8 w-8">
+                          <MoreVertical className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="w-48">
+                        <DropdownMenuItem className="gap-2"><Download className="h-4 w-4" /> Baixar</DropdownMenuItem>
+                        <DropdownMenuItem className="gap-2"><Star className="h-4 w-4" /> {doc.is_favorite ? 'Remover Favorito' : 'Favoritar'}</DropdownMenuItem>
+                        <DropdownMenuItem className="gap-2"><History className="h-4 w-4" /> Versões</DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem className="gap-2 text-destructive"><Trash2 className="h-4 w-4" /> Excluir</DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
+      </ScrollArea>
+
+      {/* Modal de Upload (Simplificado para o Protótipo) */}
+      <Dialog open={isUploadOpen} onOpenChange={setIsUploadOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>Upload de Documento</DialogTitle>
+            <DialogDescription>
+              Selecione um arquivo para subir para {currentFolder ? 'esta pasta' : 'a raiz'}.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="grid gap-2">
+              <Label htmlFor="title">Título do Documento</Label>
+              <Input id="title" placeholder="Ex: Contrato_Fornecedor_A" />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="type">Tipo Documental</Label>
+              <Input id="type" placeholder="Ex: Jurídico, Financeiro..." />
+            </div>
+            <div className="border-2 border-dashed rounded-lg p-10 flex flex-col items-center justify-center bg-muted/30">
+              <Upload className="h-10 w-10 text-muted-foreground mb-4 opacity-30" />
+              <p className="text-sm font-medium">Arraste e solte ou clique para selecionar</p>
+              <p className="text-xs text-muted-foreground mt-1">PDF, DOCX, XLSX, PNG, JPG (Max 50MB)</p>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsUploadOpen(false)}>Cancelar</Button>
+            <Button onClick={() => {
+              // Simular upload para a UI
+              setIsUploadOpen(false);
+            }} disabled={isUploading}>
+              {isUploading ? <Loader2 className="animate-spin mr-2 h-4 w-4" /> : null}
+              Confirmar Upload
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
