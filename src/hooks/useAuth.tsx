@@ -149,28 +149,33 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [fetchUserData]);
 
   const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({
+    const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
     
     // Log de auditoria para login
-    if (error) {
-      await supabase.from("user_audit_log").insert({
-        action: "login_failed",
-        source: "auth-login",
-        method: "form",
-        details: { email, error: error.message }
-      });
-    } else if (data.user) {
-      await supabase.from("user_audit_log").insert({
-        performed_by: data.user.id,
-        target_user_id: data.user.id,
-        action: "login",
-        source: "auth-login",
-        method: "form",
-        details: { email }
-      });
+    try {
+      if (error) {
+        await supabase.from("user_audit_log").insert({
+          action: "login_failed",
+          source: "auth-login",
+          method: "form",
+          target_user_id: "00000000-0000-0000-0000-000000000000", // UUID nulo para falhas
+          details: { email, error: error.message }
+        } as any);
+      } else if (data?.user) {
+        await supabase.from("user_audit_log").insert({
+          performed_by: data.user.id,
+          target_user_id: data.user.id,
+          action: "login",
+          source: "auth-login",
+          method: "form",
+          details: { email }
+        } as any);
+      }
+    } catch (auditError) {
+      console.warn("Falha ao registrar log de login:", auditError);
     }
 
     return { error };
