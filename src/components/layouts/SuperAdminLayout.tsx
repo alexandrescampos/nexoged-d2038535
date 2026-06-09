@@ -130,7 +130,7 @@ function SuperAdminSidebar() {
           <HelpCircle className="h-8 w-8 text-sidebar-primary" />
           {!isCollapsed && (
             <div>
-              <h1 className="font-bold text-sidebar-foreground">Nexo EPI</h1>
+              <h1 className="font-bold text-sidebar-foreground">Nexo GED</h1>
               <p className="text-xs text-sidebar-muted">Super Admin</p>
             </div>
           )}
