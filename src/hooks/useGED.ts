@@ -45,7 +45,7 @@ export function useGED(folderId: string | null = null, filterFavorites: boolean 
 
   const toggleFavoriteMutation = useMutation({
     mutationFn: ({ id, isFavorite }: { id: string, isFavorite: boolean }) => 
-      gedRepository.logAction(organization!.id, isFavorite ? "favorited" : "unfavorited", id),
+      gedRepository.toggleFavorite(id, isFavorite),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["ged-documents"] });
     }
