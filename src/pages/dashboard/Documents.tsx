@@ -46,6 +46,7 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { toast } from "sonner";
 
 export default function DocumentsPage() {
   const [searchParams, setSearchParams] = useSearchParams();
