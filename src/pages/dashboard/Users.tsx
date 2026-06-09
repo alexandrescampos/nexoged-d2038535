@@ -69,7 +69,7 @@ export default function OrgUsersPage() {
   const [users, setUsers] = useState<UserWithRoles[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
-  const [roleFilter, setRoleFilter] = useState<"all" | "org_admin" | "manager" | "none">("all");
+  const [roleFilter, setRoleFilter] = useState<"all" | "org_admin" | "user" | "none">("all");
   
   // Add user dialog state
   const [isAddDialogOpen, setIsAddDialogOpen] = usePersistedState("users:isAddDialogOpen", false);
@@ -77,7 +77,7 @@ export default function OrgUsersPage() {
   const [newUserEmail, setNewUserEmail] = usePersistedState("users:newUserEmail", "");
   const [newUserName, setNewUserName] = usePersistedState("users:newUserName", "");
   const [newUserPassword, setNewUserPassword] = usePersistedState("users:newUserPassword", "");
-  const [newUserRole, setNewUserRole] = usePersistedState<AppRole>("users:newUserRole", "manager");
+  const [newUserRole, setNewUserRole] = usePersistedState<AppRole>("users:newUserRole", "user");
   
   // Role removal confirmation state
   const [roleRemovalConfirm, setRoleRemovalConfirm] = useState<{ userId: string; role: AppRole } | null>(null);
@@ -965,14 +965,14 @@ export default function OrgUsersPage() {
               <Input value={editingUser?.email || ""} disabled className="bg-muted" />
               <p className="text-xs text-muted-foreground">O email não pode ser alterado.</p>
             </div>
-            {(editingUser?.roles.includes("manager") || editingUser?.roles.includes("org_admin")) && orgCnpjs.length > 0 && (
+            {(editingUser?.roles.includes("user") || editingUser?.roles.includes("org_admin")) && orgCnpjs.length > 0 && (
               <div className="space-y-2">
                 <Label className="flex items-center gap-2">
                   <Building2 className="h-4 w-4" />
-                  {editingUser?.roles.includes("manager") ? "CNPJs do Usuário" : "CNPJs do Administrador"}
+                  {editingUser?.roles.includes("user") ? "CNPJs do Usuário" : "CNPJs do Administrador"}
                 </Label>
                 <p className="text-xs text-muted-foreground">
-                  {editingUser?.roles.includes("manager")
+                  {editingUser?.roles.includes("user")
                     ? "Selecione quais empresas/filiais este usuário poderá acessar"
                     : "Selecione os CNPJs deste administrador. Deixe vazio para acesso a todos os CNPJs."}
                 </p>

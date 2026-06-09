@@ -3,15 +3,15 @@ import { useAuth } from "@/hooks/useAuth";
 
 interface AdminOnlyRouteProps {
   children: React.ReactNode;
-  allowManager?: boolean;
+  allowUser?: boolean;
 }
 
-export function AdminOnlyRoute({ children, allowManager = false }: AdminOnlyRouteProps) {
-  const { isOrgAdmin, isManager, isLoading } = useAuth();
+export function AdminOnlyRoute({ children, allowUser = false }: AdminOnlyRouteProps) {
+  const { isOrgAdmin, isUser, isLoading } = useAuth();
   
   if (isLoading) return null;
   
-  const hasAccess = isOrgAdmin || (allowManager && isManager);
+  const hasAccess = isOrgAdmin || (allowUser && isUser);
   
   if (!hasAccess) {
     return <Navigate to="/dashboard" replace />;

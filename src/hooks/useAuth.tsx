@@ -12,7 +12,7 @@ interface AuthContextType extends AuthState {
   hasRole: (role: AppRole) => boolean;
   isSuperAdmin: boolean;
   isOrgAdmin: boolean;
-  isManager: boolean;
+  isUser: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -225,7 +225,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     hasRole,
     isSuperAdmin: hasRole("super_admin"),
     isOrgAdmin: hasRole("org_admin"),
-    isManager: hasRole("manager"),
+    isUser: hasRole("user"),
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

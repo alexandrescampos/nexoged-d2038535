@@ -38,7 +38,7 @@ export function ProtectedRoute({
       // Redirect to appropriate dashboard based on user's actual role
       if (roles.includes("super_admin")) {
         return <Navigate to="/super-admin" replace />;
-      } else if (roles.includes("org_admin") || roles.includes("manager")) {
+      } else if (roles.includes("org_admin") || roles.includes("user")) {
         return <Navigate to="/dashboard" replace />;
       } else {
         return <Navigate to="/" replace />;
