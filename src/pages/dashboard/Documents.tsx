@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
+import { useSearchParams } from "react-router-dom";
 import { useGED } from "@/hooks/useGED";
 import { useAuth } from "@/hooks/useAuth";
 import { UsageIndicator } from "@/components/dashboard/UsageIndicator";
@@ -45,8 +46,11 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { toast } from "sonner";
 
 export default function DocumentsPage() {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const searchInputRef = useRef<HTMLInputElement>(null);
   const [currentFolder, setCurrentFolder] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<"grid" | "list">("list");
   const [isUploadOpen, setIsUploadOpen] = useState(false);
@@ -55,6 +59,8 @@ export default function DocumentsPage() {
     document_type: "",
     page_count: 1
   });
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const { 
     documents, 
     folders, 
@@ -65,6 +71,20 @@ export default function DocumentsPage() {
     isUploading
   } = useGED(currentFolder);
   const { organization } = useAuth();
+  
+  useEffect(() => {
+    const action = searchParams.get("action");
+    if (action === "new") {
+      setIsUploadOpen(true);
+      // Limpar o param para não reabrir ao dar refresh ou navegar
+      searchParams.delete("action");
+      setSearchParams(searchParams);
+    } else if (action === "search") {
+      searchInputRef.current?.focus();
+      searchParams.delete("action");
+      setSearchParams(searchParams);
+    }
+  }, [searchParams, setSearchParams]);
 
   const getFileIcon = (mime: string) => {
     if (mime?.includes("pdf")) return <FileText className="h-6 w-6 text-red-500" />;
@@ -104,6 +124,7 @@ export default function DocumentsPage() {
         <div className="relative flex-1 w-full">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input 
+            ref={searchInputRef}
             placeholder="Pesquisar em documentos, tags, conteúdos..." 
             className="pl-9 h-9"
             value={searchTerm}
@@ -245,43 +266,61 @@ export default function DocumentsPage() {
                 />
               </div>
             </div>
-            <div className="border-2 border-dashed rounded-lg p-10 flex flex-col items-center justify-center bg-muted/30">
+            <div 
+              className="border-2 border-dashed rounded-lg p-10 flex flex-col items-center justify-center bg-muted/30 cursor-pointer hover:bg-muted/50 transition-colors"
+              onClick={() => fileInputRef.current?.click()}
+            >
+              <Input
+                type="file"
+                className="hidden"
+                ref={fileInputRef}
+                onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
+              />
               <Upload className="h-10 w-10 text-muted-foreground mb-4 opacity-30" />
-              <p className="text-sm font-medium">Arraste e solte ou clique para selecionar</p>
+              <p className="text-sm font-medium">
+                {selectedFile ? selectedFile.name : "Arraste e solte ou clique para selecionar"}
+              </p>
               <p className="text-xs text-muted-foreground mt-1">PDF, DOCX, XLSX, PNG, JPG (Max 50MB)</p>
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsUploadOpen(false)}>Cancelar</Button>
+            <Button variant="outline" onClick={() => {
+              setIsUploadOpen(false);
+              setSelectedFile(null);
+            }}>Cancelar</Button>
             <Button onClick={() => {
-              if (!uploadData.title) return;
+              if (!uploadData.title || !selectedFile) {
+                toast.error("Por favor, preencha o título e selecione um arquivo.");
+                return;
+              }
               
-              const fileInput = document.createElement('input');
-              fileInput.type = 'file';
-              fileInput.onchange = (e) => {
-                const file = (e.target as HTMLInputElement).files?.[0];
-                if (file) {
-                  uploadDocument({
-                    doc: {
-                      title: uploadData.title,
-                      document_type: uploadData.document_type,
-                      page_count: uploadData.page_count,
-                      organization_id: organization?.id,
-                      folder_id: currentFolder,
-                      status: 'active',
-                      tags: [],
-                      keywords: []
-                    },
-                    file
-                  });
+              if (!organization?.id) {
+                toast.error("Organização não identificada. Por favor, recarregue a página.");
+                return;
+              }
+
+              uploadDocument({
+                doc: {
+                  title: uploadData.title,
+                  document_type: uploadData.document_type,
+                  page_count: uploadData.page_count,
+                  organization_id: organization.id,
+                  folder_id: currentFolder,
+                  status: 'active',
+                  tags: [],
+                  keywords: []
+                },
+                file: selectedFile
+              }, {
+                onSuccess: () => {
                   setIsUploadOpen(false);
                   setUploadData({ title: "", document_type: "", page_count: 1 });
+                  setSelectedFile(null);
                 }
-              };
-              fileInput.click();
-            }} disabled={isUploading}>
+              });
+            }} disabled={isUploading || !selectedFile || !uploadData.title}>
               {isUploading ? <Loader2 className="animate-spin mr-2 h-4 w-4" /> : null}
-              Selecionar Arquivo e Enviar
+              {isUploading ? "Enviando..." : "Enviar Documento"}
             </Button>
           </DialogFooter>
         </DialogContent>

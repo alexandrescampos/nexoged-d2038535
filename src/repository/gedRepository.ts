@@ -62,10 +62,13 @@ export const gedRepository = {
 
   async createDocument(doc: any, file?: File) {
     // 1. Inserir documento
+    const { data: { user } } = await supabase.auth.getUser();
+    
     const { data: document, error: docError } = await supabase
       .from("ged_documents")
       .insert([{
         ...doc,
+        created_by: user?.id,
         page_count: doc.page_count || 1
       }])
       .select()
