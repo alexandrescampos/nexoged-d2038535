@@ -85,7 +85,12 @@ export const gedRepository = {
   },
 
   async uploadVersion(documentId: string, versionNumber: number, file: File) {
-    const filePath = `documents/${documentId}/v${versionNumber}_${file.name}`;
+    // Sanitiza o nome do arquivo: remove acentos, espaços e caracteres especiais
+    const sanitizedName = file.name
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/[^a-zA-Z0-9._-]/g, "_");
+    const filePath = `documents/${documentId}/v${versionNumber}_${sanitizedName}`;
     
     const { error: uploadError } = await supabase.storage
       .from("ged_files")
