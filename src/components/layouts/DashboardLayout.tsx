@@ -145,7 +145,7 @@ function DashboardSidebar() {
       .toUpperCase()
       .slice(0, 2) || "ORG";
 
-  const roleLabel = isOrgAdmin ? "Administrador" : isManager ? "Gestor" : "Usuário";
+  const roleLabel = isOrgAdmin ? "Administrador" : isManager ? "Usuário" : "Usuário";
 
   return (
     <Sidebar collapsible="icon" className="border-r border-sidebar-border">
@@ -239,7 +239,7 @@ function DashboardHeader() {
       .toUpperCase()
       .slice(0, 2) || "U";
 
-  const roleLabel = isOrgAdmin ? "Administrador" : isManager ? "Gestor" : "Usuário";
+  const roleLabel = isOrgAdmin ? "Administrador" : isManager ? "Usuário" : "Usuário";
 
   return (
     <header className="h-14 border-b border-border bg-card flex items-center justify-between px-4">

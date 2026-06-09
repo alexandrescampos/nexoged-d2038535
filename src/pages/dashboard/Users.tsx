@@ -969,11 +969,11 @@ export default function OrgUsersPage() {
               <div className="space-y-2">
                 <Label className="flex items-center gap-2">
                   <Building2 className="h-4 w-4" />
-                  {editingUser?.roles.includes("manager") ? "CNPJs do Gestor" : "CNPJs do Administrador"}
+                  {editingUser?.roles.includes("manager") ? "CNPJs do Usuário" : "CNPJs do Administrador"}
                 </Label>
                 <p className="text-xs text-muted-foreground">
                   {editingUser?.roles.includes("manager")
-                    ? "Selecione quais empresas/filiais este gestor poderá acessar"
+                    ? "Selecione quais empresas/filiais este usuário poderá acessar"
                     : "Selecione os CNPJs deste administrador. Deixe vazio para acesso a todos os CNPJs."}
                 </p>
                 <div className="space-y-2 max-h-40 overflow-y-auto border rounded-md p-3">
