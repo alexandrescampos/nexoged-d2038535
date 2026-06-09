@@ -67,43 +67,27 @@ export default function ApiIntegrationSettings({ organizationId, organizationNam
 
       return [
         {
-          id: "epi-movements",
-          title: "Movimentações do dia",
+          id: "doc-movements",
+          title: "Movimentações de documentos",
           method: "GET",
-          url: `${baseUrl}/epi-movements`,
-          description: "Retorna entregas e trocas registradas na data informada, incluindo o CNPJ de cada movimentação.",
+          url: `${baseUrl}/doc-movements`,
+          description: "Retorna o histórico de upload e alterações de documentos na data informada.",
           details: [
             { label: "Header", value: "X-API-Key: sua-chave" },
-            { label: "Parâmetros", value: "date=dd/mm/yyyy (obrigatório), cnpj=12345678000199 (opcional, filtra por CNPJ)" },
-            { label: "Resposta", value: "type, delivery_date, epi_code, quantity, stock_source, cnpj, cnpj_company_name" },
+            { label: "Parâmetros", value: "date=dd/mm/yyyy (obrigatório), cnpj=12345678000199 (opcional)" },
+            { label: "Resposta", value: "type, upload_date, doc_name, status, cnpj, cnpj_company_name" },
           ],
         },
         {
-          id: "stock-update",
-          title: "Atualização de estoque novo",
+          id: "doc-status-update",
+          title: "Atualizar status de documento",
           method: "POST",
-          url: `${baseUrl}/stock-update`,
-          description: "Substitui o saldo do estoque novo de um EPI pelo código informado. O campo cnpj é obrigatório para organizações com múltiplos CNPJs.",
+          url: `${baseUrl}/doc-status`,
+          description: "Atualiza o status de vigência de um documento via API externa.",
           details: [
             { label: "Header", value: "X-API-Key: sua-chave" },
-            { label: "Body", value: '{ "epi_code": "EPI-001", "stock_quantity": 25, "cnpj": "12345678000199" }' },
-            { label: "Efeito", value: "Atualiza o estoque novo do EPI no CNPJ informado" },
-          ],
-        },
-        {
-          id: "employee-upsert",
-          title: "Cadastro de funcionários (upsert)",
-          method: "POST",
-          url: `${baseUrl}/employee-upsert`,
-          description: "Cria um funcionário novo ou atualiza um existente usando o CPF como chave. Setor e função são resolvidos pelo nome (case/acento insensitive). CNPJ é obrigatório.",
-          details: [
-            { label: "Header", value: "X-API-Key: sua-chave" },
-            {
-              label: "Body",
-              value:
-                '{ "cpf": "12345678901", "name": "Fulano da Silva", "cnpj": "12345678000199", "registration_number": "0001", "admission_date": "01/03/2024", "sector_name": "Produção", "job_function_name": "Operador", "shirt_size": "M", "pants_size": "42", "shoe_size": "41" }',
-            },
-            { label: "Resposta", value: 'success, action ("created" | "updated"), employee_id, cpf, cnpj' },
+            { label: "Body", value: '{ "doc_id": "UUID", "status": "vigente" }' },
+            { label: "Efeito", value: "Altera o status do documento informado" },
           ],
         },
       ];
@@ -207,7 +191,7 @@ export default function ApiIntegrationSettings({ organizationId, organizationNam
             Integrações / API
           </CardTitle>
           <CardDescription>
-            Gere a X-API-Key da organização{organizationName ? ` ${organizationName}` : ""} e use as rotas de movimentações e atualização de estoque.
+            Gere a X-API-Key da organização{organizationName ? ` ${organizationName}` : ""} para automação documental.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
@@ -353,8 +337,7 @@ export default function ApiIntegrationSettings({ organizationId, organizationNam
                       <SelectContent>
                         <SelectItem value="all">Todos os endpoints</SelectItem>
                         <SelectItem value="doc-movements">doc-movements</SelectItem>
-                        <SelectItem value="stock-update">stock-update</SelectItem>
-                        <SelectItem value="employee-upsert">employee-upsert</SelectItem>
+                        <SelectItem value="doc-status-update">doc-status-update</SelectItem>
                       </SelectContent>
                     </Select>
                     <Button
