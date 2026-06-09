@@ -126,6 +126,14 @@ const App = () => {
                   </PermissionProtectedRoute>
                 } 
               />
+              <Route 
+                path="favorites" 
+                element={
+                  <PermissionProtectedRoute permission="visualizar_documento">
+                    <FavoritesPage />
+                  </PermissionProtectedRoute>
+                } 
+              />
               <Route path="departments" element={<AdminOnlyRoute><DepartmentsPage /></AdminOnlyRoute>} />
               <Route path="users" element={<AdminOnlyRoute><OrgUsersPage /></AdminOnlyRoute>} />
               <Route path="permissions" element={<AdminOnlyRoute><PermissionsPage /></AdminOnlyRoute>} />
