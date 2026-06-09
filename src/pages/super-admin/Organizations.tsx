@@ -560,40 +560,42 @@ export default function OrganizationsPage() {
                 const selectedPlan = plans.find(p => p.slug === formData.plan);
                 const isUnlimited = selectedPlan?.max_users === null;
                 return (
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="grid gap-2">
-                      <Label htmlFor="contracted_pages">Franquia Páginas</Label>
-                      <Input
-                        id="contracted_pages"
-                        type="number"
-                        value={formData.contracted_pages}
-                        onChange={(e) => setFormData({ ...formData, contracted_pages: parseInt(e.target.value) || 0 })}
-                      />
+                  <>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="grid gap-2">
+                        <Label htmlFor="contracted_pages">Franquia Páginas</Label>
+                        <Input
+                          id="contracted_pages"
+                          type="number"
+                          value={formData.contracted_pages}
+                          onChange={(e) => setFormData({ ...formData, contracted_pages: parseInt(e.target.value) || 0 })}
+                        />
+                      </div>
+                      <div className="grid gap-2">
+                        <Label htmlFor="contracted_storage_gb">Espaço (GB)</Label>
+                        <Input
+                          id="contracted_storage_gb"
+                          type="number"
+                          value={formData.contracted_storage_gb}
+                          onChange={(e) => setFormData({ ...formData, contracted_storage_gb: parseInt(e.target.value) || 0 })}
+                        />
+                      </div>
                     </div>
-                    <div className="grid gap-2">
-                      <Label htmlFor="contracted_storage_gb">Espaço (GB)</Label>
+                    <div className="grid gap-2 opacity-50">
+                      <Label htmlFor="max_users">Máx. Funcionários (Legacy)</Label>
                       <Input
-                        id="contracted_storage_gb"
+                        id="max_users"
                         type="number"
-                        value={formData.contracted_storage_gb}
-                        onChange={(e) => setFormData({ ...formData, contracted_storage_gb: parseInt(e.target.value) || 0 })}
+                        value={isUnlimited ? "" : formData.max_users}
+                        onChange={(e) => setFormData({ ...formData, max_users: parseInt(e.target.value) || 10 })}
+                        disabled={isUnlimited}
+                        placeholder={isUnlimited ? "Ilimitado" : undefined}
                       />
+                      {isUnlimited && (
+                        <p className="text-xs text-muted-foreground">Ilimitado neste plano</p>
+                      )}
                     </div>
-                  </div>
-                  <div className="grid gap-2 opacity-50">
-                    <Label htmlFor="max_users">Máx. Funcionários (Legacy)</Label>
-                    <Input
-                      id="max_users"
-                      type="number"
-                      value={isUnlimited ? "" : formData.max_users}
-                      onChange={(e) => setFormData({ ...formData, max_users: parseInt(e.target.value) || 10 })}
-                      disabled={isUnlimited}
-                      placeholder={isUnlimited ? "Ilimitado" : undefined}
-                    />
-                    {isUnlimited && (
-                      <p className="text-xs text-muted-foreground">Ilimitado neste plano</p>
-                    )}
-                  </div>
+                  </>
                 );
               })()}
               <div className="flex items-center justify-between rounded-lg border p-3">
