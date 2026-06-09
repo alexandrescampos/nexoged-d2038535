@@ -56,7 +56,7 @@ export default function OrganizationDataExport({ organizationId, organizationNam
         : null;
 
       const snapshot = {
-        source: "nexo-epi",
+        source: "nexo-ged",
         version: 1,
         exported_at: new Date().toISOString(),
         organization: sanitizedOrg,
@@ -73,7 +73,7 @@ export default function OrganizationDataExport({ organizationId, organizationNam
         .toLowerCase();
       const stamp = new Date().toISOString().slice(0, 10);
       a.href = url;
-      a.download = `nexo-epi-${safeName}-${stamp}.json`;
+      a.download = `nexo-ged-${safeName}-${stamp}.json`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);

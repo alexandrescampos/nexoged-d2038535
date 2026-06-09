@@ -107,7 +107,7 @@ const roleInfo: Record<Role, { label: string; icon: React.ElementType; color: st
     label: "Administrador",
     icon: Shield,
     color: "text-primary bg-primary/10 border-primary/20",
-    description: "Gerencia a organização, usuários, EPIs e configurações",
+    description: "Gerencia a organização, usuários, documentos e configurações",
   },
   manager: {
     label: "Gestor",

@@ -352,7 +352,7 @@ export default function ApiIntegrationSettings({ organizationId, organizationNam
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="all">Todos os endpoints</SelectItem>
-                        <SelectItem value="epi-movements">epi-movements</SelectItem>
+                        <SelectItem value="doc-movements">doc-movements</SelectItem>
                         <SelectItem value="stock-update">stock-update</SelectItem>
                         <SelectItem value="employee-upsert">employee-upsert</SelectItem>
                       </SelectContent>
