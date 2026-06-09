@@ -29,6 +29,7 @@ export interface Profile {
   is_active: boolean | null;
   must_reset_password: boolean | null;
   hourly_rate: number | null;
+  department_id: string | null;
   phone: string | null;
   created_at: string;
   updated_at: string;
