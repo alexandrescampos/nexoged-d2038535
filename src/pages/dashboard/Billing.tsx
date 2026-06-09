@@ -9,7 +9,8 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
-import { Check, CreditCard, Crown, Loader2, RefreshCw, ExternalLink, XCircle, RefreshCcw, Pause, Play } from "lucide-react";
+import { Check, CreditCard, Crown, Loader2, RefreshCw, ExternalLink, XCircle, RefreshCcw, Pause, Play, FileText, HardDrive } from "lucide-react";
+import { UsageIndicator } from "@/components/dashboard/UsageIndicator";
 
 interface Plan {
   id: string;
@@ -19,6 +20,8 @@ interface Plan {
   price_monthly: number | null;
   price_yearly: number | null;
   max_users: number | null;
+  max_pages: number | null;
+  max_storage_gb: number | null;
   features: string[];
   is_highlighted: boolean;
   stripe_price_id_monthly: string | null;
@@ -204,11 +207,13 @@ export default function Billing() {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 animate-fade-in">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">Planos</h1>
-        <p className="text-muted-foreground">Gerencie sua assinatura e plano de pagamento</p>
+        <h1 className="text-3xl font-bold tracking-tight">Assinatura e Uso</h1>
+        <p className="text-muted-foreground">Gerencie seu plano e acompanhe o consumo de recursos</p>
       </div>
+
+      <UsageIndicator />
 
       {/* Current Subscription Status */}
       <Card>
@@ -380,10 +385,22 @@ export default function Billing() {
                   </CardHeader>
                   <CardContent className="flex-1">
                     <ul className="space-y-3">
-                      {plan.max_users && (
+                      {plan.max_pages && (
                         <li className="flex items-center gap-2">
                           <Check className="h-4 w-4 text-green-500" />
-                          <span>Até {plan.max_users >= 999999 ? "ilimitados" : plan.max_users} funcionários</span>
+                          <span>Até {plan.max_pages.toLocaleString()} páginas</span>
+                        </li>
+                      )}
+                      {plan.max_storage_gb && (
+                        <li className="flex items-center gap-2">
+                          <Check className="h-4 w-4 text-green-500" />
+                          <span>{plan.max_storage_gb}GB de armazenamento</span>
+                        </li>
+                      )}
+                      {plan.max_users && plan.max_users < 999999 && (
+                        <li className="flex items-center gap-2 opacity-60">
+                          <Check className="h-4 w-4 text-green-500" />
+                          <span>Até {plan.max_users} funcionários (legacy)</span>
                         </li>
                       )}
                       {plan.features.map((feature, index) => (
