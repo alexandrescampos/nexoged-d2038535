@@ -43,7 +43,7 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "sonner";
 
-export default function FavoritesPage() {
+export default function RecentPage() {
   const [viewMode, setViewMode] = useState<"grid" | "list">("list");
   const [documentToDelete, setDocumentToDelete] = useState<string | null>(null);
   
