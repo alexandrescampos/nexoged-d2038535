@@ -39,7 +39,7 @@ import {
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { toast } from "@/hooks/use-toast";
-import { Search, Plus, UserPlus, Shield, ShieldCheck, Pencil, Loader2, KeyRound, AlertCircle, Building2, MapPin, Trash2 } from "lucide-react";
+import { Search, Plus, UserPlus, Shield, ShieldCheck, Pencil, Loader2, KeyRound, AlertCircle, Building2, MapPin, Trash2, FileText } from "lucide-react";
 import { useTableSort } from "@/hooks/useTableSort";
 import { SortableTableHead } from "@/components/SortableTableHead";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -89,21 +89,6 @@ export default function OrgUsersPage() {
   const [editingUser, setEditingUser] = usePersistedState<UserWithRoles | null>("users:editingUser", null);
   const [editUserName, setEditUserName] = usePersistedState("users:editUserName", "");
 
-  // Fetch org Sectors
-  const { data: orgSectors = [] } = useQuery({
-    queryKey: ["sectors-active", organization?.id],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("sectors")
-        .select("id, name")
-        .eq("organization_id", organization!.id)
-        .eq("is_active", true)
-        .order("name");
-      if (error) throw error;
-      return data;
-    },
-    enabled: !!organization?.id,
-  });
 
 
   // Role dialog state
@@ -125,9 +110,6 @@ export default function OrgUsersPage() {
   const [editUserCnpjIds, setEditUserCnpjIds] = useState<string[]>([]);
   const [newUserCnpjIds, setNewUserCnpjIds] = useState<string[]>([]);
 
-  // Manager Sector association state
-  const [editUserSectorIds, setEditUserSectorIds] = useState<string[]>([]);
-  const [newUserSectorIds, setNewUserSectorIds] = useState<string[]>([]);
 
   // Fetch org CNPJs
   const { data: orgCnpjs = [] } = useQuery({
@@ -236,7 +218,6 @@ export default function OrgUsersPage() {
         fullName: newUserName,
         role: newUserRole,
         cnpjIds: newUserCnpjIds,
-        sectorIds: newUserSectorIds,
       });
 
       if (error) throw error;
@@ -312,22 +293,6 @@ export default function OrgUsersPage() {
           if (insErr) throw insErr;
         }
 
-        const { error: delSecErr } = await supabase
-          .from("manager_sectors" as any)
-          .delete()
-          .eq("user_id", editingUser.id)
-          .eq("organization_id", organization.id);
-        if (delSecErr) throw delSecErr;
-
-        if (isManagerUser && editUserSectorIds.length > 0) {
-          const sectorInserts = editUserSectorIds.map(sectorId => ({
-            user_id: editingUser.id,
-            sector_id: sectorId,
-            organization_id: organization.id,
-          }));
-          const { error: insSecErr } = await supabase.from("manager_sectors" as any).insert(sectorInserts);
-          if (insSecErr) throw insSecErr;
-        }
       }
 
       toast({
@@ -368,16 +333,6 @@ export default function OrgUsersPage() {
         .eq("organization_id", organization.id);
       if (cnpjRes.data) {
         setEditUserCnpjIds((cnpjRes.data as any[]).map((r: any) => r.organization_cnpj_id));
-      }
-      if (isManagerUser) {
-        const sectorRes = await supabase
-          .from("manager_sectors" as any)
-          .select("sector_id")
-          .eq("user_id", user.id)
-          .eq("organization_id", organization.id);
-        if (sectorRes.data) {
-          setEditUserSectorIds((sectorRes.data as any[]).map((r: any) => r.sector_id));
-        }
       }
     }
   };

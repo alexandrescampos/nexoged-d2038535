@@ -22,15 +22,12 @@ export default function OrganizationDataExport({ organizationId, organizationNam
     }
     setLoading(true);
     try {
-      const [orgRes, cnpjsRes, sectorsRes, functionsRes, employeesRes] = await Promise.all([
+      const [orgRes, cnpjsRes] = await Promise.all([
         supabase.from("organizations").select("*").eq("id", organizationId).maybeSingle(),
         supabase.from("organization_cnpjs").select("*").eq("organization_id", organizationId),
-        supabase.from("sectors").select("*").eq("organization_id", organizationId),
-        supabase.from("job_functions").select("*").eq("organization_id", organizationId),
-        supabase.from("employees").select("*").eq("organization_id", organizationId),
       ]);
 
-      const errors = [orgRes, cnpjsRes, sectorsRes, functionsRes, employeesRes]
+      const errors = [orgRes, cnpjsRes]
         .map((r) => r.error)
         .filter(Boolean);
       if (errors.length > 0) {
@@ -64,9 +61,6 @@ export default function OrganizationDataExport({ organizationId, organizationNam
         exported_at: new Date().toISOString(),
         organization: sanitizedOrg,
         cnpjs: cnpjsRes.data ?? [],
-        sectors: sectorsRes.data ?? [],
-        job_functions: functionsRes.data ?? [],
-        employees: employeesRes.data ?? [],
       };
 
       const blob = new Blob([JSON.stringify(snapshot, null, 2)], { type: "application/json" });
@@ -103,7 +97,7 @@ export default function OrganizationDataExport({ organizationId, organizationNam
         </CardTitle>
         <CardDescription>
           Baixa um arquivo JSON com os dados cadastrais desta organização para importação em outro
-          sistema. Inclui: organização, CNPJs, setores, funções e funcionários. Não inclui usuários,
+          sistema. Inclui: organização e CNPJs. Não inclui usuários,
           estoque, documentos ou dados financeiros.
         </CardDescription>
       </CardHeader>
