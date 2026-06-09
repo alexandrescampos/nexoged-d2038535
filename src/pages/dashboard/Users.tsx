@@ -39,7 +39,7 @@ import {
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { toast } from "@/hooks/use-toast";
-import { Search, Plus, UserPlus, Shield, ShieldCheck, Pencil, Loader2, KeyRound, AlertCircle, Building2, MapPin, Trash2 } from "lucide-react";
+import { Search, Plus, UserPlus, Shield, ShieldCheck, Pencil, Loader2, KeyRound, AlertCircle, Building2, Trash2, FileText } from "lucide-react";
 import { useTableSort } from "@/hooks/useTableSort";
 import { SortableTableHead } from "@/components/SortableTableHead";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -89,21 +89,6 @@ export default function OrgUsersPage() {
   const [editingUser, setEditingUser] = usePersistedState<UserWithRoles | null>("users:editingUser", null);
   const [editUserName, setEditUserName] = usePersistedState("users:editUserName", "");
 
-  // Fetch org Sectors
-  const { data: orgSectors = [] } = useQuery({
-    queryKey: ["sectors-active", organization?.id],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("sectors")
-        .select("id, name")
-        .eq("organization_id", organization!.id)
-        .eq("is_active", true)
-        .order("name");
-      if (error) throw error;
-      return data;
-    },
-    enabled: !!organization?.id,
-  });
 
 
   // Role dialog state
@@ -125,9 +110,6 @@ export default function OrgUsersPage() {
   const [editUserCnpjIds, setEditUserCnpjIds] = useState<string[]>([]);
   const [newUserCnpjIds, setNewUserCnpjIds] = useState<string[]>([]);
 
-  // Manager Sector association state
-  const [editUserSectorIds, setEditUserSectorIds] = useState<string[]>([]);
-  const [newUserSectorIds, setNewUserSectorIds] = useState<string[]>([]);
 
   // Fetch org CNPJs
   const { data: orgCnpjs = [] } = useQuery({
@@ -236,7 +218,6 @@ export default function OrgUsersPage() {
         fullName: newUserName,
         role: newUserRole,
         cnpjIds: newUserCnpjIds,
-        sectorIds: newUserSectorIds,
       });
 
       if (error) throw error;
@@ -253,7 +234,6 @@ export default function OrgUsersPage() {
       setNewUserRole("manager");
       
       setNewUserCnpjIds([]);
-      setNewUserSectorIds([]);
       setIsAddDialogOpen(false);
 
       // Refresh user list
@@ -312,22 +292,6 @@ export default function OrgUsersPage() {
           if (insErr) throw insErr;
         }
 
-        const { error: delSecErr } = await supabase
-          .from("manager_sectors" as any)
-          .delete()
-          .eq("user_id", editingUser.id)
-          .eq("organization_id", organization.id);
-        if (delSecErr) throw delSecErr;
-
-        if (isManagerUser && editUserSectorIds.length > 0) {
-          const sectorInserts = editUserSectorIds.map(sectorId => ({
-            user_id: editingUser.id,
-            sector_id: sectorId,
-            organization_id: organization.id,
-          }));
-          const { error: insSecErr } = await supabase.from("manager_sectors" as any).insert(sectorInserts);
-          if (insSecErr) throw insSecErr;
-        }
       }
 
       toast({
@@ -354,7 +318,7 @@ export default function OrgUsersPage() {
     setEditingUser(user);
     setEditUserName(user.full_name || "");
     setEditUserCnpjIds([]);
-    setEditUserSectorIds([]);
+    
     setIsEditDialogOpen(true);
 
     // Fetch CNPJ scope (manager and admin) and sector scope (manager only)
@@ -368,16 +332,6 @@ export default function OrgUsersPage() {
         .eq("organization_id", organization.id);
       if (cnpjRes.data) {
         setEditUserCnpjIds((cnpjRes.data as any[]).map((r: any) => r.organization_cnpj_id));
-      }
-      if (isManagerUser) {
-        const sectorRes = await supabase
-          .from("manager_sectors" as any)
-          .select("sector_id")
-          .eq("user_id", user.id)
-          .eq("organization_id", organization.id);
-        if (sectorRes.data) {
-          setEditUserSectorIds((sectorRes.data as any[]).map((r: any) => r.sector_id));
-        }
       }
     }
   };
@@ -513,7 +467,7 @@ export default function OrgUsersPage() {
         if (error.message?.includes("HISTORY_EXISTS") || (error as any).error === "HISTORY_EXISTS") {
           toast({
             title: "Não é possível excluir",
-            description: "Este usuário possui histórico de entregas, solicitações ou outras ações e não pode ser removido.",
+            description: "Este usuário possui histórico no sistema e não pode ser removido.",
             variant: "destructive",
           });
         } else {
@@ -818,35 +772,6 @@ export default function OrgUsersPage() {
                         </div>
                       </div>
                     )}
-                    {newUserRole === "manager" && orgSectors.length > 0 && (
-                      <div className="space-y-2">
-                        <Label className="flex items-center gap-2">
-                          <MapPin className="h-4 w-4" />
-                          Setores do Gestor
-                        </Label>
-                        <p className="text-xs text-muted-foreground">Selecione quais setores este gestor poderá acessar. Se nenhum for selecionado, verá todos os funcionários dos CNPJs associados.</p>
-                        <div className="space-y-2 max-h-40 overflow-y-auto border rounded-md p-3">
-                          {orgSectors.map((sector) => (
-                            <div key={sector.id} className="flex items-center space-x-2">
-                              <Checkbox
-                                id={`new-sector-${sector.id}`}
-                                checked={newUserSectorIds.includes(sector.id)}
-                                onCheckedChange={(checked) => {
-                                  setNewUserSectorIds(prev =>
-                                    checked
-                                      ? [...prev, sector.id]
-                                      : prev.filter(id => id !== sector.id)
-                                  );
-                                }}
-                              />
-                              <Label htmlFor={`new-sector-${sector.id}`} className="text-sm font-normal cursor-pointer">
-                                {sector.name}
-                              </Label>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
                     </div>
                     <DialogFooter>
                       <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
@@ -1053,35 +978,6 @@ export default function OrgUsersPage() {
                 </div>
               </div>
             )}
-            {editingUser?.roles.includes("manager") && orgSectors.length > 0 && (
-              <div className="space-y-2">
-                <Label className="flex items-center gap-2">
-                  <MapPin className="h-4 w-4" />
-                  Setores do Gestor
-                </Label>
-                <p className="text-xs text-muted-foreground">Selecione quais setores este gestor poderá acessar. Se nenhum for selecionado, verá todos os funcionários dos CNPJs associados.</p>
-                <div className="space-y-2 max-h-40 overflow-y-auto border rounded-md p-3">
-                  {orgSectors.map((sector) => (
-                    <div key={sector.id} className="flex items-center space-x-2">
-                      <Checkbox
-                        id={`edit-sector-${sector.id}`}
-                        checked={editUserSectorIds.includes(sector.id)}
-                        onCheckedChange={(checked) => {
-                          setEditUserSectorIds(prev =>
-                            checked
-                              ? [...prev, sector.id]
-                              : prev.filter(id => id !== sector.id)
-                          );
-                        }}
-                      />
-                      <Label htmlFor={`edit-sector-${sector.id}`} className="text-sm font-normal cursor-pointer">
-                        {sector.name}
-                      </Label>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
@@ -1236,7 +1132,7 @@ export default function OrgUsersPage() {
             <AlertDialogDescription>
               Esta ação não pode ser desfeita. O usuário <strong>{userToDelete?.full_name}</strong> será permanentemente removido do sistema.
               <br /><br />
-              <em>Nota: Somente usuários sem histórico de entregas ou solicitações podem ser excluídos.</em>
+              <em>Nota: Somente usuários sem histórico relevante podem ser excluídos.</em>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

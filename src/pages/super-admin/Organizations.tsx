@@ -151,22 +151,7 @@ export default function OrganizationsPage() {
 
     // Fetch user counts for organizations on current page
     if (orgs.length > 0) {
-      const orgIds = orgs.map(o => o.id);
-      const { data: employeesData, error: employeesError } = await supabase
-        .from("employees")
-        .select("organization_id")
-        .eq("is_active", true)
-        .in("organization_id", orgIds);
-
-      if (!employeesError && employeesData) {
-        const counts: Record<string, number> = {};
-        employeesData.forEach((emp) => {
-          if (emp.organization_id) {
-            counts[emp.organization_id] = (counts[emp.organization_id] || 0) + 1;
-          }
-        });
-        setEmployeeCounts(counts);
-      }
+      setEmployeeCounts({});
     }
 
     setIsLoading(false);
@@ -701,11 +686,10 @@ export default function OrganizationsPage() {
                         </Badge>
                       </TableCell>
                       <TableCell className="text-sm">
-                        <span className="font-medium">{employeeCounts[org.id] || 0}</span>
-                        <span className="text-muted-foreground">
-                          /{org.max_users === null || org.max_users >= 999999 ? "∞" : org.max_users}
+                        <span className="font-medium">
+                          {org.max_users === null || org.max_users >= 999999 ? "∞" : org.max_users}
                         </span>
-                        <span className="text-muted-foreground ml-1">funcionários</span>
+                        <span className="text-muted-foreground ml-1">usuários</span>
                       </TableCell>
                       <TableCell>
                         <DropdownMenu>

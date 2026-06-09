@@ -33,7 +33,7 @@ export function ScopeSummaryCard({ selectedCnpjId, onSelectCnpj }: ScopeSummaryC
   const { organization, isSuperAdmin, isOrgAdmin, isManager } = useAuth();
   const { managerCnpjIds, managerSectorIds, isLoading } = useManagerCnpjs();
   const [cnpjs, setCnpjs] = useState<CnpjOption[]>([]);
-  const [sectors, setSectors] = useState<SectorOption[]>([]);
+  
 
   const hasFullAccess = isSuperAdmin || managerCnpjIds === null;
 
@@ -51,19 +51,9 @@ export function ScopeSummaryCard({ selectedCnpjId, onSelectCnpj }: ScopeSummaryC
       }
       const { data: cnpjData } = await cnpjQuery;
       setCnpjs((cnpjData as CnpjOption[]) || []);
-
-      if (!isSuperAdmin && managerSectorIds && managerSectorIds.length > 0) {
-        const { data: sectorData } = await supabase
-          .from("sectors")
-          .select("id, name")
-          .in("id", managerSectorIds);
-        setSectors((sectorData as SectorOption[]) || []);
-      } else {
-        setSectors([]);
-      }
     };
     load();
-  }, [organization?.id, managerCnpjIds, managerSectorIds]);
+  }, [organization?.id, managerCnpjIds]);
 
   if (isLoading) return null;
 
@@ -133,17 +123,6 @@ export function ScopeSummaryCard({ selectedCnpjId, onSelectCnpj }: ScopeSummaryC
                     className="font-normal"
                   >
                     {c.company_name}
-                  </Badge>
-                ))}
-              </div>
-            )}
-            {sectors.length > 0 && (
-              <div className="flex flex-wrap items-center gap-2">
-                <Layers className="h-3.5 w-3.5 text-muted-foreground" />
-                <span className="text-xs text-muted-foreground">Setores:</span>
-                {sectors.map((s) => (
-                  <Badge key={s.id} variant="outline" className="font-normal">
-                    {s.name}
                   </Badge>
                 ))}
               </div>

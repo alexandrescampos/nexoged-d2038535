@@ -308,7 +308,7 @@ export default function OrganizationCnpjs() {
               <div className="space-y-2">
                 <Label>Logo do CNPJ</Label>
                 <p className="text-xs text-muted-foreground">
-                  Usado nos termos de entrega e troca de EPI. Se não definido, será usado o logo da organização.
+                  Usado nos documentos gerados pelo sistema. Se não definido, será usado o logo da organização.
                 </p>
                 <div className="flex items-center gap-3">
                   <Avatar className="h-14 w-14 rounded-lg">
