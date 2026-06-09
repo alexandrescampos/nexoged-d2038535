@@ -42,7 +42,11 @@ serve(async (req) => {
 
     if (error) {
       console.error("Auth update error:", error);
-      return new Response(JSON.stringify({ error: error.message }), {
+      const isWeak = (error as any).code === "weak_password" || error.message?.toLowerCase().includes("weak");
+      const friendly = isWeak
+        ? "Esta senha foi encontrada em vazamentos públicos de dados e não pode ser usada. Escolha uma senha diferente e mais original."
+        : error.message;
+      return new Response(JSON.stringify({ error: friendly }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
