@@ -35,7 +35,6 @@ export default function AuditLogPage() {
           performer:profiles!user_audit_log_performed_by_fkey(full_name, email),
           organization:organizations(name)
         `)
-        .eq("action", "created")
         .gte("created_at", startOfDay(new Date(dateFrom)).toISOString())
         .lte("created_at", endOfDay(new Date(dateTo)).toISOString())
         .order("created_at", { ascending: false }) as any;
