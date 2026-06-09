@@ -312,7 +312,7 @@ export default function OrgUsersPage() {
         if (editUserPermissions.length > 0) {
           const permInserts = editUserPermissions.map(p => ({
             user_id: editingUser.id,
-            permission: p,
+            permission: p as any,
             organization_id: organization.id
           }));
           const { error: insPermError } = await supabase
