@@ -88,8 +88,8 @@ export default function OrgUsersPage() {
   const [isEditingUser, setIsEditingUser] = useState(false);
   const [editingUser, setEditingUser] = usePersistedState<UserWithRoles | null>("users:editingUser", null);
   const [editUserName, setEditUserName] = usePersistedState("users:editUserName", "");
-
-
+  const [editUserDeptId, setEditUserDeptId] = useState<string | null>(null);
+  const [editUserPermissions, setEditUserPermissions] = useState<string[]>([]);
 
   // Role dialog state
   const [isRoleDialogOpen, setIsRoleDialogOpen] = usePersistedState("users:isRoleDialogOpen", false);
@@ -109,6 +109,9 @@ export default function OrgUsersPage() {
   // Manager CNPJ association state
   const [editUserCnpjIds, setEditUserCnpjIds] = useState<string[]>([]);
   const [newUserCnpjIds, setNewUserCnpjIds] = useState<string[]>([]);
+  const [newUserPermissions, setNewUserPermissions] = useState<string[]>(["visualizar_documento"]);
+  const [newUserDeptId, setNewUserDeptId] = useState<string | null>(null);
+
 
 
   // Fetch org CNPJs
@@ -234,6 +237,8 @@ export default function OrgUsersPage() {
         fullName: newUserName,
         role: newUserRole,
         cnpjIds: newUserCnpjIds,
+        departmentId: newUserDeptId,
+        permissions: newUserPermissions,
       });
 
       if (error) throw error;
@@ -250,10 +255,13 @@ export default function OrgUsersPage() {
       setNewUserRole("user");
       
       setNewUserCnpjIds([]);
+      setNewUserPermissions(["visualizar_documento"]);
+      setNewUserDeptId(null);
       setIsAddDialogOpen(false);
 
       // Refresh user list
       fetchUsers();
+
     } catch (error: any) {
       console.error("Error creating user:", error);
       const msg = error.message || "";
@@ -278,16 +286,44 @@ export default function OrgUsersPage() {
 
     setIsEditingUser(true);
     try {
-      const { error } = await supabase
+      // 1. Update Profile
+      const { error: profileError } = await supabase
         .from("profiles")
         .update({ 
           full_name: editUserName.trim(),
+          department_id: editUserDeptId,
         })
         .eq("id", editingUser.id);
 
-      if (error) throw error;
+      if (profileError) throw profileError;
 
-      // Save CNPJ scope for manager OR org_admin; sectors only for manager.
+      // 2. Update Permissions
+      if (organization?.id) {
+        // Remove existing
+        const { error: delPermError } = await supabase
+          .from("user_permissions")
+          .delete()
+          .eq("user_id", editingUser.id)
+          .eq("organization_id", organization.id);
+        
+        if (delPermError) throw delPermError;
+
+        // Add new
+        if (editUserPermissions.length > 0) {
+          const permInserts = editUserPermissions.map(p => ({
+            user_id: editingUser.id,
+            permission: p,
+            organization_id: organization.id
+          }));
+          const { error: insPermError } = await supabase
+            .from("user_permissions")
+            .insert(permInserts);
+          
+          if (insPermError) throw insPermError;
+        }
+      }
+
+      // 3. Save CNPJ scope
       const isUserRole = editingUser.roles.includes("user");
       const isAdminUser = editingUser.roles.includes("org_admin");
       if ((isUserRole || isAdminUser) && organization?.id) {
@@ -307,7 +343,6 @@ export default function OrgUsersPage() {
           const { error: insErr } = await supabase.from("manager_cnpjs" as any).insert(cnpjInserts);
           if (insErr) throw insErr;
         }
-
       }
 
       toast({
@@ -333,24 +368,40 @@ export default function OrgUsersPage() {
   const openEditDialog = async (user: UserWithRoles) => {
     setEditingUser(user);
     setEditUserName(user.full_name || "");
+    setEditUserDeptId(user.department_id || null);
     setEditUserCnpjIds([]);
+    setEditUserPermissions([]);
     
     setIsEditDialogOpen(true);
 
-    // Fetch CNPJ scope (manager and admin) and sector scope (manager only)
-    const isUserRole = user.roles.includes("user");
-    const isAdminUser = user.roles.includes("org_admin");
-    if ((isUserRole || isAdminUser) && organization?.id) {
-      const cnpjRes = await supabase
-        .from("manager_cnpjs" as any)
-        .select("organization_cnpj_id")
+    if (organization?.id) {
+      // Fetch CNPJ scope
+      const isUserRole = user.roles.includes("user");
+      const isAdminUser = user.roles.includes("org_admin");
+      if (isUserRole || isAdminUser) {
+        const cnpjRes = await supabase
+          .from("manager_cnpjs" as any)
+          .select("organization_cnpj_id")
+          .eq("user_id", user.id)
+          .eq("organization_id", organization.id);
+        if (cnpjRes.data) {
+          setEditUserCnpjIds((cnpjRes.data as any[]).map((r: any) => r.organization_cnpj_id));
+        }
+      }
+
+      // Fetch permissions
+      const { data: permsData } = await supabase
+        .from("user_permissions")
+        .select("permission")
         .eq("user_id", user.id)
         .eq("organization_id", organization.id);
-      if (cnpjRes.data) {
-        setEditUserCnpjIds((cnpjRes.data as any[]).map((r: any) => r.organization_cnpj_id));
+      
+      if (permsData) {
+        setEditUserPermissions(permsData.map(p => p.permission as string));
       }
     }
   };
+
 
   const openRoleDialog = (user: UserWithRoles) => {
     setRoleDialogUser(user);
@@ -658,8 +709,9 @@ export default function OrgUsersPage() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Todos os tipos</SelectItem>
-                  <SelectItem value="org_admin">Administrador</SelectItem>
-                  <SelectItem value="manager">Usuário</SelectItem>
+                   <SelectItem value="org_admin">Administrador</SelectItem>
+                  <SelectItem value="user">Usuário</SelectItem>
+
                   <SelectItem value="none">Sem role</SelectItem>
                 </SelectContent>
               </Select>
@@ -744,13 +796,16 @@ export default function OrgUsersPage() {
                           </SelectTrigger>
                           <SelectContent>
                             <SelectItem value="org_admin">Administrador</SelectItem>
-                            <SelectItem value="manager">Usuário</SelectItem>
+                            <SelectItem value="user">Usuário</SelectItem>
                           </SelectContent>
                         </Select>
                     </div>
                     <div className="space-y-2">
                       <Label>Departamento</Label>
-                      <Select>
+                      <Select
+                        value={newUserDeptId || "none"}
+                        onValueChange={(v) => setNewUserDeptId(v === "none" ? null : v)}
+                      >
                         <SelectTrigger>
                           <SelectValue placeholder="Selecione um departamento" />
                         </SelectTrigger>
@@ -767,24 +822,32 @@ export default function OrgUsersPage() {
                     <div className="space-y-2">
                       <Label>Permissões Especiais</Label>
                       <div className="grid grid-cols-2 gap-2 border rounded-md p-3">
-                        <div className="flex items-center space-x-2">
-                          <Checkbox id="perm-view" defaultChecked />
-                          <Label htmlFor="perm-view" className="text-xs font-normal">Visualizar Documentos</Label>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <Checkbox id="perm-insert" />
-                          <Label htmlFor="perm-insert" className="text-xs font-normal">Inserir Documentos</Label>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <Checkbox id="perm-edit" />
-                          <Label htmlFor="perm-edit" className="text-xs font-normal">Editar Documentos</Label>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <Checkbox id="perm-admin" />
-                          <Label htmlFor="perm-admin" className="text-xs font-normal">Administrar Sistema</Label>
-                        </div>
+                        {[
+                          { id: "visualizar_documento", label: "Visualizar" },
+                          { id: "inserir_documento", label: "Inserir" },
+                          { id: "editar_documento", label: "Editar" },
+                          { id: "excluir_documento", label: "Excluir" },
+                          { id: "assinar_documento", label: "Assinar" },
+                          { id: "administrar_sistema", label: "Administrar" },
+                        ].map((perm) => (
+                          <div key={perm.id} className="flex items-center space-x-2">
+                            <Checkbox 
+                              id={`new-perm-${perm.id}`} 
+                              checked={newUserPermissions.includes(perm.id)}
+                              onCheckedChange={(checked) => {
+                                setNewUserPermissions(prev => 
+                                  checked 
+                                    ? [...prev, perm.id] 
+                                    : prev.filter(p => p !== perm.id)
+                                );
+                              }}
+                            />
+                            <Label htmlFor={`new-perm-${perm.id}`} className="text-xs font-normal">{perm.label}</Label>
+                          </div>
+                        ))}
                       </div>
                     </div>
+
                     </div>
                     <DialogFooter>
                       <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
@@ -958,6 +1021,53 @@ export default function OrgUsersPage() {
               <Input value={editingUser?.email || ""} disabled className="bg-muted" />
               <p className="text-xs text-muted-foreground">O email não pode ser alterado.</p>
             </div>
+            <div className="space-y-2">
+              <Label>Departamento</Label>
+              <Select
+                value={editUserDeptId || "none"}
+                onValueChange={(v) => setEditUserDeptId(v === "none" ? null : v)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione um departamento" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">Nenhum</SelectItem>
+                  {orgDepartments.map((dept: any) => (
+                    <SelectItem key={dept.id} value={dept.id}>
+                      {dept.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>Permissões Granulares</Label>
+              <div className="grid grid-cols-2 gap-2 border rounded-md p-3">
+                {[
+                  { id: "visualizar_documento", label: "Visualizar" },
+                  { id: "inserir_documento", label: "Inserir" },
+                  { id: "editar_documento", label: "Editar" },
+                  { id: "excluir_documento", label: "Excluir" },
+                  { id: "assinar_documento", label: "Assinar" },
+                  { id: "administrar_sistema", label: "Administrar" },
+                ].map((perm) => (
+                  <div key={perm.id} className="flex items-center space-x-2">
+                    <Checkbox 
+                      id={`edit-perm-${perm.id}`} 
+                      checked={editUserPermissions.includes(perm.id)}
+                      onCheckedChange={(checked) => {
+                        setEditUserPermissions(prev => 
+                          checked 
+                            ? [...prev, perm.id] 
+                            : prev.filter(p => p !== perm.id)
+                        );
+                      }}
+                    />
+                    <Label htmlFor={`edit-perm-${perm.id}`} className="text-xs font-normal">{perm.label}</Label>
+                  </div>
+                ))}
+              </div>
+            </div>
             {(editingUser?.roles.includes("user") || editingUser?.roles.includes("org_admin")) && orgCnpjs.length > 0 && (
               <div className="space-y-2">
                 <Label className="flex items-center gap-2">
@@ -991,6 +1101,7 @@ export default function OrgUsersPage() {
                 </div>
               </div>
             )}
+
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
@@ -1031,8 +1142,9 @@ export default function OrgUsersPage() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="org_admin">Administrador</SelectItem>
-                  <SelectItem value="manager">Usuário</SelectItem>
+                  <SelectItem value="user">Usuário</SelectItem>
                 </SelectContent>
+
               </Select>
             </div>
           </div>
