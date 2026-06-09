@@ -110,24 +110,63 @@ export default function Dashboard() {
         </p>
       </div>
 
-      <div className="grid gap-4 grid-cols-2 md:grid-cols-4">
-        {cards.map((card) => (
-          <Card key={card.title} className={card.onClick ? "cursor-pointer hover:shadow-md transition-shadow" : ""} onClick={card.onClick}>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                {card.title}
-              </CardTitle>
-              <card.icon className={`h-4 w-4 ${card.color}`} />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                {isLoadingStats ? "..." : card.value}
-              </div>
-              <p className="text-xs text-muted-foreground">{card.description}</p>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+      <TooltipProvider delayDuration={200}>
+        <div className="grid gap-4 grid-cols-2 md:grid-cols-4">
+          {cards.map((card: any) => (
+            <Card key={card.title} className={card.onClick ? "cursor-pointer hover:shadow-md transition-shadow" : ""} onClick={card.onClick}>
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-1.5">
+                  {card.title}
+                  {card.tooltip && (
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <button
+                          type="button"
+                          onClick={(e) => e.stopPropagation()}
+                          className="text-muted-foreground/60 hover:text-foreground transition-colors"
+                          aria-label="Saiba mais"
+                        >
+                          <Info className="h-3.5 w-3.5" />
+                        </button>
+                      </TooltipTrigger>
+                      <TooltipContent side="bottom" className="max-w-xs text-xs leading-relaxed">
+                        {card.tooltip}
+                      </TooltipContent>
+                    </Tooltip>
+                  )}
+                </CardTitle>
+                <card.icon className={`h-4 w-4 ${card.color}`} />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">
+                  {isLoadingStats ? "..." : card.value}
+                </div>
+                <p className="text-xs text-muted-foreground">{card.description}</p>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </TooltipProvider>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Info className="h-5 w-5 text-orange-500" />
+            O que são "Documentos Pendentes"?
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="text-sm text-muted-foreground space-y-2">
+          <p>
+            São documentos da sua organização que ainda <strong>não foram concluídos</strong> e estão aguardando alguma ação do usuário antes de serem considerados ativos.
+          </p>
+          <p>
+            <strong>Como o sistema calcula:</strong> contamos todos os registros em <code className="bg-muted px-1 py-0.5 rounded text-xs">ged_documents</code> pertencentes à sua organização (<code className="bg-muted px-1 py-0.5 rounded text-xs">organization_id</code>) cujo campo <code className="bg-muted px-1 py-0.5 rounded text-xs">status</code> está definido como <code className="bg-muted px-1 py-0.5 rounded text-xs">'pending'</code>.
+          </p>
+          <p>
+            Situações típicas que geram pendência: documento enviado mas ainda não classificado, aguardando aprovação/revisão, upload incompleto, ou aguardando assinatura digital. Se nenhum documento estiver nessa situação, o contador exibirá <strong>0</strong>.
+          </p>
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader>
