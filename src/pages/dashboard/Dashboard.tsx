@@ -42,12 +42,16 @@ export default function Dashboard() {
       setIsLoadingStats(true);
 
       try {
-        // Mocking stats for now as we transition to documents
+        const [docsCount, activeUsers] = await Promise.all([
+          supabase.from("system_audit_log").select("id", { count: "exact", head: true }).eq("organization_id", organization.id),
+          supabase.from("profiles").select("id", { count: "exact", head: true }).eq("organization_id", organization.id).eq("is_active", true),
+        ]);
+
         setStats({
-          totalDocuments: 12,
-          vigenteDocuments: 10,
-          expiredDocuments: 2,
-          totalUsers: 5,
+          totalDocuments: 24, // Placeholder até criar tabela docs
+          vigenteDocuments: 20,
+          expiredDocuments: 4,
+          totalUsers: activeUsers.count || 0,
         });
       } catch (err) {
         console.error("Error fetching dashboard stats:", err);
