@@ -4,7 +4,7 @@ import { gedRepository } from "@/repository/gedRepository";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 
-export function useGED(folderId: string | null = null) {
+export function useGED(folderId: string | null = null, filterFavorites: boolean = false) {
   const { organization } = useAuth();
   const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState("");
@@ -12,12 +12,13 @@ export function useGED(folderId: string | null = null) {
 
   // Documentos
   const { data: documentsData, isLoading: isLoadingDocs } = useQuery({
-    queryKey: ["ged-documents", organization?.id, folderId, searchTerm, page],
+    queryKey: ["ged-documents", organization?.id, folderId, searchTerm, page, filterFavorites],
     queryFn: () => gedRepository.getDocuments({
       organizationId: organization!.id,
       folderId,
       searchTerm,
-      page
+      page,
+      isFavorite: filterFavorites
     }),
     enabled: !!organization?.id,
   });
@@ -44,7 +45,7 @@ export function useGED(folderId: string | null = null) {
 
   const toggleFavoriteMutation = useMutation({
     mutationFn: ({ id, isFavorite }: { id: string, isFavorite: boolean }) => 
-      gedRepository.logAction(organization!.id, isFavorite ? "favorited" : "unfavorited", id),
+      gedRepository.toggleFavorite(id, isFavorite),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["ged-documents"] });
     }
