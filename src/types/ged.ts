@@ -34,35 +34,45 @@ export interface Profile {
 }
 
 export interface Department {
-  id: string;
+  dept_id: string;
   organization_id: string;
-  parent_id?: string | null;
-  name: string;
-  code?: string | null;
-  is_active: boolean;
+  dept_cd_departamento?: string | null;
+  dept_nm_departamento: string;
+  dept_ds_departamento?: string | null;
+  dept_in_ativo: boolean;
+  dept_dt_cadastro: string;
+  dept_usuario_responsavel?: string | null;
   created_at: string;
   updated_at: string;
 }
 
 export interface Sector {
-  id: string;
-  department_id: string;
+  set_id: string;
+  dept_id: string;
   organization_id: string;
-  name: string;
-  description?: string;
-  is_active: boolean;
+  set_cd_setor?: string | null;
+  set_nm_setor: string;
+  set_ds_setor?: string | null;
+  set_in_ativo: boolean;
+  set_dt_cadastro: string;
+  set_usuario_responsavel?: string | null;
   created_at: string;
   updated_at: string;
 }
 
 export interface Folder {
-  id: string;
+  past_id: string;
   organization_id: string;
-  sector_id?: string;
-  parent_id?: string;
-  name: string;
-  description?: string;
-  is_active: boolean;
+  set_id?: string;
+  past_id_pai?: string | null;
+  past_cd_pasta?: string | null;
+  past_nm_pasta: string;
+  past_ds_pasta?: string | null;
+  past_in_ativa: boolean;
+  past_in_restrita: boolean;
+  past_in_permite_subpastas: boolean;
+  past_dt_cadastro: string;
+  past_usuario_responsavel?: string | null;
   created_at: string;
   updated_at: string;
 }
