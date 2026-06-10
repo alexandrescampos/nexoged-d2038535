@@ -291,7 +291,21 @@ export default function DocumentsPage() {
       const { url } = await getDownloadUrl(documentId);
       window.open(url, '_blank', 'noopener,noreferrer');
     } catch (error: any) {
-      toast.error(error?.message || "Erro ao visualizar arquivo.");
+      console.error("Erro ao visualizar arquivo:", error);
+      const isPermissionError = 
+        error?.message?.includes("JWT") || 
+        error?.code === "PGRST301" || 
+        error?.message?.includes("permission denied") ||
+        error?.status === 403;
+
+      if (isPermissionError) {
+        toast.error("Acesso Negado", {
+          description: "Você não tem permissão para visualizar este documento devido ao nível de sigilo ou restrições de pasta.",
+          duration: 5000,
+        });
+      } else {
+        toast.error(error?.message || "Erro ao visualizar arquivo.");
+      }
     }
   };
 
@@ -306,7 +320,21 @@ export default function DocumentsPage() {
       link.click();
       document.body.removeChild(link);
     } catch (error: any) {
-      toast.error(error?.message || "Erro ao baixar arquivo.");
+      console.error("Erro ao baixar arquivo:", error);
+      const isPermissionError = 
+        error?.message?.includes("JWT") || 
+        error?.code === "PGRST301" || 
+        error?.message?.includes("permission denied") ||
+        error?.status === 403;
+
+      if (isPermissionError) {
+        toast.error("Acesso Negado", {
+          description: "Seu perfil não possui permissão para baixar este documento.",
+          duration: 5000,
+        });
+      } else {
+        toast.error(error?.message || "Erro ao baixar arquivo.");
+      }
     }
   };
 
