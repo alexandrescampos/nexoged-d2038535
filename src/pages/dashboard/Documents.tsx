@@ -102,6 +102,68 @@ function getFileTypeLabel(mime?: string, name?: string): string {
 }
 
 
+function normalizeTag(value: string): string {
+  return value.trim().replace(/\s+/g, " ").slice(0, 40);
+}
+
+function TagsInput({ value, onChange }: { value: string[]; onChange: (next: string[]) => void }) {
+  const [draft, setDraft] = useState("");
+  const addTag = (raw: string) => {
+    const t = normalizeTag(raw);
+    if (!t) return;
+    if (value.some(v => v.toLowerCase() === t.toLowerCase())) return;
+    if (value.length >= 20) return;
+    onChange([...value, t]);
+  };
+  const removeTag = (idx: number) => {
+    onChange(value.filter((_, i) => i !== idx));
+  };
+  return (
+    <div className="flex flex-wrap items-center gap-1.5 rounded-md border bg-background px-2 py-1.5 focus-within:ring-2 focus-within:ring-ring">
+      {value.map((tag, i) => (
+        <Badge key={`${tag}-${i}`} variant="secondary" className="gap-1 pl-2 pr-1 font-normal">
+          {tag}
+          <button
+            type="button"
+            aria-label={`Remover tag ${tag}`}
+            className="rounded-sm opacity-60 hover:opacity-100"
+            onClick={() => removeTag(i)}
+          >
+            <X className="h-3 w-3" />
+          </button>
+        </Badge>
+      ))}
+      <input
+        type="text"
+        value={draft}
+        onChange={(e) => setDraft(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === ",") {
+            e.preventDefault();
+            addTag(draft);
+            setDraft("");
+          } else if (e.key === "Backspace" && draft === "" && value.length > 0) {
+            removeTag(value.length - 1);
+          }
+        }}
+        onBlur={() => {
+          if (draft.trim()) {
+            addTag(draft);
+            setDraft("");
+          }
+        }}
+        placeholder={value.length === 0 ? "Digite e pressione Enter para adicionar..." : ""}
+        className="flex-1 min-w-[140px] bg-transparent text-sm outline-none placeholder:text-muted-foreground"
+        maxLength={40}
+      />
+    </div>
+  );
+}
+
+
+
+
+
 export default function DocumentsPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const searchInputRef = useRef<HTMLInputElement>(null);
