@@ -286,6 +286,21 @@ export default function DocumentsPage() {
                   setCurrentFolder(folder.past_id);
                   setFolderPath([...folderPath, { id: folder.past_id, name: folder.past_nm_pasta }]);
                 }}
+                onDragOver={(e) => { e.preventDefault(); e.currentTarget.classList.add('ring-2','ring-primary'); }}
+                onDragLeave={(e) => e.currentTarget.classList.remove('ring-2','ring-primary')}
+                onDrop={async (e) => {
+                  e.preventDefault();
+                  e.currentTarget.classList.remove('ring-2','ring-primary');
+                  const id = e.dataTransfer.getData('id');
+                  const type = e.dataTransfer.getData('type');
+                  if (type !== 'DOCUMENT' || !id) return;
+                  const { supabase } = await import('@/integrations/supabase/client');
+                  const { error } = await supabase.from('ged_documents').update({ past_id: folder.past_id, folder_id: folder.past_id }).eq('id', id);
+                  if (error) { toast.error('Erro ao mover documento'); return; }
+                  toast.success('Documento movido');
+                  // refetch
+                  window.dispatchEvent(new Event('ged-refresh'));
+                }}
               >
                 <CardContent className={viewMode === 'list' ? 'p-2 flex items-center gap-3' : 'p-4 flex flex-col items-center gap-2 text-center'}>
                   <Folder className="h-8 w-8 text-amber-500 fill-amber-500/20" />
