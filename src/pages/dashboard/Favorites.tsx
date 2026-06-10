@@ -56,7 +56,8 @@ export default function FavoritesPage() {
     setSearchTerm,
     deleteDocument,
     toggleFavorite,
-    getDownloadUrl
+    getDownloadUrl,
+    debug,
   } = useGED(null, true); // null for folderId, true for filterFavorites
 
   const { canUserDownload } = useDocumentPermissions();
