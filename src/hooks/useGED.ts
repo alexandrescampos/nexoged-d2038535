@@ -58,9 +58,41 @@ export function useGED(folderId: string | null = null, filterFavorites: boolean 
   });
 
   const toggleFavoriteMutation = useMutation({
-    mutationFn: ({ id, isFavorite }: { id: string, isFavorite: boolean }) => 
+    mutationFn: ({ id, isFavorite }: { id: string, isFavorite: boolean }) =>
       gedRepository.toggleFavorite(id, isFavorite),
-    onSuccess: () => {
+    onMutate: async ({ id, isFavorite }) => {
+      await queryClient.cancelQueries({ queryKey: ["ged-documents"] });
+      const previous = queryClient.getQueriesData<any>({ queryKey: ["ged-documents"] });
+
+      queryClient.setQueriesData<any>({ queryKey: ["ged-documents"] }, (old: any) => {
+        if (!old?.data) return old;
+        if (!isFavorite) {
+          // Optimistically remove from favorites-filtered lists, flip flag elsewhere
+          const filtered = old.data.filter((d: any) => d.id !== id || !old.__isFavoriteList);
+          return {
+            ...old,
+            data: old.data.map((d: any) =>
+              d.id === id ? { ...d, is_favorite: false } : d
+            ).filter((d: any) => !(old.__isFavoriteList && d.id === id)),
+            count: old.count,
+          };
+        }
+        return {
+          ...old,
+          data: old.data.map((d: any) =>
+            d.id === id ? { ...d, is_favorite: true } : d
+          ),
+        };
+      });
+
+      return { previous };
+    },
+    onError: (_err, _vars, context: any) => {
+      if (context?.previous) {
+        context.previous.forEach(([key, data]: any) => queryClient.setQueryData(key, data));
+      }
+    },
+    onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ["ged-documents"] });
     }
   });
