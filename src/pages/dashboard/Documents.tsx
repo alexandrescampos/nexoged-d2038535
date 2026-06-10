@@ -179,7 +179,8 @@ export default function DocumentsPage() {
     page_count: 1,
     description: "",
     expiration_date: "",
-    document_creation_date: ""
+    document_creation_date: "",
+    tags: [] as string[],
   });
   const [editData, setEditData] = useState({
     title: "",
@@ -187,7 +188,8 @@ export default function DocumentsPage() {
     page_count: 1,
     description: "",
     expiration_date: "",
-    document_creation_date: ""
+    document_creation_date: "",
+    tags: [] as string[],
   });
 
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
