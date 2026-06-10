@@ -1,4 +1,7 @@
 import { useState, useRef } from "react";
+import { useGEDSettings } from "@/hooks/useGEDSettings";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
 import { useGED } from "@/hooks/useGED";
 import { 
   FileText, 
@@ -156,7 +159,9 @@ export default function RecentPage() {
                         {doc.is_favorite && <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />}
                       </div>
                       <div className="flex items-center gap-2 mt-1">
-                        <Badge variant="outline" className="text-[10px] h-4 py-0 font-normal">{doc.document_type || "Geral"}</Badge>
+                        <Badge variant="outline" className="text-[10px] h-4 py-0 font-normal">
+                          {doc.document_type_data?.name || doc.document_type || "Geral"}
+                        </Badge>
                         <span className="text-[10px] text-muted-foreground">{new Date(doc.updated_at).toLocaleDateString()}</span>
                       </div>
                     </div>
