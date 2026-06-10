@@ -82,6 +82,12 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { SortableTableHead } from "@/components/SortableTableHead";
 import { useTableSort } from "@/hooks/useTableSort";
 import { toast } from "sonner";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 function getFileTypeLabel(mime?: string, name?: string): string {
   const ext = (name?.split(".").pop() || "").toLowerCase();
