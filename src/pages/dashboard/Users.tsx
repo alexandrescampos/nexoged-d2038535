@@ -137,10 +137,10 @@ export default function OrgUsersPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("departments")
-        .select("id, name")
+        .select("dept_id, dept_nm_departamento")
         .eq("organization_id", organization!.id)
-        .eq("is_active", true)
-        .order("name");
+        .eq("dept_in_ativo", true)
+        .order("dept_nm_departamento");
       if (error) throw error;
       return data;
     },

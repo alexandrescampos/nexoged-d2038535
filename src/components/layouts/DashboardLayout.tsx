@@ -49,6 +49,7 @@ import {
   Info,
   Copy,
   Share2,
+  FolderTree,
 } from "lucide-react";
 import { TabsProvider, useTabs } from "@/contexts/TabsContext";
 import { TabsBar } from "@/components/TabsBar";
@@ -91,6 +92,7 @@ const menuGroups: MenuGroup[] = [
       { title: "Documentos", url: "/dashboard/documents", icon: FileText, userAllowed: true },
       { title: "Tipos de Documento", url: "/dashboard/document-types", icon: Settings2, adminOnly: true },
       { title: "Departamentos", url: "/dashboard/departments", icon: Building2, adminOnly: true },
+      { title: "Estrutura Org.", url: "/dashboard/organization-structure", icon: FolderTree, adminOnly: true },
       { title: "Usuários", url: "/dashboard/users", icon: Users, adminOnly: true },
     ],
   },

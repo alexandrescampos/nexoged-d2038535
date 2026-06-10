@@ -225,14 +225,14 @@ export default function DocumentsPage() {
             {/* Render Pastas */}
             {folders.map((folder) => (
               <Card 
-                key={folder.id} 
+                key={folder.past_id} 
                 className={`cursor-pointer transition-all hover:bg-accent/50 group ${viewMode === 'list' ? 'border-none shadow-none bg-transparent rounded-md' : ''}`}
-                onClick={() => setCurrentFolder(folder.id)}
+                onClick={() => setCurrentFolder(folder.past_id)}
               >
                 <CardContent className={viewMode === 'list' ? 'p-2 flex items-center gap-3' : 'p-4 flex flex-col items-center gap-2 text-center'}>
                   <Folder className="h-8 w-8 text-amber-500 fill-amber-500/20" />
                   <div className={viewMode === 'list' ? 'flex-1' : ''}>
-                    <p className="font-medium text-sm truncate max-w-[150px]">{folder.name}</p>
+                    <p className="font-medium text-sm truncate max-w-[150px]">{folder.past_nm_pasta}</p>
                     {viewMode === 'list' && <p className="text-xs text-muted-foreground">Pasta de arquivos</p>}
                   </div>
                   {viewMode === 'list' && <MoreVertical className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100" />}

@@ -43,8 +43,8 @@ export default function DepartmentsPage() {
   const [newDeptCode, setNewDeptCode] = useState("");
 
   const filteredDepartments = departments.filter(d => 
-    d.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    d.code?.toLowerCase().includes(searchTerm.toLowerCase())
+    d.dept_nm_departamento.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    d.dept_cd_departamento?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const { sortedItems, sortField, sortDirection, handleSort } = useTableSort(filteredDepartments);
@@ -52,11 +52,10 @@ export default function DepartmentsPage() {
   const handleCreate = () => {
     if (!newDeptName.trim() || !organization?.id) return;
     createDepartment({
-      name: newDeptName.trim(),
-      code: newDeptCode.trim() || null,
+      dept_nm_departamento: newDeptName.trim(),
+      dept_cd_departamento: newDeptCode.trim() || null,
       organization_id: organization.id,
-      is_active: true,
-      parent_id: null
+      dept_in_ativo: true,
     });
     setNewDeptName("");
     setNewDeptCode("");
@@ -92,9 +91,9 @@ export default function DepartmentsPage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <SortableTableHead field="name" sortField={sortField} sortDirection={sortDirection} onSort={handleSort} className="w-[400px]">Nome</SortableTableHead>
-                <SortableTableHead field="code" sortField={sortField} sortDirection={sortDirection} onSort={handleSort}>Código</SortableTableHead>
-                <SortableTableHead field="is_active" sortField={sortField} sortDirection={sortDirection} onSort={handleSort}>Status</SortableTableHead>
+                <SortableTableHead field="dept_nm_departamento" sortField={sortField} sortDirection={sortDirection} onSort={handleSort} className="w-[400px]">Nome</SortableTableHead>
+                <SortableTableHead field="dept_cd_departamento" sortField={sortField} sortDirection={sortDirection} onSort={handleSort}>Código</SortableTableHead>
+                <SortableTableHead field="dept_in_ativo" sortField={sortField} sortDirection={sortDirection} onSort={handleSort}>Status</SortableTableHead>
                 <TableHead className="text-right">Ações</TableHead>
               </TableRow>
             </TableHeader>
@@ -113,17 +112,17 @@ export default function DepartmentsPage() {
                 </TableRow>
               ) : (
                 sortedItems.map((dept) => (
-                  <TableRow key={dept.id}>
+                  <TableRow key={dept.dept_id}>
                     <TableCell className="font-medium">
                       <div className="flex items-center gap-2">
                         <FolderTree className="h-4 w-4 text-primary" />
-                        {dept.name}
+                        {dept.dept_nm_departamento}
                       </div>
                     </TableCell>
-                    <TableCell className="text-muted-foreground">{dept.code || "—"}</TableCell>
+                    <TableCell className="text-muted-foreground">{dept.dept_cd_departamento || "—"}</TableCell>
                     <TableCell>
-                      <Badge variant={dept.is_active ? "default" : "secondary"}>
-                        {dept.is_active ? "Ativo" : "Inativo"}
+                      <Badge variant={dept.dept_in_ativo ? "default" : "secondary"}>
+                        {dept.dept_in_ativo ? "Ativo" : "Inativo"}
                       </Badge>
                     </TableCell>
                     <TableCell className="text-right">

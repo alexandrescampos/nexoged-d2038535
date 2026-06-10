@@ -56,6 +56,7 @@ import PrivacyPage from "./pages/dashboard/Privacy";
 import LegalPage from "./pages/super-admin/Legal";
 import AboutPage from "./pages/dashboard/About";
 import SuperAdminAboutPage from "./pages/super-admin/About";
+import OrganizationStructurePage from "./pages/dashboard/OrganizationStructure";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -154,6 +155,7 @@ const App = () => {
                 } 
               />
               <Route path="departments" element={<AdminOnlyRoute><DepartmentsPage /></AdminOnlyRoute>} />
+              <Route path="organization-structure" element={<AdminOnlyRoute><OrganizationStructurePage /></AdminOnlyRoute>} />
               <Route path="users" element={<AdminOnlyRoute><OrgUsersPage /></AdminOnlyRoute>} />
               <Route path="permissions" element={<AdminOnlyRoute><PermissionsPage /></AdminOnlyRoute>} />
               <Route path="document-types" element={<AdminOnlyRoute><DocumentTypesPage /></AdminOnlyRoute>} />
