@@ -215,7 +215,8 @@ export default function OrgDashboard() {
           </div>
 
           {/* Expired Alerts */}
-          {stats.expiredDocs > 0 && (
+          {/* DEBUG: Expired: {stats.expiredDocs}, Near: {stats.nearExpiryDocs} */}
+          {(stats.expiredDocs > 0 || true) && (
             <Card className="border-red-500/20 bg-red-500/5 shadow-none">
               <CardContent className="p-4 flex items-center gap-4">
                 <div className="bg-red-500 p-2 rounded-full"><AlertTriangle className="h-5 w-5 text-white" /></div>
