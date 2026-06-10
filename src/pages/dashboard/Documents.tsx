@@ -20,6 +20,7 @@ import { UsageIndicator } from "@/components/dashboard/UsageIndicator";
 import { GedTreeView } from "@/components/dashboard/ged/GedTreeView";
 import { useOrganizationStructure } from "@/hooks/useOrganizationStructure";
 import { useQuery } from "@tanstack/react-query";
+import { useDocumentPermissions } from "@/hooks/useDocumentPermissions";
 import { supabase } from "@/integrations/supabase/client";
 import { Files } from "lucide-react";
 import { 
@@ -219,8 +220,12 @@ export default function DocumentsPage() {
   const folders = isFiltering ? [] : allFolders;
 
   const { documentTypes } = useGEDSettings();
-  const { organization } = useAuth();
+  const { organization, user, isSuperAdmin, isOrgAdmin } = useAuth();
   const { moveItem } = useOrganizationStructure();
+  const { canUserDownload } = useDocumentPermissions();
+
+
+
 
   // Enriquece documentos com rótulo de tipo de arquivo p/ ordenação
   const enrichedDocuments = (documents || []).map((d: any) => ({
@@ -714,9 +719,11 @@ export default function DocumentsPage() {
                               </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end" className="w-48">
-                              <DropdownMenuItem className="gap-2" disabled={!doc.has_file} onClick={() => handleDownloadFile(doc)}>
-                                <Download className="h-4 w-4" /> Baixar
-                              </DropdownMenuItem>
+                              {canUserDownload(doc) && (
+                                <DropdownMenuItem className="gap-2" disabled={!doc.has_file} onClick={() => handleDownloadFile(doc)}>
+                                  <Download className="h-4 w-4" /> Baixar
+                                </DropdownMenuItem>
+                              )}
                               <DropdownMenuItem
                                 className="gap-2"
                                 onClick={() => {
@@ -838,9 +845,11 @@ export default function DocumentsPage() {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end" className="w-48">
-                        <DropdownMenuItem className="gap-2" disabled={!doc.has_file} onClick={() => handleDownloadFile(doc)}>
-                          <Download className="h-4 w-4" /> Baixar
-                        </DropdownMenuItem>
+                        {canUserDownload(doc) && (
+                          <DropdownMenuItem className="gap-2" disabled={!doc.has_file} onClick={() => handleDownloadFile(doc)}>
+                            <Download className="h-4 w-4" /> Baixar
+                          </DropdownMenuItem>
+                        )}
                         <DropdownMenuItem
                           className="gap-2"
                           onClick={() => {

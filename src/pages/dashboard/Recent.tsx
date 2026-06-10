@@ -3,7 +3,9 @@ import { useGEDSettings } from "@/hooks/useGEDSettings";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useGED } from "@/hooks/useGED";
+import { useDocumentPermissions } from "@/hooks/useDocumentPermissions";
 import { 
+
   FileText, 
   Search, 
   Filter, 
@@ -70,6 +72,9 @@ export default function RecentPage() {
     updateDocument,
     isUpdatingDoc
   } = useGED(null, false, true); // null for folderId, false for filterFavorites, true for filterRecent
+
+  const { canUserDownload } = useDocumentPermissions();
+
 
   const { documentTypes } = useGEDSettings();
 
@@ -197,13 +202,15 @@ export default function RecentPage() {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end" className="w-48">
-                        <DropdownMenuItem 
-                          className="gap-2"
-                          disabled={!doc.has_file}
-                          onClick={() => handleDownloadFile(doc)}
-                        >
-                          <Download className="h-4 w-4" /> Baixar
-                        </DropdownMenuItem>
+                        {canUserDownload(doc) && (
+                          <DropdownMenuItem 
+                            className="gap-2"
+                            disabled={!doc.has_file}
+                            onClick={() => handleDownloadFile(doc)}
+                          >
+                            <Download className="h-4 w-4" /> Baixar
+                          </DropdownMenuItem>
+                        )}
                         <DropdownMenuItem 
                           className="gap-2"
                           onClick={() => toggleFavorite({ id: doc.id, isFavorite: !doc.is_favorite })}

@@ -1,7 +1,9 @@
 import { useState, useRef } from "react";
 import { useGED } from "@/hooks/useGED";
 import { useGEDSettings } from "@/hooks/useGEDSettings";
+import { useDocumentPermissions } from "@/hooks/useDocumentPermissions";
 import { 
+
   FileText, 
   Search, 
   Filter, 
@@ -56,6 +58,9 @@ export default function FavoritesPage() {
     toggleFavorite,
     getDownloadUrl
   } = useGED(null, true); // null for folderId, true for filterFavorites
+
+  const { canUserDownload } = useDocumentPermissions();
+
 
   const { documentTypes } = useGEDSettings();
 
@@ -183,13 +188,15 @@ export default function FavoritesPage() {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end" className="w-48">
-                        <DropdownMenuItem 
-                          className="gap-2"
-                          disabled={!doc.has_file}
-                          onClick={() => handleDownloadFile(doc)}
-                        >
-                          <Download className="h-4 w-4" /> Baixar
-                        </DropdownMenuItem>
+                        {canUserDownload(doc) && (
+                          <DropdownMenuItem 
+                            className="gap-2"
+                            disabled={!doc.has_file}
+                            onClick={() => handleDownloadFile(doc)}
+                          >
+                            <Download className="h-4 w-4" /> Baixar
+                          </DropdownMenuItem>
+                        )}
                         <DropdownMenuItem 
                           className="gap-2"
                           onClick={() => toggleFavorite({ id: doc.id, isFavorite: false })}
