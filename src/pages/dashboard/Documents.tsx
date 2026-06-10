@@ -20,6 +20,7 @@ import { UsageIndicator } from "@/components/dashboard/UsageIndicator";
 import { GedTreeView } from "@/components/dashboard/ged/GedTreeView";
 import { useOrganizationStructure } from "@/hooks/useOrganizationStructure";
 import { useQuery } from "@tanstack/react-query";
+import { useDocumentPermissions } from "@/hooks/useDocumentPermissions";
 import { supabase } from "@/integrations/supabase/client";
 import { Files } from "lucide-react";
 import { 
