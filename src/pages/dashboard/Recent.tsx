@@ -73,6 +73,9 @@ export default function RecentPage() {
     isUpdatingDoc
   } = useGED(null, false, true); // null for folderId, false for filterFavorites, true for filterRecent
 
+  const { canUserDownload } = useDocumentPermissions();
+
+
   const { documentTypes } = useGEDSettings();
 
   const getFileIcon = (mime: string) => {
