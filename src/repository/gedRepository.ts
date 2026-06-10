@@ -37,8 +37,11 @@ export const gedRepository = {
         *,
         versions:ged_document_versions(mime_type, version_number, file_name, file_size, created_by),
         document_type_data:ged_document_types(*)
-      `, { count: "exact" })
-      .eq("organization_id", params.organizationId);
+      `, { count: "exact" });
+    
+    if (params.organizationId) {
+      query = query.eq("organization_id", params.organizationId);
+    }
 
     // When searching, look across the whole organization (ignore current folder)
     if (params.folderId !== undefined && !params.searchTerm) {
