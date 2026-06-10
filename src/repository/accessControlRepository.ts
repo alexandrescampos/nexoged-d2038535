@@ -176,5 +176,33 @@ export const accessControlRepository = {
       profiles: profiles?.map(p => p.perfil) || [],
       scopes: scopes || []
     };
+  },
+
+  // Profile Scopes
+  async getProfileScopes(profileId: string) {
+    const { data, error } = await supabase
+      .from("perfil_escopo")
+      .select("*")
+      .eq("perfil_id", profileId);
+    if (error) throw error;
+    return data;
+  },
+
+  async addProfileScope(scope: any) {
+    const { data, error } = await supabase
+      .from("perfil_escopo")
+      .insert([scope])
+      .select()
+      .single();
+    if (error) throw error;
+    return data;
+  },
+
+  async removeProfileScope(scopeId: string) {
+    const { error } = await supabase
+      .from("perfil_escopo")
+      .delete()
+      .eq("id", scopeId);
+    if (error) throw error;
   }
 };
