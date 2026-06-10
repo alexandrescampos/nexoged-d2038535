@@ -950,7 +950,7 @@ export default function DocumentsPage() {
                   folder_id: currentFolder,
                   past_id: currentFolder,
                   status: 'active',
-                  tags: [],
+                  tags: uploadData.tags,
                   keywords: []
                 },
                 file: selectedFile
@@ -963,7 +963,8 @@ export default function DocumentsPage() {
                     page_count: 1, 
                     description: "",
                     expiration_date: "",
-                    document_creation_date: ""
+                    document_creation_date: "",
+                    tags: [],
                   });
                   setSelectedFile(null);
                 }
