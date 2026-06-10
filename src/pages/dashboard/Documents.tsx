@@ -123,6 +123,21 @@ export default function DocumentsPage() {
   const { documentTypes } = useGEDSettings();
   const { organization } = useAuth();
   const { moveItem } = useOrganizationStructure();
+
+  const { data: totalDocuments = 0 } = useQuery({
+    queryKey: ["ged-documents-total", organization?.id],
+    queryFn: async () => {
+      const { count, error } = await supabase
+        .from("ged_documents")
+        .select("id", { count: "exact", head: true })
+        .eq("organization_id", organization!.id)
+        .neq("status", "deleted");
+      if (error) throw error;
+      return count || 0;
+    },
+    enabled: !!organization?.id,
+  });
+
   
   useEffect(() => {
     const action = searchParams.get("action");
