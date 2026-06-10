@@ -548,6 +548,61 @@ export default function DocumentsPage() {
             </div>
           </div>
 
+            {/* Filtros Ativos */}
+            {(status || searchTerm || selectedTags.length > 0) && (
+              <div className="flex flex-wrap gap-2 items-center bg-muted/30 p-2 rounded-md border border-dashed w-full">
+                <span className="text-xs text-muted-foreground font-medium">Filtros ativos:</span>
+                {status === 'expired' && (
+                  <Badge variant="destructive" className="gap-1 pr-1 cursor-pointer" onClick={() => {
+                    setStatus(null);
+                    const newParams = new URLSearchParams(searchParams);
+                    newParams.delete("status");
+                    setSearchParams(newParams);
+                  }}>
+                    Vencidos <X className="h-3 w-3" />
+                  </Badge>
+                )}
+                {status === 'near_expiry' && (
+                  <Badge variant="outline" className="gap-1 pr-1 bg-amber-500/10 text-amber-600 border-amber-500/20 cursor-pointer" onClick={() => {
+                    setStatus(null);
+                    const newParams = new URLSearchParams(searchParams);
+                    newParams.delete("status");
+                    setSearchParams(newParams);
+                  }}>
+                    A Vencer <X className="h-3 w-3" />
+                  </Badge>
+                )}
+                {status === 'pending' && (
+                  <Badge variant="outline" className="gap-1 pr-1 bg-orange-500/10 text-orange-600 border-orange-500/20 cursor-pointer" onClick={() => {
+                    setStatus(null);
+                    const newParams = new URLSearchParams(searchParams);
+                    newParams.delete("status");
+                    setSearchParams(newParams);
+                  }}>
+                    Pendentes <X className="h-3 w-3" />
+                  </Badge>
+                )}
+                {searchTerm && (
+                  <Badge variant="secondary" className="gap-1 pr-1 cursor-pointer" onClick={() => setSearchTerm("")}>
+                    Busca: {searchTerm} <X className="h-3 w-3" />
+                  </Badge>
+                )}
+                {selectedTags.map(tag => (
+                   <Badge key={tag} variant="secondary" className="gap-1 pr-1 cursor-pointer" onClick={() => setSelectedTags(selectedTags.filter(t => t !== tag))}>
+                    Tag: {tag} <X className="h-3 w-3" />
+                  </Badge>
+                ))}
+                <Button variant="ghost" size="sm" className="h-6 text-[10px] px-2 ml-auto" onClick={() => {
+                  setStatus(null);
+                  setSearchTerm("");
+                  setSelectedTags([]);
+                  setSearchParams({});
+                }}>
+                  Limpar Tudo
+                </Button>
+              </div>
+            )}
+
       {/* Breadcrumbs da pasta selecionada */}
       <div className="flex items-center justify-between gap-2 px-1 py-2 border-b">
         <div className="flex items-center flex-wrap text-sm text-muted-foreground min-w-0">
