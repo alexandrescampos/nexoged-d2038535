@@ -9,6 +9,7 @@ export const gedRepository = {
     isFavorite?: boolean;
     status?: string;
     searchTerm?: string;
+    tags?: string[];
     page?: number;
     pageSize?: number;
   }) {
