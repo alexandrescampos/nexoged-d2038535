@@ -45,25 +45,16 @@ export const gedRepository = {
       // Sanitize term to avoid breaking the PostgREST `or` syntax
       const term = params.searchTerm.replace(/[,(){}"]/g, " ").trim();
       if (term) {
-        // For tag/keyword partial match we cannot use ilike directly on array columns
-        // via PostgREST. Pre-fetch ids of docs whose any tag/keyword matches partially.
+        // PostgREST can't do partial ilike on array columns, so we pre-resolve
+        // which document ids have any tag/keyword that partially matches the term.
         const lowerTerm = term.toLowerCase();
-        const { data: tagMatchRows } = await supabase
-          .from("ged_documents")
-          .select("id, tags, keywords")
-          .eq("organization_id", params.organizationId)
-          .neq("status", "deleted")
-          .or(`tags.cs.{${term}},keywords.cs.{${term}}`)
-          // also pull rows that have any tag/keyword set so we can do partial match client-side
-          .limit(2000);
-        const matchedIds = new Set<string>();
         const { data: allTagRows } = await supabase
           .from("ged_documents")
           .select("id, tags, keywords")
           .eq("organization_id", params.organizationId)
           .neq("status", "deleted")
-          .or("tags.neq.{},keywords.neq.{}")
           .limit(5000);
+        const matchedIds: string[] = [];
         (allTagRows || []).forEach((row: any) => {
           const tags: string[] = Array.isArray(row.tags) ? row.tags : [];
           const kws: string[] = Array.isArray(row.keywords) ? row.keywords : [];
@@ -71,13 +62,12 @@ export const gedRepository = {
             tags.some(t => typeof t === "string" && t.toLowerCase().includes(lowerTerm)) ||
             kws.some(k => typeof k === "string" && k.toLowerCase().includes(lowerTerm))
           ) {
-            matchedIds.add(row.id);
+            matchedIds.push(row.id);
           }
         });
-        (tagMatchRows || []).forEach((row: any) => matchedIds.add(row.id));
 
-        const idsClause = matchedIds.size > 0
-          ? `,id.in.(${Array.from(matchedIds).join(",")})`
+        const idsClause = matchedIds.length > 0
+          ? `,id.in.(${matchedIds.join(",")})`
           : "";
 
         query = query.or(
