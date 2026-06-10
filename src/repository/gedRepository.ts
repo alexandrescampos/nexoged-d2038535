@@ -45,9 +45,33 @@ export const gedRepository = {
       // Sanitize term to avoid breaking the PostgREST `or` syntax
       const term = params.searchTerm.replace(/[,(){}"]/g, " ").trim();
       if (term) {
-        // Match title/description (partial) or any tag/keyword (exact element contains)
+        // PostgREST can't do partial ilike on array columns, so we pre-resolve
+        // which document ids have any tag/keyword that partially matches the term.
+        const lowerTerm = term.toLowerCase();
+        const { data: allTagRows } = await supabase
+          .from("ged_documents")
+          .select("id, tags, keywords")
+          .eq("organization_id", params.organizationId)
+          .neq("status", "deleted")
+          .limit(5000);
+        const matchedIds: string[] = [];
+        (allTagRows || []).forEach((row: any) => {
+          const tags: string[] = Array.isArray(row.tags) ? row.tags : [];
+          const kws: string[] = Array.isArray(row.keywords) ? row.keywords : [];
+          if (
+            tags.some(t => typeof t === "string" && t.toLowerCase().includes(lowerTerm)) ||
+            kws.some(k => typeof k === "string" && k.toLowerCase().includes(lowerTerm))
+          ) {
+            matchedIds.push(row.id);
+          }
+        });
+
+        const idsClause = matchedIds.length > 0
+          ? `,id.in.(${matchedIds.join(",")})`
+          : "";
+
         query = query.or(
-          `title.ilike.%${term}%,description.ilike.%${term}%,tags.cs.{${term}},keywords.cs.{${term}}`
+          `title.ilike.%${term}%,description.ilike.%${term}%${idsClause}`
         );
       }
     }
