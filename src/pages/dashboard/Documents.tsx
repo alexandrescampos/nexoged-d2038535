@@ -169,10 +169,35 @@ export default function DocumentsPage() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Gestão de Documentos</h1>
-          <div className="flex items-center text-sm text-muted-foreground mt-1">
-            <span className="hover:text-primary cursor-pointer" onClick={() => setCurrentFolder(null)}>Nexo GED</span>
-            <ChevronRight className="h-4 w-4 mx-1" />
-            <span className="font-medium text-foreground">Explorar</span>
+          <div className="flex items-center flex-wrap text-sm text-muted-foreground mt-1">
+            <span
+              className="hover:text-primary cursor-pointer"
+              onClick={() => { setCurrentFolder(null); setFolderPath([]); }}
+            >
+              Nexo GED
+            </span>
+            {folderPath.map((f, idx) => (
+              <span key={f.id} className="flex items-center">
+                <ChevronRight className="h-4 w-4 mx-1" />
+                <span
+                  className={idx === folderPath.length - 1 ? "font-medium text-foreground" : "hover:text-primary cursor-pointer"}
+                  onClick={() => {
+                    if (idx === folderPath.length - 1) return;
+                    const newPath = folderPath.slice(0, idx + 1);
+                    setFolderPath(newPath);
+                    setCurrentFolder(newPath[newPath.length - 1].id);
+                  }}
+                >
+                  {f.name}
+                </span>
+              </span>
+            ))}
+            {folderPath.length === 0 && (
+              <>
+                <ChevronRight className="h-4 w-4 mx-1" />
+                <span className="font-medium text-foreground">Explorar</span>
+              </>
+            )}
           </div>
         </div>
         
