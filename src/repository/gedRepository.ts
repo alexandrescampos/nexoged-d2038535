@@ -17,18 +17,12 @@ export const gedRepository = {
     // Pre-fetch favorite doc ids for this user (used both for is_favorite flag and filtering)
     let favoriteIds: string[] = [];
     if (params.userId) {
-      console.log("[gedRepository] Fetching favorites for userId:", params.userId);
-      const { data: favs, error: favError } = await supabase
+      const { data: favs } = await supabase
         .from("ged_user_favorites")
         .select("document_id")
         .eq("user_id", params.userId);
       
-      if (favError) {
-        console.error("[gedRepository] Error fetching favorites:", favError);
-      }
-      
       favoriteIds = (favs || []).map((f: any) => f.document_id);
-      console.log("[gedRepository] Found favoriteIds:", favoriteIds);
     }
 
     let query = supabase

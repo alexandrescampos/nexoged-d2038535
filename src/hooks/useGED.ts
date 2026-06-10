@@ -16,25 +16,15 @@ export function useGED(folderId: string | null = null, filterFavorites: boolean 
   const { data: documentsData, isLoading: isLoadingDocs } = useQuery({
     queryKey: ["ged-documents", organization?.id, profile?.id, folderId, searchTerm, selectedTags, page, filterFavorites, filterRecent],
     queryFn: () => {
-      if (!organization?.id) return { data: [], count: 0 };
-      
       if (filterRecent && profile?.id) {
         return gedRepository.getRecentDocuments({
-          organizationId: organization.id,
+          organizationId: organization?.id || "",
           userId: profile.id
         });
       }
       
-      console.log("[useGED] Calling getDocuments with:", {
-        organizationId: organization.id,
-        folderId,
-        searchTerm,
-        filterFavorites,
-        userId: profile?.id
-      });
-
       return gedRepository.getDocuments({
-        organizationId: organization.id,
+        organizationId: organization?.id || "",
         folderId,
         searchTerm,
         tags: selectedTags,
@@ -43,7 +33,7 @@ export function useGED(folderId: string | null = null, filterFavorites: boolean 
         userId: profile?.id
       });
     },
-    enabled: !!organization?.id,
+    enabled: true, // Allow fetching even without organizationId for global views like Favorites
   });
 
   // Pastas
