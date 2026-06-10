@@ -12,15 +12,21 @@ export const gedRepository = {
     tags?: string[];
     page?: number;
     pageSize?: number;
+    userId?: string;
   }) {
     let query = supabase
       .from("ged_documents")
       .select(`
         *,
         versions:ged_document_versions(mime_type, version_number, file_name, file_size, created_by),
-        document_type_data:ged_document_types(*)
+        document_type_data:ged_document_types(*),
+        is_favorite:ged_user_favorites!left(id)
       `, { count: "exact" })
       .eq("organization_id", params.organizationId);
+
+    if (params.userId) {
+      query = query.eq("ged_user_favorites.user_id", params.userId);
+    }
 
     // When searching, look across the whole organization (ignore current folder)
     if (params.folderId !== undefined && !params.searchTerm) {
@@ -32,7 +38,7 @@ export const gedRepository = {
     }
 
     if (params.isFavorite) {
-      query = query.eq("is_favorite", true);
+      query = query.not("ged_user_favorites", "is", null);
     }
 
     if (params.status) {
@@ -100,6 +106,7 @@ export const gedRepository = {
 
       return {
         ...doc,
+        is_favorite: !!(doc as any).is_favorite?.[0]?.id,
         has_file: versions.length > 0,
         file_name: latestVersion?.file_name,
         file_size: latestVersion?.file_size,
@@ -301,12 +308,22 @@ export const gedRepository = {
   },
   
   async toggleFavorite(documentId: string, isFavorite: boolean) {
-    const { error } = await supabase
-      .from("ged_documents")
-      .update({ is_favorite: isFavorite, updated_at: new Date().toISOString() })
-      .eq("id", documentId);
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error("Usuário não autenticado");
 
-    if (error) throw error;
+    if (isFavorite) {
+      const { error } = await supabase
+        .from("ged_user_favorites")
+        .upsert([{ user_id: user.id, document_id: documentId }], { onConflict: "user_id,document_id" });
+      if (error) throw error;
+    } else {
+      const { error } = await supabase
+        .from("ged_user_favorites")
+        .delete()
+        .eq("user_id", user.id)
+        .eq("document_id", documentId);
+      if (error) throw error;
+    }
     return true;
   },
 
