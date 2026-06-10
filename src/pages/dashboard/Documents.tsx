@@ -992,6 +992,25 @@ export default function DocumentsPage() {
             </div>
 
             <div className="grid gap-2">
+              <Label>Nível de Sigilo</Label>
+              <Select
+                value={uploadData.sigilo}
+                onValueChange={(value) => setUploadData({ ...uploadData, sigilo: value as any })}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="PUBLICO">Público</SelectItem>
+                  <SelectItem value="INTERNO">Interno</SelectItem>
+                  <SelectItem value="RESTRITO">Restrito</SelectItem>
+                  <SelectItem value="CONFIDENCIAL">Confidencial</SelectItem>
+                  <SelectItem value="SIGILOSO">Sigiloso</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="grid gap-2">
               <Label>Tags</Label>
               <TagsInput
                 value={uploadData.tags}
