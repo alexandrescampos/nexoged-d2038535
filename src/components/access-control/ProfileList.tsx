@@ -174,7 +174,10 @@ export function ProfileList() {
             {profiles.map(profile => (
               <button
                 key={profile.perfil_id}
-                onClick={() => setSelectedProfileId(profile.perfil_id)}
+                onClick={() => {
+                  setSelectedProfileId(profile.perfil_id);
+                  setSelectedSigilos(profile.niveis_sigilo_permitidos || ["PUBLICO", "INTERNO"]);
+                }}
                 className={`w-full flex items-center justify-between p-3 rounded-lg border text-left transition-all ${selectedProfileId === profile.perfil_id ? 'border-primary bg-primary/5 ring-1 ring-primary/20' : 'hover:bg-muted'}`}
               >
                 <div>
