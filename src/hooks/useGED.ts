@@ -44,6 +44,7 @@ export function useGED(folderId: string | null = null, filterFavorites: boolean 
     mutationFn: ({ doc, file }: { doc: any, file: File }) => gedRepository.createDocument(doc, file),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["ged-documents"] });
+      queryClient.invalidateQueries({ queryKey: ["ged-documents-total"] });
       queryClient.invalidateQueries({ queryKey: ["organization-usage"] });
       toast.success("Documento enviado com sucesso!");
     },
@@ -64,6 +65,7 @@ export function useGED(folderId: string | null = null, filterFavorites: boolean 
     mutationFn: (id: string) => gedRepository.deleteDocument(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["ged-documents"] });
+      queryClient.invalidateQueries({ queryKey: ["ged-documents-total"] });
       queryClient.invalidateQueries({ queryKey: ["organization-usage"] });
       toast.success("Documento excluído com sucesso!");
     },

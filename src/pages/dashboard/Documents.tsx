@@ -19,6 +19,9 @@ import { useAuth } from "@/hooks/useAuth";
 import { UsageIndicator } from "@/components/dashboard/UsageIndicator";
 import { GedTreeView } from "@/components/dashboard/ged/GedTreeView";
 import { useOrganizationStructure } from "@/hooks/useOrganizationStructure";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { Files } from "lucide-react";
 import { 
   FileText, 
   Upload, 
@@ -42,7 +45,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
   DropdownMenu,
@@ -120,6 +123,21 @@ export default function DocumentsPage() {
   const { documentTypes } = useGEDSettings();
   const { organization } = useAuth();
   const { moveItem } = useOrganizationStructure();
+
+  const { data: totalDocuments = 0 } = useQuery({
+    queryKey: ["ged-documents-total", organization?.id],
+    queryFn: async () => {
+      const { count, error } = await supabase
+        .from("ged_documents")
+        .select("id", { count: "exact", head: true })
+        .eq("organization_id", organization!.id)
+        .neq("status", "deleted");
+      if (error) throw error;
+      return count || 0;
+    },
+    enabled: !!organization?.id,
+  });
+
   
   useEffect(() => {
     const action = searchParams.get("action");
@@ -228,7 +246,21 @@ export default function DocumentsPage() {
         </div>
       </div>
 
-      <UsageIndicator />
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total de Documentos</CardTitle>
+            <Files className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{totalDocuments.toLocaleString()}</div>
+            <p className="text-xs text-muted-foreground mt-2">Documentos ativos na organização</p>
+          </CardContent>
+        </Card>
+        <div className="md:col-span-2">
+          <UsageIndicator />
+        </div>
+      </div>
 
       <div className="flex flex-col lg:flex-row gap-6 h-full overflow-hidden">
         {/* Sidebar Structure */}
