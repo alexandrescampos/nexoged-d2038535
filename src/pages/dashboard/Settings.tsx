@@ -10,10 +10,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { toast } from "@/hooks/use-toast";
-import { Building2, Crown, Users, Shield, Upload, Loader2, Save, FileText } from "lucide-react";
+import { Building2, Crown, Users, Shield, Upload, Loader2, Save, FileText, Settings2 } from "lucide-react";
 import OrganizationCnpjs from "@/components/dashboard/OrganizationCnpjs";
 import ApiIntegrationSettings from "@/components/dashboard/ApiIntegrationSettings";
 import UserAuditLog from "@/components/dashboard/UserAuditLog";
+import DocumentTypesSettings from "@/components/dashboard/DocumentTypesSettings";
 
 export default function OrgSettingsPage() {
   const { organization, profile, isOrgAdmin } = useAuth();
