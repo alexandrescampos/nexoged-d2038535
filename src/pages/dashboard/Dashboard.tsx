@@ -21,6 +21,7 @@ import { useNavigate } from "react-router-dom";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { useOrganizationStructure } from "@/hooks/useOrganizationStructure";
+import { useUserScopes } from "@/hooks/useUserScopes";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatBytes } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
