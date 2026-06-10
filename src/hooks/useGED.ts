@@ -28,7 +28,8 @@ export function useGED(folderId: string | null = null, filterFavorites: boolean 
         searchTerm,
         tags: selectedTags,
         page,
-        isFavorite: filterFavorites
+        isFavorite: filterFavorites,
+        userId: profile?.id
       });
     },
     enabled: !!organization?.id,
