@@ -8,12 +8,13 @@ export function useGED(folderId: string | null = null, filterFavorites: boolean 
   const { organization } = useAuth();
   const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState("");
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [page, setPage] = useState(0);
   const { profile } = useAuth();
 
   // Documentos
   const { data: documentsData, isLoading: isLoadingDocs } = useQuery({
-    queryKey: ["ged-documents", organization?.id, profile?.id, folderId, searchTerm, page, filterFavorites, filterRecent],
+    queryKey: ["ged-documents", organization?.id, profile?.id, folderId, searchTerm, selectedTags, page, filterFavorites, filterRecent],
     queryFn: () => {
       if (filterRecent && profile?.id) {
         return gedRepository.getRecentDocuments({
@@ -25,6 +26,7 @@ export function useGED(folderId: string | null = null, filterFavorites: boolean 
         organizationId: organization!.id,
         folderId,
         searchTerm,
+        tags: selectedTags,
         page,
         isFavorite: filterFavorites
       });
