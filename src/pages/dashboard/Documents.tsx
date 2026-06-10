@@ -692,6 +692,7 @@ export default function DocumentsPage() {
                                     expiration_date: doc.expiration_date || "",
                                     document_creation_date: doc.document_creation_date || "",
                                     tags: Array.isArray(doc.tags) ? doc.tags : [],
+                                    sigilo: doc.sigilo || "PUBLICO",
                                   });
                                 }}
                               >
