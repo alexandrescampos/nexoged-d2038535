@@ -90,6 +90,9 @@ export default function OrgDashboard() {
         </div>
       </div>
 
+
+
+
       {/* Stats Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <Card className="border-none shadow-sm bg-primary/5">
@@ -211,77 +214,77 @@ export default function OrgDashboard() {
             </Card>
           </div>
 
-          {/* Expired Alerts */}
-          {stats.expiredDocs > 0 && (
-            <Card className="border-red-500/20 bg-red-500/5 shadow-none">
-              <CardContent className="p-4 flex items-center gap-4">
-                <div className="bg-red-500 p-2 rounded-full"><AlertTriangle className="h-5 w-5 text-white" /></div>
-                <div className="flex-1">
-                  <h4 className="text-sm font-bold text-red-700">Documentos Vencidos</h4>
-                  <p className="text-xs text-red-600/80">Você possui {stats.expiredDocs} documentos com data de validade expirada.</p>
-                </div>
-                <Button size="sm" variant="outline" className="border-red-500/30 text-red-700 hover:bg-red-500/10" onClick={() => {
-                  const item = { title: "Documentos", url: "/dashboard/documents", icon: FileText };
-                  openTab({
-                    id: item.url,
-                    title: item.title,
-                    icon: item.icon,
-                  });
-                  navigate("/dashboard/documents?status=expired");
-                }}>
-                  Ver Todos
-                </Button>
-              </CardContent>
-            </Card>
-          )}
+          {/* Alerts Section */}
+          <div className="space-y-4">
+            {stats.expiredDocs > 0 && (
+              <Card className="border-red-500/20 bg-red-500/5 shadow-none">
+                <CardContent className="p-4 flex items-center gap-4">
+                  <div className="bg-red-500 p-2 rounded-full"><AlertTriangle className="h-5 w-5 text-white" /></div>
+                  <div className="flex-1">
+                    <h4 className="text-sm font-bold text-red-700">Documentos Vencidos</h4>
+                    <p className="text-xs text-red-600/80">Você possui {stats.expiredDocs} documentos com data de validade expirada.</p>
+                  </div>
+                  <Button size="sm" variant="outline" className="border-red-500/30 text-red-700 hover:bg-red-500/10" onClick={() => {
+                    const item = { title: "Documentos", url: "/dashboard/documents", icon: FileText };
+                    openTab({
+                      id: item.url,
+                      title: item.title,
+                      icon: item.icon,
+                    });
+                    navigate("/dashboard/documents?status=expired");
+                  }}>
+                    Ver Todos
+                  </Button>
+                </CardContent>
+              </Card>
+            )}
 
-          {/* Near Expiry Alerts */}
-          {stats.nearExpiryDocs > 0 && (
-            <Card className="border-amber-500/20 bg-amber-500/5 shadow-none">
-              <CardContent className="p-4 flex items-center gap-4">
-                <div className="bg-amber-500 p-2 rounded-full"><Calendar className="h-5 w-5 text-white" /></div>
-                <div className="flex-1">
-                  <h4 className="text-sm font-bold text-amber-700">Documentos a Vencer</h4>
-                  <p className="text-xs text-amber-600/80">Você possui {stats.nearExpiryDocs} documentos que vencerão nos próximos 30 dias.</p>
-                </div>
-                <Button size="sm" variant="outline" className="border-amber-500/30 text-amber-700 hover:bg-amber-500/10" onClick={() => {
-                  const item = { title: "Documentos", url: "/dashboard/documents", icon: FileText };
-                  openTab({
-                    id: item.url,
-                    title: item.title,
-                    icon: item.icon,
-                  });
-                  navigate("/dashboard/documents?status=near_expiry");
-                }}>
-                  Ver Todos
-                </Button>
-              </CardContent>
-            </Card>
-          )}
+            {stats.nearExpiryDocs > 0 && (
+              <Card className="border-amber-500/20 bg-amber-500/5 shadow-none">
+                <CardContent className="p-4 flex items-center gap-4">
+                  <div className="bg-amber-500 p-2 rounded-full"><Calendar className="h-5 w-5 text-white" /></div>
+                  <div className="flex-1">
+                    <h4 className="text-sm font-bold text-amber-700">Documentos a Vencer</h4>
+                    <p className="text-xs text-amber-600/80">Você possui {stats.nearExpiryDocs} documentos que vencerão nos próximos 30 dias.</p>
+                  </div>
+                  <Button size="sm" variant="outline" className="border-amber-500/30 text-amber-700 hover:bg-amber-500/10" onClick={() => {
+                    const item = { title: "Documentos", url: "/dashboard/documents", icon: FileText };
+                    openTab({
+                      id: item.url,
+                      title: item.title,
+                      icon: item.icon,
+                    });
+                    navigate("/dashboard/documents?status=near_expiry");
+                  }}>
+                    Ver Todos
+                  </Button>
+                </CardContent>
+              </Card>
+            )}
 
-          {/* Pending Alerts */}
-          {stats.pendingDocs > 0 && (
-            <Card className="border-orange-500/20 bg-orange-500/5 shadow-none">
-              <CardContent className="p-4 flex items-center gap-4">
-                <div className="bg-orange-500 p-2 rounded-full"><AlertCircle className="h-5 w-5 text-white" /></div>
-                <div className="flex-1">
-                  <h4 className="text-sm font-bold text-orange-700">Documentos Pendentes</h4>
-                  <p className="text-xs text-orange-600/80">Você possui {stats.pendingDocs} documentos que requerem atenção ou classificação.</p>
-                </div>
-                <Button size="sm" variant="outline" className="border-orange-500/30 text-orange-700 hover:bg-orange-500/10" onClick={() => {
-                  const item = { title: "Documentos", url: "/dashboard/documents", icon: FileText };
-                  openTab({
-                    id: item.url,
-                    title: item.title,
-                    icon: item.icon,
-                  });
-                  navigate("/dashboard/documents?status=pending");
-                }}>
-                  Resolver Agora
-                </Button>
-              </CardContent>
-            </Card>
-          )}
+            {stats.pendingDocs > 0 && (
+              <Card className="border-orange-500/20 bg-orange-500/5 shadow-none">
+                <CardContent className="p-4 flex items-center gap-4">
+                  <div className="bg-orange-500 p-2 rounded-full"><AlertCircle className="h-5 w-5 text-white" /></div>
+                  <div className="flex-1">
+                    <h4 className="text-sm font-bold text-orange-700">Documentos Pendentes</h4>
+                    <p className="text-xs text-orange-600/80">Você possui {stats.pendingDocs} documentos que requerem atenção ou classificação.</p>
+                  </div>
+                  <Button size="sm" variant="outline" className="border-orange-500/30 text-orange-700 hover:bg-orange-500/10" onClick={() => {
+                    const item = { title: "Documentos", url: "/dashboard/documents", icon: FileText };
+                    openTab({
+                      id: item.url,
+                      title: item.title,
+                      icon: item.icon,
+                    });
+                    navigate("/dashboard/documents?status=pending");
+                  }}>
+                    Resolver Agora
+                  </Button>
+                </CardContent>
+              </Card>
+            )}
+          </div>
         </div>
       </div>
     </div>
