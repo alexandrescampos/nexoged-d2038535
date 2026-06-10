@@ -55,16 +55,17 @@ export interface Sector {
   updated_at: string;
 }
 
-export interface Folder {
+export interface DocumentType {
   id: string;
   organization_id: string;
-  sector_id?: string;
-  parent_id?: string;
+  initials: string;
   name: string;
   description?: string;
-  is_active: boolean;
+  requires_expiration_date: boolean;
+  requires_creation_date: boolean;
   created_at: string;
   updated_at: string;
+  created_by?: string;
 }
 
 export interface Document {
@@ -74,6 +75,9 @@ export interface Document {
   title: string;
   description?: string;
   document_type?: string;
+  document_type_id?: string;
+  expiration_date?: string;
+  document_creation_date?: string;
   taxonomy?: string;
   status: string;
   tags: string[];
@@ -90,6 +94,7 @@ export interface Document {
   file_name?: string;
   versions_count?: number;
   creator_name?: string;
+  document_type_data?: DocumentType;
 }
 
 export interface DocumentVersion {
