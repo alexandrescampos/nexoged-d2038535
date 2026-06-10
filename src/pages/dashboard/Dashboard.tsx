@@ -349,7 +349,15 @@ export default function OrgDashboard() {
                   <h4 className="text-sm font-bold text-orange-700">Documentos Pendentes</h4>
                   <p className="text-xs text-orange-600/80">Você possui {stats.pendingDocs} documentos que requerem atenção ou classificação.</p>
                 </div>
-                <Button size="sm" variant="outline" className="border-orange-500/30 text-orange-700 hover:bg-orange-500/10" onClick={() => navigate("/dashboard/documents?status=pending")}>
+                <Button size="sm" variant="outline" className="border-orange-500/30 text-orange-700 hover:bg-orange-500/10" onClick={() => {
+                  const item = { title: "Documentos", url: "/dashboard/documents", icon: FileText };
+                  openTab({
+                    id: item.url,
+                    title: item.title,
+                    icon: item.icon,
+                  });
+                  navigate("/dashboard/documents?status=pending");
+                }}>
                   Resolver Agora
                 </Button>
               </CardContent>
