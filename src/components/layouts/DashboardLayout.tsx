@@ -87,7 +87,7 @@ const menuGroups: MenuGroup[] = [
     label: "Gestão",
     items: [
       { title: "Documentos", url: "/dashboard/documents", icon: FileText, userAllowed: true },
-      { title: "Tipos de Documento", url: "/dashboard/settings#document-types", icon: Settings2, adminOnly: true },
+      { title: "Tipos de Documento", url: "/dashboard/document-types", icon: Settings2, adminOnly: true },
       { title: "Departamentos", url: "/dashboard/departments", icon: Building2, adminOnly: true },
       { title: "Usuários", url: "/dashboard/users", icon: Users, adminOnly: true },
     ],
