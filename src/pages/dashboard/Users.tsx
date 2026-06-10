@@ -992,53 +992,6 @@ export default function OrgUsersPage() {
               <Input value={editingUser?.email || ""} disabled className="bg-muted" />
               <p className="text-xs text-muted-foreground">O email não pode ser alterado.</p>
             </div>
-            <div className="space-y-2">
-              <Label>Departamento</Label>
-              <Select
-                value={editUserDeptId || "none"}
-                onValueChange={(v) => setEditUserDeptId(v === "none" ? null : v)}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione um departamento" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">Nenhum</SelectItem>
-                  {orgDepartments.map((dept: any) => (
-                    <SelectItem key={dept.id} value={dept.id}>
-                      {dept.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label>Permissões Granulares</Label>
-              <div className="grid grid-cols-2 gap-2 border rounded-md p-3">
-                {[
-                  { id: "visualizar_documento", label: "Visualizar" },
-                  { id: "inserir_documento", label: "Inserir" },
-                  { id: "editar_documento", label: "Editar" },
-                  { id: "excluir_documento", label: "Excluir" },
-                  { id: "assinar_documento", label: "Assinar" },
-                  { id: "administrar_sistema", label: "Administrar" },
-                ].map((perm) => (
-                  <div key={perm.id} className="flex items-center space-x-2">
-                    <Checkbox 
-                      id={`edit-perm-${perm.id}`} 
-                      checked={editUserPermissions.includes(perm.id)}
-                      onCheckedChange={(checked) => {
-                        setEditUserPermissions(prev => 
-                          checked 
-                            ? [...prev, perm.id] 
-                            : prev.filter(p => p !== perm.id)
-                        );
-                      }}
-                    />
-                    <Label htmlFor={`edit-perm-${perm.id}`} className="text-xs font-normal">{perm.label}</Label>
-                  </div>
-                ))}
-              </div>
-            </div>
             {(editingUser?.roles.includes("user") || editingUser?.roles.includes("org_admin")) && orgCnpjs.length > 0 && (
               <div className="space-y-2">
                 <Label className="flex items-center gap-2">
