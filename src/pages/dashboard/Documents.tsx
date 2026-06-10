@@ -165,6 +165,14 @@ function TagsInput({ value, onChange }: { value: string[]; onChange: (next: stri
 
 
 
+const SIGILO_DESCRIPTIONS: Record<string, string> = {
+  PUBLICO: "Documento visível para todos os usuários da organização.",
+  INTERNO: "Acesso limitado a colaboradores da organização, sem permissões especiais.",
+  RESTRITO: "Requer permissão de acesso à pasta ou perfil específico para visualização.",
+  CONFIDENCIAL: "Acesso restrito a gestores e usuários com permissão explícita.",
+  SIGILOSO: "Nível máximo de segurança. Acesso monitorado e restrito a administradores ou perfis de alta confiança.",
+};
+
 export default function DocumentsPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -1054,8 +1062,8 @@ export default function DocumentsPage() {
                   <SelectItem value="SIGILOSO">Sigiloso</SelectItem>
                 </SelectContent>
               </Select>
-              <p className="text-xs text-muted-foreground">
-                Define quem pode visualizar e baixar o documento. Níveis mais altos (Restrito a Sigiloso) exigem permissões específicas.
+              <p className="text-xs text-muted-foreground bg-muted/50 p-2 rounded-sm border border-border/50">
+                {SIGILO_DESCRIPTIONS[uploadData.sigilo] || "Define quem pode visualizar e baixar o documento."}
               </p>
             </div>
 
@@ -1285,8 +1293,8 @@ export default function DocumentsPage() {
                   <SelectItem value="SIGILOSO">Sigiloso</SelectItem>
                 </SelectContent>
               </Select>
-              <p className="text-xs text-muted-foreground">
-                Define quem pode visualizar e baixar o documento. Níveis mais altos (Restrito a Sigiloso) exigem permissões específicas.
+              <p className="text-xs text-muted-foreground bg-muted/50 p-2 rounded-sm border border-border/50">
+                {SIGILO_DESCRIPTIONS[editData.sigilo] || "Define quem pode visualizar e baixar o documento."}
               </p>
             </div>
             <div className="grid gap-2">
