@@ -159,6 +159,7 @@ const App = () => {
 
               <Route path="users" element={<AdminOnlyRoute><OrgUsersPage /></AdminOnlyRoute>} />
               <Route path="permissions" element={<AdminOnlyRoute><PermissionsPage /></AdminOnlyRoute>} />
+              <Route path="access-control" element={<AdminOnlyRoute><AccessControlPage /></AdminOnlyRoute>} />
               <Route path="document-types" element={<AdminOnlyRoute><DocumentTypesPage /></AdminOnlyRoute>} />
               <Route path="billing" element={<AdminOnlyRoute><BillingPage /></AdminOnlyRoute>} />
               <Route path="payment-success" element={<AdminOnlyRoute><PaymentSuccessPage /></AdminOnlyRoute>} />
