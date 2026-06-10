@@ -101,6 +101,7 @@ export function ProfileList() {
       setIsDialogOpen(false);
       setNewProfile({ perfil_nome: "", perfil_descricao: "" });
       loadData();
+      window.dispatchEvent(new CustomEvent("perfis-changed"));
     } catch (error) {
       toast.error("Erro ao criar perfil.");
     } finally {
