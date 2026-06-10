@@ -291,7 +291,12 @@ export default function DocumentsPage() {
       const { url } = await getDownloadUrl(documentId);
       window.open(url, '_blank', 'noopener,noreferrer');
     } catch (error: any) {
-      toast.error(error?.message || "Erro ao visualizar arquivo.");
+      console.error("Erro ao visualizar arquivo:", error);
+      if (error?.message?.includes("JWT") || error?.code === "PGRST301" || error?.message?.includes("permission denied")) {
+        toast.error("Você não tem permissão para visualizar este documento.");
+      } else {
+        toast.error(error?.message || "Erro ao visualizar arquivo.");
+      }
     }
   };
 
@@ -306,7 +311,12 @@ export default function DocumentsPage() {
       link.click();
       document.body.removeChild(link);
     } catch (error: any) {
-      toast.error(error?.message || "Erro ao baixar arquivo.");
+      console.error("Erro ao baixar arquivo:", error);
+      if (error?.message?.includes("JWT") || error?.code === "PGRST301" || error?.message?.includes("permission denied")) {
+        toast.error("Você não tem permissão para baixar este documento.");
+      } else {
+        toast.error(error?.message || "Erro ao baixar arquivo.");
+      }
     }
   };
 
