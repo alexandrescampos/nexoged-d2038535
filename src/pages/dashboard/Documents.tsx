@@ -241,6 +241,27 @@ export default function DocumentsPage() {
     enabled: !!organization?.id,
   });
 
+  // Tags disponíveis na organização para uso no filtro
+  const { data: availableTags = [] } = useQuery({
+    queryKey: ["ged-tags", organization?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("ged_documents")
+        .select("tags")
+        .eq("organization_id", organization!.id)
+        .neq("status", "deleted");
+      if (error) throw error;
+      const set = new Set<string>();
+      (data || []).forEach((row: any) => {
+        (row.tags || []).forEach((t: string) => {
+          if (typeof t === "string" && t.trim()) set.add(t.trim());
+        });
+      });
+      return Array.from(set).sort((a, b) => a.localeCompare(b, "pt-BR"));
+    },
+    enabled: !!organization?.id,
+  });
+
   
   useEffect(() => {
     const action = searchParams.get("action");
