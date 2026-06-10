@@ -246,7 +246,21 @@ export default function DocumentsPage() {
         </div>
       </div>
 
-      <UsageIndicator />
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total de Documentos</CardTitle>
+            <Files className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{totalDocuments.toLocaleString()}</div>
+            <p className="text-xs text-muted-foreground mt-2">Documentos ativos na organização</p>
+          </CardContent>
+        </Card>
+        <div className="md:col-span-2">
+          <UsageIndicator />
+        </div>
+      </div>
 
       <div className="flex flex-col lg:flex-row gap-6 h-full overflow-hidden">
         {/* Sidebar Structure */}
