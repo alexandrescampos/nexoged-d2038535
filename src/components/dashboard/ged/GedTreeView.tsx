@@ -38,6 +38,7 @@ type TreeItem = {
 
 export function GedTreeView({ onSelectFolder, currentFolderId }: TreeViewProps) {
   const { departments, sectors, folders, moveItem } = useOrganizationStructure();
+  const { scopes } = useUserScopes();
   const [expandedItems, setExpandedItems] = useState<Record<string, boolean>>({});
   const [draggedItem, setDraggedItem] = useState<{ id: string, type: string } | null>(null);
   const [dragOverId, setDragOverId] = useState<string | null>(null);
