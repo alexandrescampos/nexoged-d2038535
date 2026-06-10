@@ -29,10 +29,20 @@ export function ProfileList() {
   const [isSaving, setIsSaving] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [selectedSigilos, setSelectedSigilos] = useState<string[]>([]);
   const [newProfile, setNewProfile] = useState({
     perfil_nome: "",
     perfil_descricao: "",
+    niveis_sigilo_permitidos: ["PUBLICO", "INTERNO"],
   });
+
+  const sigiloOptions = [
+    { value: "PUBLICO", label: "Público" },
+    { value: "INTERNO", label: "Interno" },
+    { value: "RESTRITO", label: "Restrito" },
+    { value: "CONFIDENCIAL", label: "Confidencial" },
+    { value: "SIGILOSO", label: "Sigiloso" },
+  ];
 
   useEffect(() => {
     if (organization?.id) {
