@@ -768,7 +768,11 @@ export default function DocumentsPage() {
                 }
                 updateDocument({
                   id: documentToEdit.id,
-                  updates: editData
+                  updates: {
+                    ...editData,
+                    document_creation_date: editData.document_creation_date || null,
+                    expiration_date: editData.expiration_date || null,
+                  } as any
                 }, {
                   onSuccess: () => setDocumentToEdit(null)
                 });
