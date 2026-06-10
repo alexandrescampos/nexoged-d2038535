@@ -43,11 +43,22 @@ export const gedRepository = {
 
     if (params.searchTerm) {
       // Sanitize term to avoid breaking the PostgREST `or` syntax
-      const term = params.searchTerm.replace(/[,()]/g, " ").trim();
+      const term = params.searchTerm.replace(/[,(){}"]/g, " ").trim();
       if (term) {
+        // Match title/description (partial) or any tag/keyword (exact element contains)
         query = query.or(
-          `title.ilike.%${term}%,description.ilike.%${term}%`
+          `title.ilike.%${term}%,description.ilike.%${term}%,tags.cs.{${term}},keywords.cs.{${term}}`
         );
+      }
+    }
+
+    if (params.tags && params.tags.length > 0) {
+      // Documents whose tags array overlaps any of the selected tags
+      const sanitized = params.tags
+        .map(t => t.replace(/[,(){}"]/g, " ").trim())
+        .filter(Boolean);
+      if (sanitized.length > 0) {
+        query = query.overlaps("tags", sanitized);
       }
     }
 
