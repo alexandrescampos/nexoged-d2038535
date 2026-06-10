@@ -78,6 +78,9 @@ export function useOrganizationStructure() {
       queryClient.invalidateQueries({ queryKey: ["departments"] });
       queryClient.invalidateQueries({ queryKey: ["sectors"] });
       queryClient.invalidateQueries({ queryKey: ["folders-all"] });
+      queryClient.invalidateQueries({ queryKey: ["ged-documents"] });
+      queryClient.invalidateQueries({ queryKey: ["documents"] });
+      queryClient.invalidateQueries({ queryKey: ["folders"] });
       toast.success("Movimentação realizada com sucesso!");
     }
   });
