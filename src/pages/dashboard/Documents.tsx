@@ -76,6 +76,7 @@ export default function DocumentsPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const searchInputRef = useRef<HTMLInputElement>(null);
   const [currentFolder, setCurrentFolder] = useState<string | null>(null);
+  const [folderPath, setFolderPath] = useState<{ id: string; name: string }[]>([]);
   const [viewMode, setViewMode] = useState<"grid" | "list">("list");
   const [isUploadOpen, setIsUploadOpen] = useState(false);
   const [documentToDelete, setDocumentToDelete] = useState<string | null>(null);
@@ -168,14 +169,52 @@ export default function DocumentsPage() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Gestão de Documentos</h1>
-          <div className="flex items-center text-sm text-muted-foreground mt-1">
-            <span className="hover:text-primary cursor-pointer" onClick={() => setCurrentFolder(null)}>Nexo GED</span>
-            <ChevronRight className="h-4 w-4 mx-1" />
-            <span className="font-medium text-foreground">Explorar</span>
+          <div className="flex items-center flex-wrap text-sm text-muted-foreground mt-1">
+            <span
+              className="hover:text-primary cursor-pointer"
+              onClick={() => { setCurrentFolder(null); setFolderPath([]); }}
+            >
+              Nexo GED
+            </span>
+            {folderPath.map((f, idx) => (
+              <span key={f.id} className="flex items-center">
+                <ChevronRight className="h-4 w-4 mx-1" />
+                <span
+                  className={idx === folderPath.length - 1 ? "font-medium text-foreground" : "hover:text-primary cursor-pointer"}
+                  onClick={() => {
+                    if (idx === folderPath.length - 1) return;
+                    const newPath = folderPath.slice(0, idx + 1);
+                    setFolderPath(newPath);
+                    setCurrentFolder(newPath[newPath.length - 1].id);
+                  }}
+                >
+                  {f.name}
+                </span>
+              </span>
+            ))}
+            {folderPath.length === 0 && (
+              <>
+                <ChevronRight className="h-4 w-4 mx-1" />
+                <span className="font-medium text-foreground">Explorar</span>
+              </>
+            )}
           </div>
         </div>
         
         <div className="flex items-center gap-2">
+          {folderPath.length > 0 && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                const newPath = folderPath.slice(0, -1);
+                setFolderPath(newPath);
+                setCurrentFolder(newPath.length ? newPath[newPath.length - 1].id : null);
+              }}
+            >
+              ← Voltar
+            </Button>
+          )}
           <Button variant="outline" size="sm" className="hidden sm:flex">
             <History className="mr-2 h-4 w-4" /> Histórico
           </Button>
@@ -227,7 +266,10 @@ export default function DocumentsPage() {
               <Card 
                 key={folder.past_id} 
                 className={`cursor-pointer transition-all hover:bg-accent/50 group ${viewMode === 'list' ? 'border-none shadow-none bg-transparent rounded-md' : ''}`}
-                onClick={() => setCurrentFolder(folder.past_id)}
+                onClick={() => {
+                  setCurrentFolder(folder.past_id);
+                  setFolderPath([...folderPath, { id: folder.past_id, name: folder.past_nm_pasta }]);
+                }}
               >
                 <CardContent className={viewMode === 'list' ? 'p-2 flex items-center gap-3' : 'p-4 flex flex-col items-center gap-2 text-center'}>
                   <Folder className="h-8 w-8 text-amber-500 fill-amber-500/20" />
@@ -533,6 +575,7 @@ export default function DocumentsPage() {
                   description: uploadData.description || null,
                   organization_id: organization.id,
                   folder_id: currentFolder,
+                  past_id: currentFolder,
                   status: 'active',
                   tags: [],
                   keywords: []
