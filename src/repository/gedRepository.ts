@@ -182,6 +182,8 @@ export const gedRepository = {
       .insert([{
         ...doc,
         created_by: user?.id,
+        owner_id: doc.owner_id || user?.id,
+        sigilo: doc.sigilo || 'PUBLICO',
         page_count: doc.page_count || 1
       }])
       .select()
