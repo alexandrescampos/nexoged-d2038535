@@ -132,7 +132,18 @@ export default function FavoritesPage() {
           <Button variant="outline" size="sm" className="h-9">
             <Filter className="mr-2 h-4 w-4" /> Filtros
           </Button>
-        </div>
+      </div>
+
+      {import.meta.env.DEV && (
+        <details className="rounded-md border border-dashed border-muted-foreground/40 bg-muted/30 p-3 text-xs">
+          <summary className="cursor-pointer font-mono text-muted-foreground select-none">
+            Depuração (somente desenvolvimento)
+          </summary>
+          <pre className="mt-2 overflow-auto max-h-80 whitespace-pre-wrap break-all text-[11px] leading-relaxed">
+{JSON.stringify(debug ?? { note: "sem dados de depuração ainda" }, null, 2)}
+          </pre>
+        </details>
+      )}
       </div>
 
       {/* List/Grid */}
