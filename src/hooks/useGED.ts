@@ -8,12 +8,13 @@ export function useGED(folderId: string | null = null, filterFavorites: boolean 
   const { organization } = useAuth();
   const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState("");
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [page, setPage] = useState(0);
   const { profile } = useAuth();
 
   // Documentos
   const { data: documentsData, isLoading: isLoadingDocs } = useQuery({
-    queryKey: ["ged-documents", organization?.id, profile?.id, folderId, searchTerm, page, filterFavorites, filterRecent],
+    queryKey: ["ged-documents", organization?.id, profile?.id, folderId, searchTerm, selectedTags, page, filterFavorites, filterRecent],
     queryFn: () => {
       if (filterRecent && profile?.id) {
         return gedRepository.getRecentDocuments({
@@ -25,6 +26,7 @@ export function useGED(folderId: string | null = null, filterFavorites: boolean 
         organizationId: organization!.id,
         folderId,
         searchTerm,
+        tags: selectedTags,
         page,
         isFavorite: filterFavorites
       });
@@ -45,6 +47,7 @@ export function useGED(folderId: string | null = null, filterFavorites: boolean 
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["ged-documents"] });
       queryClient.invalidateQueries({ queryKey: ["ged-documents-total"] });
+      queryClient.invalidateQueries({ queryKey: ["ged-tags"] });
       queryClient.invalidateQueries({ queryKey: ["organization-usage"] });
       toast.success("Documento enviado com sucesso!");
     },
@@ -78,6 +81,7 @@ export function useGED(folderId: string | null = null, filterFavorites: boolean 
     mutationFn: ({ id, updates }: { id: string, updates: any }) => gedRepository.updateDocument(id, updates),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["ged-documents"] });
+      queryClient.invalidateQueries({ queryKey: ["ged-tags"] });
       toast.success("Documento atualizado com sucesso!");
     },
     onError: (error: any) => {
@@ -99,6 +103,8 @@ export function useGED(folderId: string | null = null, filterFavorites: boolean 
     searchTerm,
 
     setSearchTerm,
+    selectedTags,
+    setSelectedTags,
     page,
     setPage,
     getDownloadUrl: (id: string) => gedRepository.getDownloadUrl(id)

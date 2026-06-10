@@ -41,7 +41,9 @@ import {
   FileCode,
   FileSpreadsheet,
   FileImage,
-  Loader2
+  Loader2,
+  X,
+  Tag as TagIcon
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -100,6 +102,68 @@ function getFileTypeLabel(mime?: string, name?: string): string {
 }
 
 
+function normalizeTag(value: string): string {
+  return value.trim().replace(/\s+/g, " ").slice(0, 40);
+}
+
+function TagsInput({ value, onChange }: { value: string[]; onChange: (next: string[]) => void }) {
+  const [draft, setDraft] = useState("");
+  const addTag = (raw: string) => {
+    const t = normalizeTag(raw);
+    if (!t) return;
+    if (value.some(v => v.toLowerCase() === t.toLowerCase())) return;
+    if (value.length >= 20) return;
+    onChange([...value, t]);
+  };
+  const removeTag = (idx: number) => {
+    onChange(value.filter((_, i) => i !== idx));
+  };
+  return (
+    <div className="flex flex-wrap items-center gap-1.5 rounded-md border bg-background px-2 py-1.5 focus-within:ring-2 focus-within:ring-ring">
+      {value.map((tag, i) => (
+        <Badge key={`${tag}-${i}`} variant="secondary" className="gap-1 pl-2 pr-1 font-normal">
+          {tag}
+          <button
+            type="button"
+            aria-label={`Remover tag ${tag}`}
+            className="rounded-sm opacity-60 hover:opacity-100"
+            onClick={() => removeTag(i)}
+          >
+            <X className="h-3 w-3" />
+          </button>
+        </Badge>
+      ))}
+      <input
+        type="text"
+        value={draft}
+        onChange={(e) => setDraft(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === ",") {
+            e.preventDefault();
+            addTag(draft);
+            setDraft("");
+          } else if (e.key === "Backspace" && draft === "" && value.length > 0) {
+            removeTag(value.length - 1);
+          }
+        }}
+        onBlur={() => {
+          if (draft.trim()) {
+            addTag(draft);
+            setDraft("");
+          }
+        }}
+        placeholder={value.length === 0 ? "Digite e pressione Enter para adicionar..." : ""}
+        className="flex-1 min-w-[140px] bg-transparent text-sm outline-none placeholder:text-muted-foreground"
+        maxLength={40}
+      />
+    </div>
+  );
+}
+
+
+
+
+
 export default function DocumentsPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -115,7 +179,8 @@ export default function DocumentsPage() {
     page_count: 1,
     description: "",
     expiration_date: "",
-    document_creation_date: ""
+    document_creation_date: "",
+    tags: [] as string[],
   });
   const [editData, setEditData] = useState({
     title: "",
@@ -123,7 +188,8 @@ export default function DocumentsPage() {
     page_count: 1,
     description: "",
     expiration_date: "",
-    document_creation_date: ""
+    document_creation_date: "",
+    tags: [] as string[],
   });
 
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -134,6 +200,8 @@ export default function DocumentsPage() {
     isLoading, 
     searchTerm, 
     setSearchTerm,
+    selectedTags,
+    setSelectedTags,
     uploadDocument,
     isUploading,
     deleteDocument,
@@ -144,8 +212,9 @@ export default function DocumentsPage() {
     totalCount: folderTotalCount,
   } = useGED(currentFolder);
   const isSearching = (searchTerm ?? "").trim().length > 0;
-  // Hide folder rows while searching so results are documents-only across all folders
-  const folders = isSearching ? [] : allFolders;
+  const isFiltering = isSearching || selectedTags.length > 0;
+  // Hide folder rows while searching/filtering so results are documents-only across all folders
+  const folders = isFiltering ? [] : allFolders;
 
   const { documentTypes } = useGEDSettings();
   const { organization } = useAuth();
@@ -168,6 +237,27 @@ export default function DocumentsPage() {
         .neq("status", "deleted");
       if (error) throw error;
       return count || 0;
+    },
+    enabled: !!organization?.id,
+  });
+
+  // Tags disponíveis na organização para uso no filtro
+  const { data: availableTags = [] } = useQuery({
+    queryKey: ["ged-tags", organization?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("ged_documents")
+        .select("tags")
+        .eq("organization_id", organization!.id)
+        .neq("status", "deleted");
+      if (error) throw error;
+      const set = new Set<string>();
+      (data || []).forEach((row: any) => {
+        (row.tags || []).forEach((t: string) => {
+          if (typeof t === "string" && t.trim()) set.add(t.trim());
+        });
+      });
+      return Array.from(set).sort((a, b) => a.localeCompare(b, "pt-BR"));
     },
     enabled: !!organization?.id,
   });
@@ -338,9 +428,72 @@ export default function DocumentsPage() {
                   <TabsTrigger value="grid" className="h-7 px-3"><LayoutGrid className="h-4 w-4" /></TabsTrigger>
                 </TabsList>
               </Tabs>
-              <Button variant="outline" size="sm" className="h-9">
-                <Filter className="mr-2 h-4 w-4" /> Filtros
-              </Button>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" size="sm" className="h-9">
+                    <Filter className="mr-2 h-4 w-4" /> Filtros
+                    {selectedTags.length > 0 && (
+                      <Badge variant="secondary" className="ml-2 h-5 px-1.5 text-xs">
+                        {selectedTags.length}
+                      </Badge>
+                    )}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent align="end" className="w-72 p-0">
+                  <div className="flex items-center justify-between border-b px-3 py-2">
+                    <div className="flex items-center gap-2 text-sm font-medium">
+                      <TagIcon className="h-4 w-4" /> Filtrar por tag
+                    </div>
+                    {selectedTags.length > 0 && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="h-7 px-2 text-xs"
+                        onClick={() => setSelectedTags([])}
+                      >
+                        Limpar
+                      </Button>
+                    )}
+                  </div>
+                  <ScrollArea className="max-h-64">
+                    <div className="p-2">
+                      {availableTags.length === 0 ? (
+                        <p className="px-2 py-4 text-center text-xs text-muted-foreground">
+                          Nenhuma tag cadastrada ainda.
+                        </p>
+                      ) : (
+                        <div className="flex flex-wrap gap-1.5">
+                          {availableTags.map((tag) => {
+                            const active = selectedTags.includes(tag);
+                            return (
+                              <button
+                                key={tag}
+                                type="button"
+                                onClick={() => {
+                                  setSelectedTags(
+                                    active
+                                      ? selectedTags.filter((t) => t !== tag)
+                                      : [...selectedTags, tag]
+                                  );
+                                }}
+                                className={cn(
+                                  "rounded-full border px-2.5 py-1 text-xs transition-colors",
+                                  active
+                                    ? "border-primary bg-primary text-primary-foreground"
+                                    : "border-input bg-background hover:bg-accent"
+                                )}
+                              >
+                                {tag}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  </ScrollArea>
+                </PopoverContent>
+              </Popover>
             </div>
           </div>
 
@@ -535,7 +688,8 @@ export default function DocumentsPage() {
                                     page_count: doc.page_count || 1,
                                     description: doc.description || "",
                                     expiration_date: doc.expiration_date || "",
-                                    document_creation_date: doc.document_creation_date || ""
+                                    document_creation_date: doc.document_creation_date || "",
+                                    tags: Array.isArray(doc.tags) ? doc.tags : [],
                                   });
                                 }}
                               >
@@ -657,7 +811,8 @@ export default function DocumentsPage() {
                               page_count: doc.page_count || 1,
                               description: doc.description || "",
                               expiration_date: doc.expiration_date || "",
-                              document_creation_date: doc.document_creation_date || ""
+                              document_creation_date: doc.document_creation_date || "",
+                              tags: Array.isArray(doc.tags) ? doc.tags : [],
                             });
                           }}
                         >
@@ -832,6 +987,18 @@ export default function DocumentsPage() {
               />
             </div>
 
+            <div className="grid gap-2">
+              <Label>Tags</Label>
+              <TagsInput
+                value={uploadData.tags}
+                onChange={(next) => setUploadData({ ...uploadData, tags: next })}
+              />
+              <p className="text-xs text-muted-foreground">
+                Use tags para encontrar o arquivo na busca e em filtros (ex: contrato, 2024, fornecedor).
+              </p>
+            </div>
+
+
             <div 
               className="border-2 border-dashed rounded-lg p-10 flex flex-col items-center justify-center bg-muted/30 cursor-pointer hover:bg-muted/50 transition-colors"
               onClick={() => fileInputRef.current?.click()}
@@ -882,7 +1049,7 @@ export default function DocumentsPage() {
                   folder_id: currentFolder,
                   past_id: currentFolder,
                   status: 'active',
-                  tags: [],
+                  tags: uploadData.tags,
                   keywords: []
                 },
                 file: selectedFile
@@ -895,7 +1062,8 @@ export default function DocumentsPage() {
                     page_count: 1, 
                     description: "",
                     expiration_date: "",
-                    document_creation_date: ""
+                    document_creation_date: "",
+                    tags: [],
                   });
                   setSelectedFile(null);
                 }
@@ -1025,6 +1193,16 @@ export default function DocumentsPage() {
                 value={editData.description}
                 onChange={(e) => setEditData({ ...editData, description: e.target.value })}
               />
+            </div>
+            <div className="grid gap-2">
+              <Label>Tags</Label>
+              <TagsInput
+                value={editData.tags}
+                onChange={(next) => setEditData({ ...editData, tags: next })}
+              />
+              <p className="text-xs text-muted-foreground">
+                Use tags para encontrar o arquivo na busca e em filtros.
+              </p>
             </div>
           </div>
           <DialogFooter>
