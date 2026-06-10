@@ -126,6 +126,7 @@ export function useGED(folderId: string | null = null, filterFavorites: boolean 
   return {
     documents: documentsData?.data || [],
     totalCount: documentsData?.count || 0,
+    debug: (documentsData as any)?.debug,
     folders,
     isLoading: isLoadingDocs || isLoadingFolders,
     uploadDocument: uploadMutation.mutate,
