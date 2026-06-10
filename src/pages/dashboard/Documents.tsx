@@ -219,6 +219,8 @@ export default function DocumentsPage() {
     setSearchTerm,
     selectedTags,
     setSelectedTags,
+    status,
+    setStatus,
     uploadDocument,
     isUploading,
     deleteDocument,
@@ -227,7 +229,7 @@ export default function DocumentsPage() {
     updateDocument,
     isUpdatingDoc,
     totalCount: folderTotalCount,
-  } = useGED(currentFolder);
+  } = useGED(currentFolder, false, false, searchParams.get("status"));
   const isSearching = (searchTerm ?? "").trim().length > 0;
   const isFiltering = isSearching || selectedTags.length > 0;
   // Hide folder rows while searching/filtering so results are documents-only across all folders
