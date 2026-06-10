@@ -266,7 +266,10 @@ export default function DocumentsPage() {
               <Card 
                 key={folder.past_id} 
                 className={`cursor-pointer transition-all hover:bg-accent/50 group ${viewMode === 'list' ? 'border-none shadow-none bg-transparent rounded-md' : ''}`}
-                onClick={() => setCurrentFolder(folder.past_id)}
+                onClick={() => {
+                  setCurrentFolder(folder.past_id);
+                  setFolderPath([...folderPath, { id: folder.past_id, name: folder.past_nm_pasta }]);
+                }}
               >
                 <CardContent className={viewMode === 'list' ? 'p-2 flex items-center gap-3' : 'p-4 flex flex-col items-center gap-2 text-center'}>
                   <Folder className="h-8 w-8 text-amber-500 fill-amber-500/20" />
