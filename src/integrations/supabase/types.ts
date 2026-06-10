@@ -16,31 +16,37 @@ export type Database = {
     Tables: {
       departments: {
         Row: {
-          code: string | null
-          created_at: string | null
-          id: string
-          is_active: boolean | null
-          name: string
+          dept_cd_departamento: string | null
+          dept_ds_departamento: string | null
+          dept_dt_cadastro: string | null
+          dept_id: string
+          dept_in_ativo: boolean | null
+          dept_nm_departamento: string
+          dept_usuario_responsavel: string | null
           organization_id: string
           parent_id: string | null
           updated_at: string | null
         }
         Insert: {
-          code?: string | null
-          created_at?: string | null
-          id?: string
-          is_active?: boolean | null
-          name: string
+          dept_cd_departamento?: string | null
+          dept_ds_departamento?: string | null
+          dept_dt_cadastro?: string | null
+          dept_id?: string
+          dept_in_ativo?: boolean | null
+          dept_nm_departamento: string
+          dept_usuario_responsavel?: string | null
           organization_id: string
           parent_id?: string | null
           updated_at?: string | null
         }
         Update: {
-          code?: string | null
-          created_at?: string | null
-          id?: string
-          is_active?: boolean | null
-          name?: string
+          dept_cd_departamento?: string | null
+          dept_ds_departamento?: string | null
+          dept_dt_cadastro?: string | null
+          dept_id?: string
+          dept_in_ativo?: boolean | null
+          dept_nm_departamento?: string
+          dept_usuario_responsavel?: string | null
           organization_id?: string
           parent_id?: string | null
           updated_at?: string | null
@@ -65,7 +71,7 @@ export type Database = {
             columns: ["parent_id"]
             isOneToOne: false
             referencedRelation: "departments"
-            referencedColumns: ["id"]
+            referencedColumns: ["dept_id"]
           },
         ]
       }
@@ -126,38 +132,115 @@ export type Database = {
           },
         ]
       }
-      folders: {
+      folder_authorized_users: {
         Row: {
           created_at: string | null
-          description: string | null
           id: string
-          is_active: boolean | null
-          name: string
-          organization_id: string
-          parent_id: string | null
-          sector_id: string | null
-          updated_at: string | null
+          past_id: string | null
+          usuario_id: string | null
         }
         Insert: {
           created_at?: string | null
-          description?: string | null
           id?: string
-          is_active?: boolean | null
-          name: string
-          organization_id: string
-          parent_id?: string | null
-          sector_id?: string | null
-          updated_at?: string | null
+          past_id?: string | null
+          usuario_id?: string | null
         }
         Update: {
           created_at?: string | null
-          description?: string | null
           id?: string
-          is_active?: boolean | null
-          name?: string
+          past_id?: string | null
+          usuario_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "folder_authorized_users_past_id_fkey"
+            columns: ["past_id"]
+            isOneToOne: false
+            referencedRelation: "folders"
+            referencedColumns: ["past_id"]
+          },
+        ]
+      }
+      folder_document_types: {
+        Row: {
+          created_at: string | null
+          id: string
+          past_id: string | null
+          tipo_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          past_id?: string | null
+          tipo_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          past_id?: string | null
+          tipo_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "folder_document_types_past_id_fkey"
+            columns: ["past_id"]
+            isOneToOne: false
+            referencedRelation: "folders"
+            referencedColumns: ["past_id"]
+          },
+          {
+            foreignKeyName: "folder_document_types_tipo_id_fkey"
+            columns: ["tipo_id"]
+            isOneToOne: false
+            referencedRelation: "ged_document_types"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      folders: {
+        Row: {
+          organization_id: string
+          past_cd_pasta: string | null
+          past_ds_pasta: string | null
+          past_dt_cadastro: string | null
+          past_id: string
+          past_id_pai: string | null
+          past_in_ativa: boolean | null
+          past_in_permite_subpastas: boolean | null
+          past_in_restrita: boolean | null
+          past_nm_pasta: string
+          past_usuario_responsavel: string | null
+          set_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          organization_id: string
+          past_cd_pasta?: string | null
+          past_ds_pasta?: string | null
+          past_dt_cadastro?: string | null
+          past_id?: string
+          past_id_pai?: string | null
+          past_in_ativa?: boolean | null
+          past_in_permite_subpastas?: boolean | null
+          past_in_restrita?: boolean | null
+          past_nm_pasta: string
+          past_usuario_responsavel?: string | null
+          set_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
           organization_id?: string
-          parent_id?: string | null
-          sector_id?: string | null
+          past_cd_pasta?: string | null
+          past_ds_pasta?: string | null
+          past_dt_cadastro?: string | null
+          past_id?: string
+          past_id_pai?: string | null
+          past_in_ativa?: boolean | null
+          past_in_permite_subpastas?: boolean | null
+          past_in_restrita?: boolean | null
+          past_nm_pasta?: string
+          past_usuario_responsavel?: string | null
+          set_id?: string | null
           updated_at?: string | null
         }
         Relationships: [
@@ -177,17 +260,17 @@ export type Database = {
           },
           {
             foreignKeyName: "folders_parent_id_fkey"
-            columns: ["parent_id"]
+            columns: ["past_id_pai"]
             isOneToOne: false
             referencedRelation: "folders"
-            referencedColumns: ["id"]
+            referencedColumns: ["past_id"]
           },
           {
             foreignKeyName: "folders_sector_id_fkey"
-            columns: ["sector_id"]
+            columns: ["set_id"]
             isOneToOne: false
             referencedRelation: "sectors"
-            referencedColumns: ["id"]
+            referencedColumns: ["set_id"]
           },
         ]
       }
@@ -373,6 +456,7 @@ export type Database = {
           keywords: string[] | null
           organization_id: string
           page_count: number | null
+          past_id: string | null
           status: string | null
           tags: string[] | null
           taxonomy: string | null
@@ -394,6 +478,7 @@ export type Database = {
           keywords?: string[] | null
           organization_id: string
           page_count?: number | null
+          past_id?: string | null
           status?: string | null
           tags?: string[] | null
           taxonomy?: string | null
@@ -415,6 +500,7 @@ export type Database = {
           keywords?: string[] | null
           organization_id?: string
           page_count?: number | null
+          past_id?: string | null
           status?: string | null
           tags?: string[] | null
           taxonomy?: string | null
@@ -434,7 +520,7 @@ export type Database = {
             columns: ["folder_id"]
             isOneToOne: false
             referencedRelation: "folders"
-            referencedColumns: ["id"]
+            referencedColumns: ["past_id"]
           },
           {
             foreignKeyName: "ged_documents_organization_id_fkey"
@@ -445,6 +531,61 @@ export type Database = {
           },
           {
             foreignKeyName: "ged_documents_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ged_documents_past_id_fkey"
+            columns: ["past_id"]
+            isOneToOne: false
+            referencedRelation: "folders"
+            referencedColumns: ["past_id"]
+          },
+        ]
+      }
+      ged_hierarchy_audit: {
+        Row: {
+          acao: string
+          created_at: string | null
+          detalhes: Json | null
+          entidade_id: string | null
+          entidade_tipo: string | null
+          id: string
+          organization_id: string | null
+          usuario_id: string | null
+        }
+        Insert: {
+          acao: string
+          created_at?: string | null
+          detalhes?: Json | null
+          entidade_id?: string | null
+          entidade_tipo?: string | null
+          id?: string
+          organization_id?: string | null
+          usuario_id?: string | null
+        }
+        Update: {
+          acao?: string
+          created_at?: string | null
+          detalhes?: Json | null
+          entidade_id?: string | null
+          entidade_tipo?: string | null
+          id?: string
+          organization_id?: string | null
+          usuario_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ged_hierarchy_audit_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organization_usage"
+            referencedColumns: ["organization_id"]
+          },
+          {
+            foreignKeyName: "ged_hierarchy_audit_organization_id_fkey"
             columns: ["organization_id"]
             isOneToOne: false
             referencedRelation: "organizations"
@@ -851,7 +992,7 @@ export type Database = {
             columns: ["department_id"]
             isOneToOne: false
             referencedRelation: "departments"
-            referencedColumns: ["id"]
+            referencedColumns: ["dept_id"]
           },
           {
             foreignKeyName: "profiles_organization_id_fkey"
@@ -871,42 +1012,48 @@ export type Database = {
       }
       sectors: {
         Row: {
-          created_at: string | null
-          department_id: string
-          description: string | null
-          id: string
-          is_active: boolean | null
-          name: string
+          dept_id: string
           organization_id: string
+          set_cd_setor: string | null
+          set_ds_setor: string | null
+          set_dt_cadastro: string | null
+          set_id: string
+          set_in_ativo: boolean | null
+          set_nm_setor: string
+          set_usuario_responsavel: string | null
           updated_at: string | null
         }
         Insert: {
-          created_at?: string | null
-          department_id: string
-          description?: string | null
-          id?: string
-          is_active?: boolean | null
-          name: string
+          dept_id: string
           organization_id: string
+          set_cd_setor?: string | null
+          set_ds_setor?: string | null
+          set_dt_cadastro?: string | null
+          set_id?: string
+          set_in_ativo?: boolean | null
+          set_nm_setor: string
+          set_usuario_responsavel?: string | null
           updated_at?: string | null
         }
         Update: {
-          created_at?: string | null
-          department_id?: string
-          description?: string | null
-          id?: string
-          is_active?: boolean | null
-          name?: string
+          dept_id?: string
           organization_id?: string
+          set_cd_setor?: string | null
+          set_ds_setor?: string | null
+          set_dt_cadastro?: string | null
+          set_id?: string
+          set_in_ativo?: boolean | null
+          set_nm_setor?: string
+          set_usuario_responsavel?: string | null
           updated_at?: string | null
         }
         Relationships: [
           {
             foreignKeyName: "sectors_department_id_fkey"
-            columns: ["department_id"]
+            columns: ["dept_id"]
             isOneToOne: false
             referencedRelation: "departments"
-            referencedColumns: ["id"]
+            referencedColumns: ["dept_id"]
           },
           {
             foreignKeyName: "sectors_organization_id_fkey"
@@ -1328,6 +1475,33 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      user_scope: {
+        Row: {
+          created_at: string | null
+          escopo_id: string
+          herda_permissoes: boolean | null
+          id: string
+          tipo_escopo: string
+          usuario_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          escopo_id: string
+          herda_permissoes?: boolean | null
+          id?: string
+          tipo_escopo: string
+          usuario_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          escopo_id?: string
+          herda_permissoes?: boolean | null
+          id?: string
+          tipo_escopo?: string
+          usuario_id?: string | null
+        }
+        Relationships: []
       }
     }
     Views: {
