@@ -310,7 +310,13 @@ export default function DocumentsPage() {
             {documents.map((doc) => (
               <Card 
                 key={doc.id} 
-                className={`transition-all hover:bg-accent/50 group ${viewMode === 'list' ? 'border-none shadow-none bg-transparent rounded-md border-b' : ''}`}
+                draggable
+                onDragStart={(e) => {
+                  e.dataTransfer.setData("id", doc.id);
+                  e.dataTransfer.setData("type", "DOCUMENT");
+                  e.dataTransfer.effectAllowed = "move";
+                }}
+                className={`transition-all hover:bg-accent/50 group cursor-grab active:cursor-grabbing ${viewMode === 'list' ? 'border-none shadow-none bg-transparent rounded-md border-b' : ''}`}
               >
                 <CardContent className={viewMode === 'list' ? 'p-3 flex items-center gap-4' : 'p-4 flex flex-col items-center gap-3 text-center h-full justify-between'}>
                   <div className={viewMode === 'list' ? 'flex items-center gap-4 flex-1 min-w-0' : 'flex flex-col items-center gap-2'}>
