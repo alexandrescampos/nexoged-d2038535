@@ -16,7 +16,7 @@ export const accessControlRepository = {
   async createProfile(profile: Partial<Perfil>): Promise<Perfil> {
     const { data, error } = await supabase
       .from("perfil")
-      .insert([profile])
+      .insert([profile as any])
       .select()
       .single();
     if (error) throw error;
