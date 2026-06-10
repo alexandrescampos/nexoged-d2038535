@@ -1,28 +1,23 @@
 import React, { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useGED } from "@/hooks/useGED";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { 
-  FolderTree, 
   Star, 
   Clock, 
   FileText, 
   AlertCircle,
   Plus,
-  ArrowRight,
-  Search,
   ChevronRight,
-  FileIcon,
   HardDrive,
-  Users
+  Users,
+  Calendar,
+  AlertTriangle
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Badge } from "@/components/ui/badge";
 import { useTabs } from "@/contexts/TabsContext";
-import { useOrganizationStructure } from "@/hooks/useOrganizationStructure";
-import { useUserScopes } from "@/hooks/useUserScopes";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatBytes } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
@@ -31,54 +26,17 @@ export default function OrgDashboard() {
   const { organization, profile } = useAuth();
   const navigate = useNavigate();
   const { openTab } = useTabs();
-  const { departments: allDepartments, sectors: allSectors, folders: allFolders, isLoading: isLoadingStructure } = useOrganizationStructure();
-  const { scopes } = useUserScopes();
-
-  // Filtragem hierárquica por escopo do usuário
-  const folderAncestors = React.useMemo(() => {
-    const map = new Map<string, string[]>();
-    const byId = new Map(allFolders.map(f => [f.past_id, f]));
-    allFolders.forEach(f => {
-      const chain: string[] = [];
-      let cur: any = f;
-      while (cur) { chain.push(cur.past_id); cur = cur.past_id_pai ? byId.get(cur.past_id_pai) : null; }
-      map.set(f.past_id, chain);
-    });
-    return map;
-  }, [allFolders]);
-
-  const folderAllowed = (folderId: string, sectorId: string, deptId: string) => {
-    if (scopes.unrestricted) return true;
-    if (scopes.departmentIds.has(deptId)) return true;
-    if (scopes.sectorIds.has(sectorId)) return true;
-    return (folderAncestors.get(folderId) || [folderId]).some(id => scopes.folderIds.has(id));
-  };
-  const sectorAllowed = (sectorId: string, deptId: string) => {
-    if (scopes.unrestricted) return true;
-    if (scopes.departmentIds.has(deptId) || scopes.sectorIds.has(sectorId)) return true;
-    return allFolders.some(f => f.set_id === sectorId && folderAllowed(f.past_id, sectorId, deptId));
-  };
-  const departmentAllowed = (deptId: string) => {
-    if (scopes.unrestricted) return true;
-    if (scopes.departmentIds.has(deptId)) return true;
-    return allSectors.some(s => s.dept_id === deptId && sectorAllowed(s.set_id, deptId));
-  };
-
-  const departments = allDepartments.filter(d => departmentAllowed(d.dept_id));
-  const sectors = allSectors.filter(s => sectorAllowed(s.set_id, s.dept_id));
-  const folders = allFolders.filter(f => {
-    const sec = allSectors.find(s => s.set_id === f.set_id);
-    return sec ? folderAllowed(f.past_id, sec.set_id, sec.dept_id) : false;
-  });
+  
   const { documents: recentDocuments, isLoading: isLoadingRecent } = useGED(null, false, true);
   const { documents: favoriteDocuments, isLoading: isLoadingFavorites } = useGED(null, true, false);
 
-  const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
   const [stats, setStats] = useState({
     totalDocs: 0,
     usedSpace: 0,
     pendingDocs: 0,
-    totalUsers: 0
+    totalUsers: 0,
+    expiredDocs: 0,
+    nearExpiryDocs: 0
   });
   const [isLoadingStats, setIsLoadingStats] = useState(true);
 
@@ -87,18 +45,32 @@ export default function OrgDashboard() {
       if (!organization?.id) return;
       setIsLoadingStats(true);
       try {
-        const [docsCount, spaceUsage, pendingDocs, activeUsers] = await Promise.all([
+        const today = new Date().toISOString().split('T')[0];
+        const next30Days = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+
+        const [docsCount, spaceUsage, pendingDocs, activeUsers, expiredCount, nearExpiryCount] = await Promise.all([
           supabase.from("ged_documents").select("id", { count: "exact", head: true }).eq("organization_id", organization.id).neq("status", "deleted"),
           supabase.rpc('sum_org_document_size', { p_org_id: organization.id }),
           supabase.from("ged_documents").select("id", { count: "exact", head: true }).eq("organization_id", organization.id).eq("status", "pending"),
           supabase.from("profiles").select("id", { count: "exact", head: true }).eq("organization_id", organization.id).eq("is_active", true),
+          supabase.from("ged_documents").select("id", { count: "exact", head: true })
+            .eq("organization_id", organization.id)
+            .neq("status", "deleted")
+            .lt("expiration_date", today),
+          supabase.from("ged_documents").select("id", { count: "exact", head: true })
+            .eq("organization_id", organization.id)
+            .neq("status", "deleted")
+            .gte("expiration_date", today)
+            .lte("expiration_date", next30Days),
         ]);
 
         setStats({
           totalDocs: docsCount.count || 0,
           usedSpace: (spaceUsage.data as number) || 0,
           pendingDocs: pendingDocs.count || 0,
-          totalUsers: activeUsers.count || 0
+          totalUsers: activeUsers.count || 0,
+          expiredDocs: expiredCount.count || 0,
+          nearExpiryDocs: nearExpiryCount.count || 0
         });
       } catch (err) {
         console.error("Dashboard stats error:", err);
@@ -108,71 +80,6 @@ export default function OrgDashboard() {
     };
     fetchStats();
   }, [organization?.id]);
-
-  const toggleExpand = (id: string) => {
-    const newExpanded = new Set(expandedItems);
-    if (newExpanded.has(id)) {
-      newExpanded.delete(id);
-    } else {
-      newExpanded.add(id);
-    }
-    setExpandedItems(newExpanded);
-  };
-
-  const renderNavTree = (parentId: string | null = null, sectorId: string | null = null, level: number = 0) => {
-    if (level === 0) {
-      return (
-        <div className="space-y-1">
-          {departments.map(dept => (
-            <div key={dept.dept_id}>
-              <div 
-                className="flex items-center hover:bg-accent/50 p-1.5 rounded-md cursor-pointer transition-colors"
-                onClick={() => toggleExpand(dept.dept_id)}
-              >
-                {expandedItems.has(dept.dept_id) ? <ChevronRight className="h-4 w-4 rotate-90 transition-transform" /> : <ChevronRight className="h-4 w-4 transition-transform" />}
-                <FolderTree className="h-4 w-4 mr-2 text-primary" />
-                <span className="text-sm font-medium truncate">{dept.dept_nm_departamento}</span>
-              </div>
-              {expandedItems.has(dept.dept_id) && (
-                <div className="ml-4 border-l pl-2">
-                  {sectors.filter(s => s.dept_id === dept.dept_id).map(sec => (
-                    <div key={sec.set_id}>
-                      <div 
-                        className="flex items-center hover:bg-accent/50 p-1.5 rounded-md cursor-pointer transition-colors"
-                        onClick={() => toggleExpand(sec.set_id)}
-                      >
-                        {expandedItems.has(sec.set_id) ? <ChevronRight className="h-3 w-3 rotate-90 transition-transform" /> : <ChevronRight className="h-3 w-3 transition-transform" />}
-                        <span className="text-sm truncate">{sec.set_nm_setor}</span>
-                      </div>
-                      {expandedItems.has(sec.set_id) && (
-                        <div className="ml-4 border-l pl-2">
-                          {folders.filter(f => f.set_id === sec.set_id && !f.past_id_pai).map(folder => (
-                            <div key={folder.past_id} className="flex items-center hover:bg-accent/50 p-1.5 rounded-md cursor-pointer" onClick={() => {
-                              const item = { title: "Documentos", url: "/dashboard/documents", icon: FileText };
-                              openTab({
-                                id: item.url,
-                                title: item.title,
-                                icon: item.icon,
-                              });
-                              navigate(`/dashboard/documents?folder=${folder.past_id}`);
-                            }}>
-                              <FileText className="h-3.5 w-3.5 mr-2 text-amber-500" />
-                              <span className="text-xs truncate">{folder.past_nm_pasta}</span>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
-      );
-    }
-    return null;
-  };
 
   return (
     <div className="space-y-6 animate-fade-in p-2 md:p-0">
@@ -229,31 +136,8 @@ export default function OrgDashboard() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-        {/* Navigation Sidebar */}
-        <Card className="lg:col-span-1 shadow-sm border-muted">
-          <CardHeader className="pb-3 border-b">
-            <CardTitle className="text-sm font-bold flex items-center gap-2">
-              <FolderTree className="h-4 w-4 text-primary" />
-              Navegação
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-3">
-            <ScrollArea className="h-[400px]">
-              {isLoadingStructure ? (
-                <div className="space-y-2">
-                  <Skeleton className="h-6 w-full" />
-                  <Skeleton className="h-6 w-3/4" />
-                  <Skeleton className="h-6 w-full" />
-                </div>
-              ) : (
-                renderNavTree()
-              )}
-            </ScrollArea>
-          </CardContent>
-        </Card>
-
         {/* Main Content Area */}
-        <div className="lg:col-span-3 space-y-6">
+        <div className="lg:col-span-4 space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Favorites */}
             <Card className="shadow-sm border-muted">
@@ -339,6 +223,54 @@ export default function OrgDashboard() {
               </CardContent>
             </Card>
           </div>
+
+          {/* Expired Alerts */}
+          {stats.expiredDocs > 0 && (
+            <Card className="border-red-500/20 bg-red-500/5 shadow-none">
+              <CardContent className="p-4 flex items-center gap-4">
+                <div className="bg-red-500 p-2 rounded-full"><AlertTriangle className="h-5 w-5 text-white" /></div>
+                <div className="flex-1">
+                  <h4 className="text-sm font-bold text-red-700">Documentos Vencidos</h4>
+                  <p className="text-xs text-red-600/80">Você possui {stats.expiredDocs} documentos com data de validade expirada.</p>
+                </div>
+                <Button size="sm" variant="outline" className="border-red-500/30 text-red-700 hover:bg-red-500/10" onClick={() => {
+                  const item = { title: "Documentos", url: "/dashboard/documents", icon: FileText };
+                  openTab({
+                    id: item.url,
+                    title: item.title,
+                    icon: item.icon,
+                  });
+                  navigate("/dashboard/documents?status=expired");
+                }}>
+                  Ver Todos
+                </Button>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Near Expiry Alerts */}
+          {stats.nearExpiryDocs > 0 && (
+            <Card className="border-amber-500/20 bg-amber-500/5 shadow-none">
+              <CardContent className="p-4 flex items-center gap-4">
+                <div className="bg-amber-500 p-2 rounded-full"><Calendar className="h-5 w-5 text-white" /></div>
+                <div className="flex-1">
+                  <h4 className="text-sm font-bold text-amber-700">Documentos a Vencer</h4>
+                  <p className="text-xs text-amber-600/80">Você possui {stats.nearExpiryDocs} documentos que vencerão nos próximos 30 dias.</p>
+                </div>
+                <Button size="sm" variant="outline" className="border-amber-500/30 text-amber-700 hover:bg-amber-500/10" onClick={() => {
+                  const item = { title: "Documentos", url: "/dashboard/documents", icon: FileText };
+                  openTab({
+                    id: item.url,
+                    title: item.title,
+                    icon: item.icon,
+                  });
+                  navigate("/dashboard/documents?status=near_expiry");
+                }}>
+                  Ver Todos
+                </Button>
+              </CardContent>
+            </Card>
+          )}
 
           {/* Pending Alerts */}
           {stats.pendingDocs > 0 && (

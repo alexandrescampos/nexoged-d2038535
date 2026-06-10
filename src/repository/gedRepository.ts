@@ -73,7 +73,14 @@ export const gedRepository = {
       query = query.in("id", favoriteIds);
     }
 
-    if (params.status) {
+    const today = new Date().toISOString().split('T')[0];
+    const next30Days = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+
+    if (params.status === 'expired') {
+      query = query.lt("expiration_date", today).neq("status", "deleted");
+    } else if (params.status === 'near_expiry') {
+      query = query.gte("expiration_date", today).lte("expiration_date", next30Days).neq("status", "deleted");
+    } else if (params.status) {
       query = query.eq("status", params.status);
     } else {
       query = query.neq("status", "deleted");

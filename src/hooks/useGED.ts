@@ -4,17 +4,18 @@ import { gedRepository } from "@/repository/gedRepository";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 
-export function useGED(folderId: string | null = null, filterFavorites: boolean = false, filterRecent: boolean = false) {
+export function useGED(folderId: string | null = null, filterFavorites: boolean = false, filterRecent: boolean = false, initialStatus: string | null = null) {
   const { organization } = useAuth();
   const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [status, setStatus] = useState<string | null>(initialStatus);
   const [page, setPage] = useState(0);
   const { profile } = useAuth();
 
   // Documentos
   const { data: documentsData, isLoading: isLoadingDocs } = useQuery({
-    queryKey: ["ged-documents", organization?.id, profile?.id, folderId, searchTerm, selectedTags, page, filterFavorites, filterRecent],
+    queryKey: ["ged-documents", organization?.id, profile?.id, folderId, searchTerm, selectedTags, page, filterFavorites, filterRecent, status],
     queryFn: () => {
       if (filterRecent && profile?.id) {
         return gedRepository.getRecentDocuments({
@@ -28,6 +29,7 @@ export function useGED(folderId: string | null = null, filterFavorites: boolean 
         folderId,
         searchTerm,
         tags: selectedTags,
+        status: status || undefined,
         page,
         isFavorite: filterFavorites,
         userId: profile?.id
@@ -140,6 +142,8 @@ export function useGED(folderId: string | null = null, filterFavorites: boolean 
     setSearchTerm,
     selectedTags,
     setSelectedTags,
+    status,
+    setStatus,
     page,
     setPage,
     getDownloadUrl: (id: string) => gedRepository.getDownloadUrl(id)
