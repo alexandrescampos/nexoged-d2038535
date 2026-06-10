@@ -19,6 +19,10 @@ import { useAuth } from "@/hooks/useAuth";
 import { UsageIndicator } from "@/components/dashboard/UsageIndicator";
 import { GedTreeView } from "@/components/dashboard/ged/GedTreeView";
 import { useOrganizationStructure } from "@/hooks/useOrganizationStructure";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { Card as TotalCard, CardContent as TotalCardContent, CardHeader as TotalCardHeader, CardTitle as TotalCardTitle } from "@/components/ui/card";
+import { Files } from "lucide-react";
 import { 
   FileText, 
   Upload, 
