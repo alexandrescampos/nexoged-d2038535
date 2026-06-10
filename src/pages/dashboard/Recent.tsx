@@ -49,6 +49,15 @@ import { toast } from "sonner";
 export default function RecentPage() {
   const [viewMode, setViewMode] = useState<"grid" | "list">("list");
   const [documentToDelete, setDocumentToDelete] = useState<string | null>(null);
+  const [documentToEdit, setDocumentToEdit] = useState<any | null>(null);
+  const [editData, setEditData] = useState({
+    title: "",
+    document_type_id: "",
+    page_count: 1,
+    description: "",
+    expiration_date: "",
+    document_creation_date: ""
+  });
   
   const { 
     documents, 
@@ -57,8 +66,12 @@ export default function RecentPage() {
     setSearchTerm,
     deleteDocument,
     toggleFavorite,
-    getDownloadUrl
+    getDownloadUrl,
+    updateDocument,
+    isUpdatingDoc
   } = useGED(null, false, true); // null for folderId, false for filterFavorites, true for filterRecent
+
+  const { documentTypes } = useGEDSettings();
 
   const getFileIcon = (mime: string) => {
     if (mime?.includes("pdf")) return <FileText className="h-6 w-6 text-red-500" />;
