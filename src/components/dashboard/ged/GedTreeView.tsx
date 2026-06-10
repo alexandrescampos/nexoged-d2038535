@@ -19,8 +19,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useOrganizationStructure } from "@/hooks/useOrganizationStructure";
-import { useGED } from "@/hooks/useGED";
-import { Department, Sector, Folder as GedFolder, Document } from "@/types/ged";
+import { GedQuickCreateDialog, QuickCreateMode } from "./GedQuickCreateDialog";
 
 interface TreeViewProps {
   onSelectFolder: (folderId: string, folderName: string, path: {id: string, name: string}[]) => void;
@@ -30,8 +29,9 @@ interface TreeViewProps {
 type TreeItem = {
   id: string;
   name: string;
-  type: 'DEPARTMENT' | 'SECTOR' | 'FOLDER' | 'DOCUMENT';
+  type: 'DEPARTMENT' | 'SECTOR' | 'FOLDER';
   parentId?: string | null;
+  sectorId?: string;
   children?: TreeItem[];
 };
 
@@ -39,6 +39,14 @@ export function GedTreeView({ onSelectFolder, currentFolderId }: TreeViewProps) 
   const { departments, sectors, folders, moveItem } = useOrganizationStructure();
   const [expandedItems, setExpandedItems] = useState<Record<string, boolean>>({});
   const [draggedItem, setDraggedItem] = useState<{ id: string, type: string } | null>(null);
+  const [dragOverId, setDragOverId] = useState<string | null>(null);
+  const [createMode, setCreateMode] = useState<QuickCreateMode | null>(null);
+  const [createOpen, setCreateOpen] = useState(false);
+
+  const openCreate = (mode: QuickCreateMode) => {
+    setCreateMode(mode);
+    setCreateOpen(true);
+  };
 
   const toggleExpand = (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
@@ -62,22 +70,21 @@ export function GedTreeView({ onSelectFolder, currentFolderId }: TreeViewProps) 
           name: sector.set_nm_setor,
           type: 'SECTOR',
           parentId: dept.dept_id,
+          sectorId: sector.set_id,
           children: []
         };
 
-        const buildFolderChildren = (parentId: string | null, sectorId: string) => {
+        const buildFolderChildren = (parentId: string | null, sectorId: string): TreeItem[] => {
           return folders
-            .filter(f => f.set_id === sectorId && f.past_id_pai === parentId)
-            .map(folder => {
-              const folderItem: TreeItem = {
-                id: folder.past_id,
-                name: folder.past_nm_pasta,
-                type: 'FOLDER',
-                parentId: parentId || sectorId,
-                children: buildFolderChildren(folder.past_id, sectorId)
-              };
-              return folderItem;
-            });
+            .filter(f => f.set_id === sectorId && (f.past_id_pai || null) === parentId)
+            .map(folder => ({
+              id: folder.past_id,
+              name: folder.past_nm_pasta,
+              type: 'FOLDER' as const,
+              parentId: parentId || sectorId,
+              sectorId,
+              children: buildFolderChildren(folder.past_id, sectorId)
+            }));
         };
 
         sectorItem.children = buildFolderChildren(null, sector.set_id);
@@ -96,18 +103,24 @@ export function GedTreeView({ onSelectFolder, currentFolderId }: TreeViewProps) 
     setDraggedItem({ id, type });
   };
 
-  const handleDragOver = (e: React.DragEvent) => {
+  const handleDragOver = (e: React.DragEvent, targetId: string, targetType: string) => {
+    const draggedType = e.dataTransfer.types.includes("type") ? null : null;
+    // Allow drop; visual highlight
     e.preventDefault();
+    setDragOverId(targetId);
   };
+
+  const handleDragLeave = () => setDragOverId(null);
 
   const handleDrop = (e: React.DragEvent, targetId: string, targetType: string) => {
     e.preventDefault();
+    setDragOverId(null);
     const id = e.dataTransfer.getData("id");
     const type = e.dataTransfer.getData("type") as any;
 
+    if (!id || !type) return;
     if (id === targetId) return;
 
-    // Lógica de validação de movimento
     let isValid = false;
     if (type === 'SECTOR' && targetType === 'DEPARTMENT') isValid = true;
     if (type === 'FOLDER' && (targetType === 'SECTOR' || targetType === 'FOLDER')) isValid = true;
@@ -123,7 +136,8 @@ export function GedTreeView({ onSelectFolder, currentFolderId }: TreeViewProps) 
     const isExpanded = expandedItems[item.id];
     const hasChildren = item.children && item.children.length > 0;
     const isSelected = currentFolderId === item.id;
-    const currentPath = [...path, { id: item.id, name: item.name }];
+    const isDragOver = dragOverId === item.id;
+    const folderPathSegment = item.type === 'FOLDER' ? [...path, { id: item.id, name: item.name }] : path;
 
     const getIcon = () => {
       switch (item.type) {
@@ -134,26 +148,42 @@ export function GedTreeView({ onSelectFolder, currentFolderId }: TreeViewProps) 
       }
     };
 
+    const addLabel =
+      item.type === 'DEPARTMENT' ? 'Novo Setor' :
+      item.type === 'SECTOR' ? 'Nova Pasta' :
+      'Nova Subpasta';
+
+    const handleAdd = (e: React.MouseEvent) => {
+      e.stopPropagation();
+      setExpandedItems(prev => ({ ...prev, [item.id]: true }));
+      if (item.type === 'DEPARTMENT') {
+        openCreate({ type: 'SECTOR', dept_id: item.id });
+      } else if (item.type === 'SECTOR') {
+        openCreate({ type: 'FOLDER', set_id: item.id, past_id_pai: null });
+      } else if (item.type === 'FOLDER' && item.sectorId) {
+        openCreate({ type: 'FOLDER', set_id: item.sectorId, past_id_pai: item.id });
+      }
+    };
+
     return (
       <div key={item.id} className="select-none">
         <div 
           className={cn(
             "group flex items-center py-1.5 px-2 rounded-md cursor-pointer hover:bg-accent/50 transition-colors",
             isSelected && "bg-accent text-accent-foreground",
+            isDragOver && "ring-2 ring-primary bg-primary/10",
             draggedItem?.id === item.id && "opacity-50"
           )}
           style={{ paddingLeft: `${depth * 12 + 8}px` }}
           onClick={() => {
             if (item.type === 'FOLDER') {
-              onSelectFolder(item.id, item.name, currentPath.filter(p => {
-                  const it = [...departments, ...sectors, ...folders].find(x => (x as any).dept_id === p.id || (x as any).set_id === p.id || (x as any).past_id === p.id);
-                  return it && (it as any).past_id; // Só pastas no breadcrumb principal do GED
-              }) as any);
+              onSelectFolder(item.id, item.name, folderPathSegment);
             }
           }}
-          draggable
+          draggable={item.type !== 'DEPARTMENT'}
           onDragStart={(e) => handleDragStart(e, item.id, item.type)}
-          onDragOver={handleDragOver}
+          onDragOver={(e) => handleDragOver(e, item.id, item.type)}
+          onDragLeave={handleDragLeave}
           onDrop={(e) => handleDrop(e, item.id, item.type)}
         >
           <div className="flex items-center gap-2 flex-1 min-w-0">
@@ -172,11 +202,17 @@ export function GedTreeView({ onSelectFolder, currentFolderId }: TreeViewProps) 
           </div>
           
           <div className="opacity-0 group-hover:opacity-100 flex items-center gap-1">
-            <Button variant="ghost" size="icon" className="h-6 w-6">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-6 w-6"
+              title={addLabel}
+              onClick={handleAdd}
+            >
               <Plus className="h-3 w-3" />
             </Button>
             <DropdownMenu>
-              <DropdownMenuTrigger asChild>
+              <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
                 <Button variant="ghost" size="icon" className="h-6 w-6">
                   <MoreVertical className="h-3 w-3" />
                 </Button>
@@ -191,7 +227,7 @@ export function GedTreeView({ onSelectFolder, currentFolderId }: TreeViewProps) 
         
         {isExpanded && hasChildren && (
           <div className="mt-0.5">
-            {item.children?.map(child => renderItem(child, depth + 1, currentPath))}
+            {item.children?.map(child => renderItem(child, depth + 1, folderPathSegment))}
           </div>
         )}
       </div>
@@ -204,13 +240,25 @@ export function GedTreeView({ onSelectFolder, currentFolderId }: TreeViewProps) 
     <div className="w-full">
       <div className="flex items-center justify-between mb-2 px-2">
         <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Estrutura</h3>
-        <Button variant="ghost" size="icon" className="h-6 w-6">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-6 w-6"
+          title="Novo Departamento"
+          onClick={() => openCreate({ type: 'DEPARTMENT' })}
+        >
           <Plus className="h-3.5 w-3.5" />
         </Button>
       </div>
       <div className="space-y-0.5">
+        {treeData.length === 0 && (
+          <p className="text-xs text-muted-foreground px-2 py-3">
+            Nenhum departamento. Clique em <Plus className="inline h-3 w-3" /> para criar.
+          </p>
+        )}
         {treeData.map(item => renderItem(item))}
       </div>
+      <GedQuickCreateDialog open={createOpen} onOpenChange={setCreateOpen} mode={createMode} />
     </div>
   );
 }

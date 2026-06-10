@@ -18,6 +18,7 @@ import { useGED } from "@/hooks/useGED";
 import { useAuth } from "@/hooks/useAuth";
 import { UsageIndicator } from "@/components/dashboard/UsageIndicator";
 import { GedTreeView } from "@/components/dashboard/ged/GedTreeView";
+import { useOrganizationStructure } from "@/hooks/useOrganizationStructure";
 import { 
   FileText, 
   Upload, 
@@ -118,6 +119,7 @@ export default function DocumentsPage() {
 
   const { documentTypes } = useGEDSettings();
   const { organization } = useAuth();
+  const { moveItem } = useOrganizationStructure();
   
   useEffect(() => {
     const action = searchParams.get("action");
@@ -286,6 +288,16 @@ export default function DocumentsPage() {
                   setCurrentFolder(folder.past_id);
                   setFolderPath([...folderPath, { id: folder.past_id, name: folder.past_nm_pasta }]);
                 }}
+                onDragOver={(e) => { e.preventDefault(); e.currentTarget.classList.add('ring-2','ring-primary'); }}
+                onDragLeave={(e) => e.currentTarget.classList.remove('ring-2','ring-primary')}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  e.currentTarget.classList.remove('ring-2','ring-primary');
+                  const id = e.dataTransfer.getData('id');
+                  const type = e.dataTransfer.getData('type');
+                  if (type !== 'DOCUMENT' || !id) return;
+                  moveItem({ type: 'DOCUMENT', id, targetId: folder.past_id });
+                }}
               >
                 <CardContent className={viewMode === 'list' ? 'p-2 flex items-center gap-3' : 'p-4 flex flex-col items-center gap-2 text-center'}>
                   <Folder className="h-8 w-8 text-amber-500 fill-amber-500/20" />
@@ -310,7 +322,13 @@ export default function DocumentsPage() {
             {documents.map((doc) => (
               <Card 
                 key={doc.id} 
-                className={`transition-all hover:bg-accent/50 group ${viewMode === 'list' ? 'border-none shadow-none bg-transparent rounded-md border-b' : ''}`}
+                draggable
+                onDragStart={(e) => {
+                  e.dataTransfer.setData("id", doc.id);
+                  e.dataTransfer.setData("type", "DOCUMENT");
+                  e.dataTransfer.effectAllowed = "move";
+                }}
+                className={`transition-all hover:bg-accent/50 group cursor-grab active:cursor-grabbing ${viewMode === 'list' ? 'border-none shadow-none bg-transparent rounded-md border-b' : ''}`}
               >
                 <CardContent className={viewMode === 'list' ? 'p-3 flex items-center gap-4' : 'p-4 flex flex-col items-center gap-3 text-center h-full justify-between'}>
                   <div className={viewMode === 'list' ? 'flex items-center gap-4 flex-1 min-w-0' : 'flex flex-col items-center gap-2'}>

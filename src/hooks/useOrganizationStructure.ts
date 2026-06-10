@@ -71,13 +71,16 @@ export function useOrganizationStructure() {
           return supabase.from('folders').update({ past_id_pai: targetId }).eq('past_id', id);
         }
       } else if (type === 'DOCUMENT') {
-        return supabase.from('ged_documents').update({ past_id: targetId }).eq('id', id);
+        return supabase.from('ged_documents').update({ past_id: targetId, folder_id: targetId, updated_at: new Date().toISOString() }).eq('id', id);
       }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["departments"] });
       queryClient.invalidateQueries({ queryKey: ["sectors"] });
       queryClient.invalidateQueries({ queryKey: ["folders-all"] });
+      queryClient.invalidateQueries({ queryKey: ["ged-documents"] });
+      queryClient.invalidateQueries({ queryKey: ["documents"] });
+      queryClient.invalidateQueries({ queryKey: ["folders"] });
       toast.success("Movimentação realizada com sucesso!");
     }
   });

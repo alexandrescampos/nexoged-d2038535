@@ -1,33 +1,49 @@
-## Problemas identificados
+# Plano — Tree View enriquecida em Documentos
 
-1. **Upload sempre vai para a raiz**: a tabela `ged_documents` tem duas colunas (`folder_id` e `past_id`). A listagem filtra por `past_id`, mas o `createDocument` insere apenas `folder_id`. Resultado: o documento é gravado, mas com `past_id = NULL`, aparecendo sempre na raiz.
+## 1. Drag and Drop de Documentos
 
-2. **Sem retorno ao entrar em uma pasta**: a página `Documents.tsx` atualiza `currentFolder` ao clicar em uma pasta, mas não exibe nenhum controle de "Voltar" / breadcrumb navegável. O único link existente ("Nexo GED") volta direto pra raiz, mas não há indicação visual da pasta atual nem botão Voltar.
+Hoje só itens da árvore são arrastáveis. Vou tornar cada linha de documento na lista central (`Documents.tsx`) arrastável e cada nó de **Pasta** na Tree View um alvo de drop.
 
-## Mudanças
+- Em `Documents.tsx`: adicionar `draggable`, `onDragStart` nos cards/linhas de documento, transferindo `{ id, type: 'DOCUMENT' }`.
+- Em `GedTreeView.tsx`: no nó tipo `FOLDER`, aceitar drop de `DOCUMENT` chamando `moveItem({ type: 'DOCUMENT', id, targetId: folder.past_id })`.
+- O hook `useOrganizationStructure.moveItem` já trata DOCUMENT atualizando `past_id` — após mover, invalidar também `["documents"]` para a lista atualizar.
+- Feedback visual: highlight da pasta durante `onDragOver` (borda/destaque).
 
-### 1. Salvar a pasta corretamente no upload
-Em `src/pages/dashboard/Documents.tsx`, ao montar o payload do `uploadDocument`, enviar a pasta tanto em `past_id` quanto em `folder_id` (mantendo compatibilidade):
+## 2. Criação direta na Tree View
 
-```ts
-folder_id: currentFolder,
-past_id: currentFolder,
-```
+Atualmente os botões `+` na Tree View não fazem nada. Vou ligá-los a diálogos de criação contextuais:
 
-### 2. Navegação de retorno entre pastas
-Em `src/pages/dashboard/Documents.tsx`:
+- `+` no header da Tree → criar **Departamento**.
+- `+` em um nó **Departamento** → criar **Setor** (já com `dept_id` preenchido).
+- `+` em um nó **Setor** → criar **Pasta** raiz (sectorId preenchido, `past_id_pai = null`).
+- `+` em um nó **Pasta** → criar **Subpasta** (mesmo `set_id`, `past_id_pai = pasta atual`).
 
-- Manter um estado `folderPath: { id: string; name: string }[]` (pilha de pastas abertas).
-- Ao clicar em uma pasta: empilhar `{ id, name }` e setar `currentFolder`.
-- Renderizar um cabeçalho com:
-  - Botão **← Voltar** (visível quando `folderPath.length > 0`) que faz `pop` da pilha e atualiza `currentFolder` para o topo (ou `null`).
-  - Breadcrumb clicável: `Nexo GED / Pasta A / Pasta B`, onde cada segmento navega para aquele nível (corta a pilha até o índice clicado).
+Implementação:
+- Novo componente `GedQuickCreateDialog.tsx` com um único `Dialog` controlado por estado `{ open, mode: 'DEPARTMENT'|'SECTOR'|'FOLDER', parent: {...} }`.
+- Campos: apenas Nome (e Descrição opcional). Submete via `createDepartment` / `createSector` / `createFolder` já existentes em `useOrganizationStructure`.
+- Após sucesso, expandir automaticamente o nó pai para mostrar o item criado.
 
-O breadcrumb existente no header (`Nexo GED > Explorar`) será substituído pelo breadcrumb dinâmico.
+## 3. Menu de contexto (Mover/Excluir)
 
-## Resultado
+O dropdown `MoreVertical` em cada nó já existe mas é inerte. Para esta entrega:
+- "Mover" → ativa modo "selecione destino" (próxima pasta/setor/depto clicado vira target) ou abre um picker. Vou usar um pequeno **Dialog com select hierárquico** reutilizando a mesma árvore, mais simples que estado modal.
+- "Excluir" → confirma e chama soft delete (`past_in_ativa=false` / `set_in_ativo=false` / depto).
 
-- Upload feito dentro de uma pasta passa a ser corretamente vinculado a ela (aparece dentro da pasta e some da raiz).
-- Usuário consegue voltar nível a nível usando o botão Voltar ou clicando em qualquer parte do breadcrumb.
+> Se preferir manter o escopo só em (1) e (2) nesta rodada, posso deixar o menu de contexto para depois — me avise.
 
-Sem alterações de schema, RLS ou backend — apenas frontend.
+## 4. Onde NÃO mexer
+
+- Página `OrganizationStructure` continua funcionando como gestão completa; a Tree em Documentos será um atalho.
+- Sem mudanças de schema, RLS ou backend.
+
+## Arquivos afetados
+
+- `src/components/dashboard/ged/GedTreeView.tsx` — botões `+` funcionais, drop de DOCUMENT, highlight de drop.
+- `src/components/dashboard/ged/GedQuickCreateDialog.tsx` — **novo**, diálogo único para Depto/Setor/Pasta.
+- `src/pages/dashboard/Documents.tsx` — tornar linhas de documento `draggable` com payload correto.
+- `src/hooks/useOrganizationStructure.ts` — invalidar `["documents"]` após `moveItem` do tipo DOCUMENT.
+
+## Confirmações
+
+1. Inclui também **Mover/Excluir** no menu de contexto agora (item 3) ou deixo para depois?
+2. Os usuários que veem a Tree em Documentos podem criar Depto/Setor livremente, ou devemos restringir a `org_admin`?
