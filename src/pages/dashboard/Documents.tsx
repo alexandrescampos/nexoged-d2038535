@@ -338,14 +338,41 @@ export default function DocumentsPage() {
                         <p className="font-semibold text-sm truncate">{doc.title}</p>
                         {doc.is_favorite && <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />}
                       </div>
-                      <div className="flex items-center gap-2 mt-1">
-                        <Badge variant="outline" className="text-[10px] h-4 py-0 font-normal">
-                          {doc.document_type_data?.name || doc.document_type || "Geral"}
-                        </Badge>
-                        <span className="text-[10px] text-muted-foreground">{new Date(doc.updated_at).toLocaleDateString()}</span>
-                      </div>
+                      {viewMode === 'list' ? (
+                        <>
+                          <div className="flex items-center gap-2 mt-1 flex-wrap">
+                            <Badge variant="outline" className="text-[10px] h-4 py-0 font-normal">
+                              {doc.document_type_data?.name || doc.document_type || "Geral"}
+                            </Badge>
+                            <span className="text-[10px] text-muted-foreground">
+                              Criado em {new Date(doc.created_at).toLocaleDateString('pt-BR')}
+                            </span>
+                            {doc.creator_name && (
+                              <span className="text-[10px] text-muted-foreground">• por {doc.creator_name}</span>
+                            )}
+                            {typeof doc.file_size === 'number' && (
+                              <span className="text-[10px] text-muted-foreground">
+                                • {doc.file_size < 1024 * 1024
+                                  ? `${(doc.file_size / 1024).toFixed(1)} KB`
+                                  : `${(doc.file_size / (1024 * 1024)).toFixed(2)} MB`}
+                              </span>
+                            )}
+                          </div>
+                          {doc.description && (
+                            <p className="text-[11px] text-muted-foreground mt-1 truncate">{doc.description}</p>
+                          )}
+                        </>
+                      ) : (
+                        <div className="flex items-center gap-2 mt-1">
+                          <Badge variant="outline" className="text-[10px] h-4 py-0 font-normal">
+                            {doc.document_type_data?.name || doc.document_type || "Geral"}
+                          </Badge>
+                          <span className="text-[10px] text-muted-foreground">{new Date(doc.updated_at).toLocaleDateString()}</span>
+                        </div>
+                      )}
                     </div>
                   </div>
+
 
                   <div className="flex items-center gap-1">
                     <Button 
