@@ -30,6 +30,7 @@ export interface Perfil {
   ativo: boolean;
   organization_id?: string;
   created_at: string;
+  niveis_sigilo_permitidos?: string[];
 }
 
 export interface Permissao {
