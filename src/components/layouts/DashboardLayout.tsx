@@ -35,6 +35,7 @@ import {
   Plus,
   Users,
   Settings,
+  Settings2,
   LogOut,
   ChevronDown,
   UserCircle,
