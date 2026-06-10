@@ -148,6 +148,13 @@ export default function DocumentsPage() {
   const { organization } = useAuth();
   const { moveItem } = useOrganizationStructure();
 
+  // Enriquece documentos com rótulo de tipo de arquivo p/ ordenação
+  const enrichedDocuments = (documents || []).map((d: any) => ({
+    ...d,
+    file_type_label: getFileTypeLabel(d.mime_type, d.file_name),
+  }));
+  const { sortedItems: sortedDocuments, sortField, sortDirection, handleSort } = useTableSort(enrichedDocuments);
+
   const { data: totalDocuments = 0 } = useQuery({
     queryKey: ["ged-documents-total", organization?.id],
     queryFn: async () => {
