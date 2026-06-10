@@ -19,6 +19,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useOrganizationStructure } from "@/hooks/useOrganizationStructure";
+import { useUserScopes } from "@/hooks/useUserScopes";
 import { GedQuickCreateDialog, QuickCreateMode } from "./GedQuickCreateDialog";
 
 interface TreeViewProps {
