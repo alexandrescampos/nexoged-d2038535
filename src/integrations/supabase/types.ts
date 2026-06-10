@@ -954,6 +954,55 @@ export type Database = {
           },
         ]
       }
+      perfil_escopo: {
+        Row: {
+          created_at: string | null
+          id: string
+          organization_id: string
+          perfil_id: string
+          referencia_id: string
+          tipo_escopo: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          organization_id: string
+          perfil_id: string
+          referencia_id: string
+          tipo_escopo: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          organization_id?: string
+          perfil_id?: string
+          referencia_id?: string
+          tipo_escopo?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "perfil_escopo_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organization_usage"
+            referencedColumns: ["organization_id"]
+          },
+          {
+            foreignKeyName: "perfil_escopo_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "perfil_escopo_perfil_id_fkey"
+            columns: ["perfil_id"]
+            isOneToOne: false
+            referencedRelation: "perfil"
+            referencedColumns: ["perfil_id"]
+          },
+        ]
+      }
       perfil_permissao: {
         Row: {
           perfil_id: string
