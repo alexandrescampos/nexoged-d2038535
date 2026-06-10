@@ -17,6 +17,7 @@ import { useSearchParams } from "react-router-dom";
 import { useGED } from "@/hooks/useGED";
 import { useAuth } from "@/hooks/useAuth";
 import { UsageIndicator } from "@/components/dashboard/UsageIndicator";
+import { GedTreeView } from "@/components/dashboard/ged/GedTreeView";
 import { 
   FileText, 
   Upload, 
@@ -227,31 +228,46 @@ export default function DocumentsPage() {
 
       <UsageIndicator />
 
-      {/* Toolbar com Filtros */}
-      <div className="flex flex-col sm:flex-row items-center gap-4 bg-card p-3 rounded-lg border shadow-sm">
-        <div className="relative flex-1 w-full">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input 
-            ref={searchInputRef}
-            placeholder="Pesquisar em documentos, tags, conteúdos..." 
-            className="pl-9 h-9"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+      <div className="flex flex-col lg:flex-row gap-6 h-full overflow-hidden">
+        {/* Sidebar Structure */}
+        <aside className="w-full lg:w-72 flex-shrink-0 bg-card border rounded-lg p-4 h-full overflow-y-auto hidden lg:block">
+          <GedTreeView 
+            currentFolderId={currentFolder} 
+            onSelectFolder={(id, name, path) => {
+              setCurrentFolder(id);
+              // O path vindo do TreeView já inclui a hierarquia de pastas
+              setFolderPath(path);
+            }} 
           />
-        </div>
-        
-        <div className="flex items-center gap-2 w-full sm:w-auto">
-          <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as any)} className="w-auto">
-            <TabsList className="h-9">
-              <TabsTrigger value="list" className="h-7 px-3"><List className="h-4 w-4" /></TabsTrigger>
-              <TabsTrigger value="grid" className="h-7 px-3"><LayoutGrid className="h-4 w-4" /></TabsTrigger>
-            </TabsList>
-          </Tabs>
-          <Button variant="outline" size="sm" className="h-9">
-            <Filter className="mr-2 h-4 w-4" /> Filtros
-          </Button>
-        </div>
-      </div>
+        </aside>
+
+        {/* Main Content Area */}
+        <div className="flex-1 flex flex-col gap-4 overflow-hidden">
+          {/* Toolbar com Filtros */}
+          <div className="flex flex-col sm:flex-row items-center gap-4 bg-card p-3 rounded-lg border shadow-sm">
+            <div className="relative flex-1 w-full">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input 
+                ref={searchInputRef}
+                placeholder="Pesquisar em documentos, tags, conteúdos..." 
+                className="pl-9 h-9"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
+            
+            <div className="flex items-center gap-2 w-full sm:w-auto">
+              <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as any)} className="w-auto">
+                <TabsList className="h-9">
+                  <TabsTrigger value="list" className="h-7 px-3"><List className="h-4 w-4" /></TabsTrigger>
+                  <TabsTrigger value="grid" className="h-7 px-3"><LayoutGrid className="h-4 w-4" /></TabsTrigger>
+                </TabsList>
+              </Tabs>
+              <Button variant="outline" size="sm" className="h-9">
+                <Filter className="mr-2 h-4 w-4" /> Filtros
+              </Button>
+            </div>
+          </div>
 
       {/* Grid de Pastas/Documentos */}
       <ScrollArea className="flex-1">
@@ -378,6 +394,8 @@ export default function DocumentsPage() {
           </div>
         )}
       </ScrollArea>
+    </div>
+  </div>
 
       {/* Confirmação de Exclusão */}
       <AlertDialog open={!!documentToDelete} onOpenChange={(open) => !open && setDocumentToDelete(null)}>
