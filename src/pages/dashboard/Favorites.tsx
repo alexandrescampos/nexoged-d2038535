@@ -59,6 +59,9 @@ export default function FavoritesPage() {
     getDownloadUrl
   } = useGED(null, true); // null for folderId, true for filterFavorites
 
+  const { canUserDownload } = useDocumentPermissions();
+
+
   const { documentTypes } = useGEDSettings();
 
   const getFileIcon = (mime: string) => {
