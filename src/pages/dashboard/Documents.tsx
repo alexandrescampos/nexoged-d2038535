@@ -385,12 +385,19 @@ export default function DocumentsPage() {
             <div className="grid grid-cols-2 gap-4">
               <div className="grid gap-2">
                 <Label htmlFor="type">Tipo Documental</Label>
-                <Input 
-                  id="type" 
-                  placeholder="Ex: Jurídico..." 
-                  value={uploadData.document_type}
-                  onChange={(e) => setUploadData({ ...uploadData, document_type: e.target.value })}
-                />
+                <Select 
+                  value={uploadData.document_type_id} 
+                  onValueChange={(val) => setUploadData({ ...uploadData, document_type_id: val })}
+                >
+                  <SelectTrigger id="type">
+                    <SelectValue placeholder="Selecione um tipo..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {documentTypes.map(type => (
+                      <SelectItem key={type.id} value={type.id}>{type.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="pages">Número de Páginas</Label>
@@ -403,6 +410,70 @@ export default function DocumentsPage() {
                 />
               </div>
             </div>
+
+            {/* Campos Condicionais baseados no tipo */}
+            {uploadData.document_type_id && (() => {
+              const selectedType = documentTypes.find(t => t.id === uploadData.document_type_id);
+              if (!selectedType) return null;
+              return (
+                <div className="grid grid-cols-2 gap-4">
+                  {selectedType.requires_creation_date && (
+                    <div className="grid gap-2">
+                      <Label>Data de Criação</Label>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant={"outline"}
+                            className={cn(
+                              "w-full justify-start text-left font-normal",
+                              !uploadData.document_creation_date && "text-muted-foreground"
+                            )}
+                          >
+                            <CalendarIcon className="mr-2 h-4 w-4" />
+                            {uploadData.document_creation_date ? format(new Date(uploadData.document_creation_date), "PPP", { locale: ptBR }) : <span>Escolha uma data</span>}
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0">
+                          <Calendar
+                            mode="single"
+                            selected={uploadData.document_creation_date ? new Date(uploadData.document_creation_date) : undefined}
+                            onSelect={(date) => setUploadData({ ...uploadData, document_creation_date: date ? date.toISOString() : "" })}
+                            initialFocus
+                          />
+                        </PopoverContent>
+                      </Popover>
+                    </div>
+                  )}
+                  {selectedType.requires_expiration_date && (
+                    <div className="grid gap-2">
+                      <Label>Data de Vencimento</Label>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant={"outline"}
+                            className={cn(
+                              "w-full justify-start text-left font-normal",
+                              !uploadData.expiration_date && "text-muted-foreground"
+                            )}
+                          >
+                            <CalendarIcon className="mr-2 h-4 w-4" />
+                            {uploadData.expiration_date ? format(new Date(uploadData.expiration_date), "PPP", { locale: ptBR }) : <span>Escolha uma data</span>}
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0">
+                          <Calendar
+                            mode="single"
+                            selected={uploadData.expiration_date ? new Date(uploadData.expiration_date) : undefined}
+                            onSelect={(date) => setUploadData({ ...uploadData, expiration_date: date ? date.toISOString() : "" })}
+                            initialFocus
+                          />
+                        </PopoverContent>
+                      </Popover>
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
             <div 
               className="border-2 border-dashed rounded-lg p-10 flex flex-col items-center justify-center bg-muted/30 cursor-pointer hover:bg-muted/50 transition-colors"
               onClick={() => fileInputRef.current?.click()}
@@ -453,7 +524,14 @@ export default function DocumentsPage() {
               }, {
                 onSuccess: () => {
                   setIsUploadOpen(false);
-                  setUploadData({ title: "", document_type: "", page_count: 1, description: "" });
+                  setUploadData({ 
+                    title: "", 
+                    document_type_id: "", 
+                    page_count: 1, 
+                    description: "",
+                    expiration_date: "",
+                    document_creation_date: ""
+                  });
                   setSelectedFile(null);
                 }
               });
