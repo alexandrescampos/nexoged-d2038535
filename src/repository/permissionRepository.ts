@@ -34,7 +34,7 @@ export const permissionRepository = {
 
     const { error: insertError } = await supabase
       .from("user_permissions")
-      .insert(inserts);
+      .insert(inserts as any);
     
     if (insertError) throw insertError;
   },

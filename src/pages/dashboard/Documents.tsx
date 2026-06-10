@@ -181,6 +181,7 @@ export default function DocumentsPage() {
     expiration_date: "",
     document_creation_date: "",
     tags: [] as string[],
+    sigilo: "PUBLICO" as any,
   });
   const [editData, setEditData] = useState({
     title: "",
@@ -190,6 +191,7 @@ export default function DocumentsPage() {
     expiration_date: "",
     document_creation_date: "",
     tags: [] as string[],
+    sigilo: "PUBLICO" as any,
   });
 
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -577,6 +579,7 @@ export default function DocumentsPage() {
                     <SortableTableHead field="file_size" sortField={sortField} sortDirection={sortDirection} onSort={handleSort}>
                       Tamanho
                     </SortableTableHead>
+                    <TableHead>Sigilo</TableHead>
                     <TableHead>Descrição</TableHead>
                     <TableHead className="w-[100px] text-right">Ações</TableHead>
                   </TableRow>
@@ -654,6 +657,14 @@ export default function DocumentsPage() {
                               : `${(doc.file_size / (1024 * 1024)).toFixed(2)} MB`)
                           : "—"}
                       </TableCell>
+                      <TableCell>
+                        <Badge 
+                          variant={doc.sigilo === 'PUBLICO' ? 'secondary' : 'destructive'} 
+                          className="text-[9px] px-1.5 py-0"
+                        >
+                          {doc.sigilo}
+                        </Badge>
+                      </TableCell>
                       <TableCell className="text-xs text-muted-foreground max-w-[240px]">
                         <span className="truncate block">{doc.description || "—"}</span>
                       </TableCell>
@@ -690,6 +701,7 @@ export default function DocumentsPage() {
                                     expiration_date: doc.expiration_date || "",
                                     document_creation_date: doc.document_creation_date || "",
                                     tags: Array.isArray(doc.tags) ? doc.tags : [],
+                                    sigilo: doc.sigilo || "PUBLICO",
                                   });
                                 }}
                               >
@@ -813,6 +825,7 @@ export default function DocumentsPage() {
                               expiration_date: doc.expiration_date || "",
                               document_creation_date: doc.document_creation_date || "",
                               tags: Array.isArray(doc.tags) ? doc.tags : [],
+                              sigilo: doc.sigilo || "PUBLICO",
                             });
                           }}
                         >
@@ -988,6 +1001,25 @@ export default function DocumentsPage() {
             </div>
 
             <div className="grid gap-2">
+              <Label>Nível de Sigilo</Label>
+              <Select
+                value={uploadData.sigilo}
+                onValueChange={(value) => setUploadData({ ...uploadData, sigilo: value as any })}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="PUBLICO">Público</SelectItem>
+                  <SelectItem value="INTERNO">Interno</SelectItem>
+                  <SelectItem value="RESTRITO">Restrito</SelectItem>
+                  <SelectItem value="CONFIDENCIAL">Confidencial</SelectItem>
+                  <SelectItem value="SIGILOSO">Sigiloso</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="grid gap-2">
               <Label>Tags</Label>
               <TagsInput
                 value={uploadData.tags}
@@ -1050,7 +1082,8 @@ export default function DocumentsPage() {
                   past_id: currentFolder,
                   status: 'active',
                   tags: uploadData.tags,
-                  keywords: []
+                   keywords: [],
+                   sigilo: uploadData.sigilo,
                 },
                 file: selectedFile
               }, {
@@ -1064,6 +1097,7 @@ export default function DocumentsPage() {
                     expiration_date: "",
                     document_creation_date: "",
                     tags: [],
+                    sigilo: "PUBLICO",
                   });
                   setSelectedFile(null);
                 }
@@ -1193,6 +1227,24 @@ export default function DocumentsPage() {
                 value={editData.description}
                 onChange={(e) => setEditData({ ...editData, description: e.target.value })}
               />
+            </div>
+            <div className="grid gap-2">
+              <Label>Nível de Sigilo</Label>
+              <Select
+                value={editData.sigilo}
+                onValueChange={(value) => setEditData({ ...editData, sigilo: value as any })}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="PUBLICO">Público</SelectItem>
+                  <SelectItem value="INTERNO">Interno</SelectItem>
+                  <SelectItem value="RESTRITO">Restrito</SelectItem>
+                  <SelectItem value="CONFIDENCIAL">Confidencial</SelectItem>
+                  <SelectItem value="SIGILOSO">Sigiloso</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
             <div className="grid gap-2">
               <Label>Tags</Label>

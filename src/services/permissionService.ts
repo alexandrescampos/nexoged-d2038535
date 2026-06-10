@@ -7,7 +7,7 @@ import { GedPermission } from "@/types/ged";
 export async function checkServerPermission(userId: string, permission: GedPermission): Promise<boolean> {
   const { data, error } = await supabase.rpc('has_permission', {
     _user_id: userId,
-    _permission: permission
+    _permission: permission as any
   });
 
   if (error) {

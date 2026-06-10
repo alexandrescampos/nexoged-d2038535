@@ -75,6 +75,35 @@ export type Database = {
           },
         ]
       }
+      documento_usuario_autorizado: {
+        Row: {
+          created_at: string | null
+          documento_id: string | null
+          id: string
+          usuario_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          documento_id?: string | null
+          id?: string
+          usuario_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          documento_id?: string | null
+          id?: string
+          usuario_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "documento_usuario_autorizado_documento_id_fkey"
+            columns: ["documento_id"]
+            isOneToOne: false
+            referencedRelation: "ged_documents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       employee_documents: {
         Row: {
           created_at: string
@@ -455,8 +484,10 @@ export type Database = {
           is_favorite: boolean | null
           keywords: string[] | null
           organization_id: string
+          owner_id: string | null
           page_count: number | null
           past_id: string | null
+          sigilo: Database["public"]["Enums"]["sigilo_nivel"] | null
           status: string | null
           tags: string[] | null
           taxonomy: string | null
@@ -477,8 +508,10 @@ export type Database = {
           is_favorite?: boolean | null
           keywords?: string[] | null
           organization_id: string
+          owner_id?: string | null
           page_count?: number | null
           past_id?: string | null
+          sigilo?: Database["public"]["Enums"]["sigilo_nivel"] | null
           status?: string | null
           tags?: string[] | null
           taxonomy?: string | null
@@ -499,8 +532,10 @@ export type Database = {
           is_favorite?: boolean | null
           keywords?: string[] | null
           organization_id?: string
+          owner_id?: string | null
           page_count?: number | null
           past_id?: string | null
+          sigilo?: Database["public"]["Enums"]["sigilo_nivel"] | null
           status?: string | null
           tags?: string[] | null
           taxonomy?: string | null
@@ -871,6 +906,102 @@ export type Database = {
           id?: string
           password_hash?: string
           user_id?: string | null
+        }
+        Relationships: []
+      }
+      perfil: {
+        Row: {
+          ativo: boolean | null
+          created_at: string | null
+          organization_id: string | null
+          perfil_descricao: string | null
+          perfil_id: string
+          perfil_nome: string
+        }
+        Insert: {
+          ativo?: boolean | null
+          created_at?: string | null
+          organization_id?: string | null
+          perfil_descricao?: string | null
+          perfil_id?: string
+          perfil_nome: string
+        }
+        Update: {
+          ativo?: boolean | null
+          created_at?: string | null
+          organization_id?: string | null
+          perfil_descricao?: string | null
+          perfil_id?: string
+          perfil_nome?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "perfil_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organization_usage"
+            referencedColumns: ["organization_id"]
+          },
+          {
+            foreignKeyName: "perfil_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      perfil_permissao: {
+        Row: {
+          perfil_id: string
+          perm_id: string
+        }
+        Insert: {
+          perfil_id: string
+          perm_id: string
+        }
+        Update: {
+          perfil_id?: string
+          perm_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "perfil_permissao_perfil_id_fkey"
+            columns: ["perfil_id"]
+            isOneToOne: false
+            referencedRelation: "perfil"
+            referencedColumns: ["perfil_id"]
+          },
+          {
+            foreignKeyName: "perfil_permissao_perm_id_fkey"
+            columns: ["perm_id"]
+            isOneToOne: false
+            referencedRelation: "permissao"
+            referencedColumns: ["perm_id"]
+          },
+        ]
+      }
+      permissao: {
+        Row: {
+          created_at: string | null
+          perm_codigo: string
+          perm_descricao: string | null
+          perm_id: string
+          perm_nome: string
+        }
+        Insert: {
+          created_at?: string | null
+          perm_codigo: string
+          perm_descricao?: string | null
+          perm_id?: string
+          perm_nome: string
+        }
+        Update: {
+          created_at?: string | null
+          perm_codigo?: string
+          perm_descricao?: string | null
+          perm_id?: string
+          perm_nome?: string
         }
         Relationships: []
       }
@@ -1503,6 +1634,91 @@ export type Database = {
         }
         Relationships: []
       }
+      usuario_escopo: {
+        Row: {
+          data_cadastro: string | null
+          escopo_id: string
+          escopo_referencia_id: string
+          herda_permissoes: boolean | null
+          organization_id: string | null
+          tipo_escopo: Database["public"]["Enums"]["tipo_escopo_enum"]
+          usuario_id: string | null
+        }
+        Insert: {
+          data_cadastro?: string | null
+          escopo_id?: string
+          escopo_referencia_id: string
+          herda_permissoes?: boolean | null
+          organization_id?: string | null
+          tipo_escopo: Database["public"]["Enums"]["tipo_escopo_enum"]
+          usuario_id?: string | null
+        }
+        Update: {
+          data_cadastro?: string | null
+          escopo_id?: string
+          escopo_referencia_id?: string
+          herda_permissoes?: boolean | null
+          organization_id?: string | null
+          tipo_escopo?: Database["public"]["Enums"]["tipo_escopo_enum"]
+          usuario_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "usuario_escopo_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organization_usage"
+            referencedColumns: ["organization_id"]
+          },
+          {
+            foreignKeyName: "usuario_escopo_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      usuario_perfil: {
+        Row: {
+          organization_id: string | null
+          perfil_id: string
+          usuario_id: string
+        }
+        Insert: {
+          organization_id?: string | null
+          perfil_id: string
+          usuario_id: string
+        }
+        Update: {
+          organization_id?: string | null
+          perfil_id?: string
+          usuario_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "usuario_perfil_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organization_usage"
+            referencedColumns: ["organization_id"]
+          },
+          {
+            foreignKeyName: "usuario_perfil_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "usuario_perfil_perfil_id_fkey"
+            columns: ["perfil_id"]
+            isOneToOne: false
+            referencedRelation: "perfil"
+            referencedColumns: ["perfil_id"]
+          },
+        ]
+      }
     }
     Views: {
       organization_usage: {
@@ -1525,6 +1741,7 @@ export type Database = {
         Returns: boolean
       }
       check_user_has_history: { Args: { p_user_id: string }; Returns: boolean }
+      check_user_is_admin: { Args: { user_id: string }; Returns: boolean }
       cleanup_api_usage_log: { Args: never; Returns: undefined }
       get_org_max_users: { Args: { _org_id: string }; Returns: number }
       get_org_user_count: { Args: { _org_id: string }; Returns: number }
@@ -1574,6 +1791,13 @@ export type Database = {
         | "assinar_documento"
         | "administrar_sistema"
       org_status: "active" | "suspended" | "trial"
+      sigilo_nivel:
+        | "PUBLICO"
+        | "INTERNO"
+        | "RESTRITO"
+        | "CONFIDENCIAL"
+        | "SIGILOSO"
+      tipo_escopo_enum: "DEPARTAMENTO" | "SETOR" | "PASTA"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1712,6 +1936,14 @@ export const Constants = {
         "administrar_sistema",
       ],
       org_status: ["active", "suspended", "trial"],
+      sigilo_nivel: [
+        "PUBLICO",
+        "INTERNO",
+        "RESTRITO",
+        "CONFIDENCIAL",
+        "SIGILOSO",
+      ],
+      tipo_escopo_enum: ["DEPARTAMENTO", "SETOR", "PASTA"],
     },
   },
 } as const

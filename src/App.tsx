@@ -47,6 +47,7 @@ import ResumeFromPausePage from "./pages/dashboard/ResumeFromPause";
 import OrgSettingsPage from "./pages/dashboard/Settings";
 import OrgProfilePage from "./pages/dashboard/Profile";
 import PermissionsPage from "./pages/dashboard/Permissions";
+import AccessControlPage from "./pages/dashboard/AccessControl";
 import DocumentTypesPage from "./pages/dashboard/DocumentTypes";
 import FavoritesPage from "./pages/dashboard/Favorites";
 import RecentPage from "./pages/dashboard/Recent";
@@ -158,6 +159,7 @@ const App = () => {
 
               <Route path="users" element={<AdminOnlyRoute><OrgUsersPage /></AdminOnlyRoute>} />
               <Route path="permissions" element={<AdminOnlyRoute><PermissionsPage /></AdminOnlyRoute>} />
+              <Route path="access-control" element={<AdminOnlyRoute><AccessControlPage /></AdminOnlyRoute>} />
               <Route path="document-types" element={<AdminOnlyRoute><DocumentTypesPage /></AdminOnlyRoute>} />
               <Route path="billing" element={<AdminOnlyRoute><BillingPage /></AdminOnlyRoute>} />
               <Route path="payment-success" element={<AdminOnlyRoute><PaymentSuccessPage /></AdminOnlyRoute>} />

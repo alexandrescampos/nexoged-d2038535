@@ -1,11 +1,54 @@
+export type SigiloNivel = 'PUBLICO' | 'INTERNO' | 'RESTRITO' | 'CONFIDENCIAL' | 'SIGILOSO';
+
+export type TipoEscopo = 'DEPARTAMENTO' | 'SETOR' | 'PASTA';
+
 export type GedPermission = 
   | 'visualizar_documento'
   | 'inserir_documento'
   | 'editar_documento'
   | 'excluir_documento'
   | 'restaurar_documento'
+  | 'baixar_documento'
+  | 'compartilhar_documento'
+  | 'aprovar_documento'
   | 'assinar_documento'
-  | 'administrar_sistema';
+  | 'criar_departamento'
+  | 'editar_departamento'
+  | 'criar_setor'
+  | 'editar_setor'
+  | 'criar_pasta'
+  | 'editar_pasta'
+  | 'gerenciar_usuarios'
+  | 'gerenciar_permissoes'
+  | 'visualizar_auditoria'
+  | 'visualizar_relatorios';
+
+export interface Perfil {
+  perfil_id: string;
+  perfil_nome: string;
+  perfil_descricao?: string;
+  ativo: boolean;
+  organization_id?: string;
+  created_at: string;
+}
+
+export interface Permissao {
+  perm_id: string;
+  perm_codigo: string;
+  perm_nome: string;
+  perm_descricao?: string;
+  created_at: string;
+}
+
+export interface UsuarioEscopo {
+  escopo_id: string;
+  usuario_id: string;
+  tipo_escopo: TipoEscopo;
+  escopo_referencia_id: string;
+  herda_permissoes: boolean;
+  data_cadastro: string;
+  organization_id?: string;
+}
 
 export interface Organization {
   id: string;
@@ -94,6 +137,7 @@ export interface Document {
   id: string;
   organization_id: string;
   folder_id?: string;
+  past_id?: string;
   title: string;
   description?: string;
   document_type?: string;
@@ -108,10 +152,12 @@ export interface Document {
   is_favorite: boolean;
   deleted_at?: string;
   created_by: string;
+  owner_id?: string;
+  sigilo: SigiloNivel;
   created_at: string;
   updated_at: string;
   // Joins
-  mime_type?: string; // Do primeiro arquivo da versão
+  mime_type?: string;
   has_file?: boolean;
   file_name?: string;
   file_size?: number;
