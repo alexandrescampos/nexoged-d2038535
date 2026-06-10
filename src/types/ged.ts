@@ -137,6 +137,7 @@ export interface Document {
   id: string;
   organization_id: string;
   folder_id?: string;
+  past_id?: string;
   title: string;
   description?: string;
   document_type?: string;
@@ -151,10 +152,12 @@ export interface Document {
   is_favorite: boolean;
   deleted_at?: string;
   created_by: string;
+  owner_id?: string;
+  sigilo: SigiloNivel;
   created_at: string;
   updated_at: string;
   // Joins
-  mime_type?: string; // Do primeiro arquivo da versão
+  mime_type?: string;
   has_file?: boolean;
   file_name?: string;
   file_size?: number;
