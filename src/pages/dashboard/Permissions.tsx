@@ -39,7 +39,7 @@ const AVAILABLE_PERMISSIONS: { id: GedPermission; label: string; icon: any; desc
   { id: 'excluir_documento', label: 'Excluir', icon: Trash2, description: 'Permite remover documentos (lixeira)' },
   { id: 'restaurar_documento', label: 'Restaurar', icon: RotateCcw, description: 'Permite restaurar itens da lixeira' },
   { id: 'assinar_documento', label: 'Assinar', icon: PenTool, description: 'Permite realizar assinatura digital' },
-  { id: 'administrar_sistema', label: 'Administrar', icon: Settings, description: 'Acesso total a configurações e usuários' },
+  { id: 'gerenciar_permissoes', label: 'Administrar', icon: Settings, description: 'Acesso total a configurações e usuários' },
 ];
 
 export default function PermissionsPage() {
