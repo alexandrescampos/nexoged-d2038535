@@ -1,4 +1,18 @@
 import { useState, useEffect, useRef } from "react";
+import { useGEDSettings } from "@/hooks/useGEDSettings";
+import { CalendarIcon } from "lucide-react";
+import { format } from "date-fns";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { cn } from "@/lib/utils";
+import { ptBR } from "date-fns/locale";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useSearchParams } from "react-router-dom";
 import { useGED } from "@/hooks/useGED";
 import { useAuth } from "@/hooks/useAuth";
@@ -68,15 +82,19 @@ export default function DocumentsPage() {
   const [documentToEdit, setDocumentToEdit] = useState<any | null>(null);
   const [uploadData, setUploadData] = useState({
     title: "",
-    document_type: "",
+    document_type_id: "",
     page_count: 1,
-    description: ""
+    description: "",
+    expiration_date: "",
+    document_creation_date: ""
   });
   const [editData, setEditData] = useState({
     title: "",
-    document_type: "",
+    document_type_id: "",
     page_count: 1,
-    description: ""
+    description: "",
+    expiration_date: "",
+    document_creation_date: ""
   });
 
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -96,6 +114,7 @@ export default function DocumentsPage() {
     isUpdatingDoc
   } = useGED(currentFolder);
 
+  const { documentTypes } = useGEDSettings();
   const { organization } = useAuth();
   
   useEffect(() => {
@@ -244,7 +263,9 @@ export default function DocumentsPage() {
                         {doc.is_favorite && <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />}
                       </div>
                       <div className="flex items-center gap-2 mt-1">
-                        <Badge variant="outline" className="text-[10px] h-4 py-0 font-normal">{doc.document_type || "Geral"}</Badge>
+                        <Badge variant="outline" className="text-[10px] h-4 py-0 font-normal">
+                          {doc.document_type_data?.name || doc.document_type || "Geral"}
+                        </Badge>
                         <span className="text-[10px] text-muted-foreground">{new Date(doc.updated_at).toLocaleDateString()}</span>
                       </div>
                     </div>
@@ -280,9 +301,11 @@ export default function DocumentsPage() {
                             setDocumentToEdit(doc);
                             setEditData({
                               title: doc.title || "",
-                              document_type: doc.document_type || "",
+                              document_type_id: doc.document_type_id || "",
                               page_count: doc.page_count || 1,
-                              description: doc.description || ""
+                              description: doc.description || "",
+                              expiration_date: doc.expiration_date || "",
+                              document_creation_date: doc.document_creation_date || ""
                             });
                           }}
                         >
@@ -416,7 +439,9 @@ export default function DocumentsPage() {
               uploadDocument({
                 doc: {
                   title: uploadData.title,
-                  document_type: uploadData.document_type,
+                  document_type_id: uploadData.document_type_id || null,
+                  expiration_date: uploadData.expiration_date || null,
+                  document_creation_date: uploadData.document_creation_date || null,
                   page_count: uploadData.page_count,
                   organization_id: organization.id,
                   folder_id: currentFolder,
