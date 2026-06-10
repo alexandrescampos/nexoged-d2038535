@@ -18,12 +18,13 @@ export function useGED(folderId: string | null = null, filterFavorites: boolean 
     queryFn: () => {
       if (filterRecent && profile?.id) {
         return gedRepository.getRecentDocuments({
-          organizationId: organization!.id,
+          organizationId: organization?.id || "",
           userId: profile.id
         });
       }
+      
       return gedRepository.getDocuments({
-        organizationId: organization!.id,
+        organizationId: organization?.id || "",
         folderId,
         searchTerm,
         tags: selectedTags,
@@ -32,7 +33,7 @@ export function useGED(folderId: string | null = null, filterFavorites: boolean 
         userId: profile?.id
       });
     },
-    enabled: !!organization?.id,
+    enabled: true, // Allow fetching even without organizationId for global views like Favorites
   });
 
   // Pastas
