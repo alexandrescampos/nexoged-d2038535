@@ -21,7 +21,8 @@ export const gedRepository = {
       `, { count: "exact" })
       .eq("organization_id", params.organizationId);
 
-    if (params.folderId !== undefined) {
+    // When searching, look across the whole organization (ignore current folder)
+    if (params.folderId !== undefined && !params.searchTerm) {
       if (params.folderId === null) {
         query = query.is("past_id", null);
       } else {
@@ -40,7 +41,13 @@ export const gedRepository = {
     }
 
     if (params.searchTerm) {
-      query = query.or(`title.ilike.%${params.searchTerm}%,description.ilike.%${params.searchTerm}%`);
+      // Sanitize term to avoid breaking the PostgREST `or` syntax
+      const term = params.searchTerm.replace(/[,()]/g, " ").trim();
+      if (term) {
+        query = query.or(
+          `title.ilike.%${term}%,description.ilike.%${term}%,file_name.ilike.%${term}%`
+        );
+      }
     }
 
     const from = (params.page || 0) * (params.pageSize || 20);
