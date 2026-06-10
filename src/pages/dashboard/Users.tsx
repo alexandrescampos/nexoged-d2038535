@@ -818,53 +818,6 @@ export default function OrgUsersPage() {
                           </SelectContent>
                         </Select>
                     </div>
-                    <div className="space-y-2">
-                      <Label>Departamento</Label>
-                      <Select
-                        value={newUserDeptId || "none"}
-                        onValueChange={(v) => setNewUserDeptId(v === "none" ? null : v)}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Selecione um departamento" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="none">Nenhum</SelectItem>
-                          {orgDepartments.map((dept: any) => (
-                            <SelectItem key={dept.id} value={dept.id}>
-                              {dept.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Permissões Especiais</Label>
-                      <div className="grid grid-cols-2 gap-2 border rounded-md p-3">
-                        {[
-                          { id: "visualizar_documento", label: "Visualizar" },
-                          { id: "inserir_documento", label: "Inserir" },
-                          { id: "editar_documento", label: "Editar" },
-                          { id: "excluir_documento", label: "Excluir" },
-                          { id: "assinar_documento", label: "Assinar" },
-                          { id: "administrar_sistema", label: "Administrar" },
-                        ].map((perm) => (
-                          <div key={perm.id} className="flex items-center space-x-2">
-                            <Checkbox 
-                              id={`new-perm-${perm.id}`} 
-                              checked={newUserPermissions.includes(perm.id)}
-                              onCheckedChange={(checked) => {
-                                setNewUserPermissions(prev => 
-                                  checked 
-                                    ? [...prev, perm.id] 
-                                    : prev.filter(p => p !== perm.id)
-                                );
-                              }}
-                            />
-                            <Label htmlFor={`new-perm-${perm.id}`} className="text-xs font-normal">{perm.label}</Label>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
 
                     </div>
                     <DialogFooter>
