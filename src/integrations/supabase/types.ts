@@ -256,6 +256,60 @@ export type Database = {
           },
         ]
       }
+      ged_document_types: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          description: string | null
+          id: string
+          initials: string
+          name: string
+          organization_id: string
+          requires_creation_date: boolean | null
+          requires_expiration_date: boolean | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          initials: string
+          name: string
+          organization_id: string
+          requires_creation_date?: boolean | null
+          requires_expiration_date?: boolean | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          initials?: string
+          name?: string
+          organization_id?: string
+          requires_creation_date?: boolean | null
+          requires_expiration_date?: boolean | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ged_document_types_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organization_usage"
+            referencedColumns: ["organization_id"]
+          },
+          {
+            foreignKeyName: "ged_document_types_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ged_document_versions: {
         Row: {
           checksum: string | null
@@ -309,7 +363,10 @@ export type Database = {
           created_by: string | null
           deleted_at: string | null
           description: string | null
+          document_creation_date: string | null
           document_type: string | null
+          document_type_id: string | null
+          expiration_date: string | null
           folder_id: string | null
           id: string
           is_favorite: boolean | null
@@ -327,7 +384,10 @@ export type Database = {
           created_by?: string | null
           deleted_at?: string | null
           description?: string | null
+          document_creation_date?: string | null
           document_type?: string | null
+          document_type_id?: string | null
+          expiration_date?: string | null
           folder_id?: string | null
           id?: string
           is_favorite?: boolean | null
@@ -345,7 +405,10 @@ export type Database = {
           created_by?: string | null
           deleted_at?: string | null
           description?: string | null
+          document_creation_date?: string | null
           document_type?: string | null
+          document_type_id?: string | null
+          expiration_date?: string | null
           folder_id?: string | null
           id?: string
           is_favorite?: boolean | null
@@ -359,6 +422,13 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "ged_documents_document_type_id_fkey"
+            columns: ["document_type_id"]
+            isOneToOne: false
+            referencedRelation: "ged_document_types"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "ged_documents_folder_id_fkey"
             columns: ["folder_id"]
