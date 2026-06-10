@@ -142,6 +142,8 @@ export function useGED(folderId: string | null = null, filterFavorites: boolean 
     setSearchTerm,
     selectedTags,
     setSelectedTags,
+    status,
+    setStatus,
     page,
     setPage,
     getDownloadUrl: (id: string) => gedRepository.getDownloadUrl(id)
