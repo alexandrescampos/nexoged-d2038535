@@ -50,6 +50,7 @@ import PermissionsPage from "./pages/dashboard/Permissions";
 import DocumentTypesPage from "./pages/dashboard/DocumentTypes";
 import FavoritesPage from "./pages/dashboard/Favorites";
 import RecentPage from "./pages/dashboard/Recent";
+import ExpirationReportPage from "./pages/dashboard/ExpirationReport";
 import TermsPage from "./pages/dashboard/Terms";
 import PrivacyPage from "./pages/dashboard/Privacy";
 import LegalPage from "./pages/super-admin/Legal";
@@ -141,6 +142,14 @@ const App = () => {
                 element={
                   <PermissionProtectedRoute permission="visualizar_documento">
                     <RecentPage />
+                  </PermissionProtectedRoute>
+                } 
+              />
+              <Route 
+                path="expiration-report" 
+                element={
+                  <PermissionProtectedRoute permission="visualizar_documento">
+                    <ExpirationReportPage />
                   </PermissionProtectedRoute>
                 } 
               />
