@@ -81,6 +81,7 @@ export function useGED(folderId: string | null = null, filterFavorites: boolean 
     mutationFn: ({ id, updates }: { id: string, updates: any }) => gedRepository.updateDocument(id, updates),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["ged-documents"] });
+      queryClient.invalidateQueries({ queryKey: ["ged-tags"] });
       toast.success("Documento atualizado com sucesso!");
     },
     onError: (error: any) => {
