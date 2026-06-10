@@ -28,6 +28,14 @@ export function UserProfileAssignment() {
   }, [organization?.id]);
 
   useEffect(() => {
+    const handler = () => {
+      if (organization?.id) loadData();
+    };
+    window.addEventListener("perfis-changed", handler);
+    return () => window.removeEventListener("perfis-changed", handler);
+  }, [organization?.id]);
+
+  useEffect(() => {
     if (selectedUserId) {
       loadUserProfiles(selectedUserId);
     }
