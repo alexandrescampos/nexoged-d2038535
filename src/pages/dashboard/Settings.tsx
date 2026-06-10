@@ -367,6 +367,13 @@ export default function OrgSettingsPage() {
         )}
 
 
+        {/* Tipos de Documento - Apenas para Org Admin */}
+        {isOrgAdmin && (
+          <div className="md:col-span-2">
+            <DocumentTypesSettings />
+          </div>
+        )}
+
         {/* Audit Log - Apenas para Org Admin */}
         {isOrgAdmin && (
           <div className="md:col-span-2">
