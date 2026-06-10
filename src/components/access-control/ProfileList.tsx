@@ -2,13 +2,23 @@ import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Plus, Edit, Trash2, CheckCircle2, ShieldCheck } from "lucide-react";
+import { Plus, Edit, Trash2, CheckCircle2, ShieldCheck, Loader2 } from "lucide-react";
 import { accessControlRepository } from "@/repository/accessControlRepository";
 import { Perfil, Permissao } from "@/types/ged";
 import { useAuth } from "@/hooks/useAuth";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
 
 export function ProfileList() {
   const { organization } = useAuth();
@@ -17,6 +27,12 @@ export function ProfileList() {
   const [selectedProfileId, setSelectedProfileId] = useState<string | null>(null);
   const [selectedPerms, setSelectedPerms] = useState<string[]>([]);
   const [isSaving, setIsSaving] = useState(false);
+  const [isCreating, setIsCreating] = useState(false);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [newProfile, setNewProfile] = useState({
+    perfil_nome: "",
+    perfil_descricao: "",
+  });
 
   useEffect(() => {
     if (organization?.id) {
@@ -71,6 +87,27 @@ export function ProfileList() {
     }
   };
 
+  const handleCreateProfile = async () => {
+    if (!newProfile.perfil_nome || !organization?.id) return;
+    setIsCreating(true);
+    try {
+      await accessControlRepository.createProfile({
+        perfil_nome: newProfile.perfil_nome,
+        perfil_descricao: newProfile.perfil_descricao,
+        organization_id: organization.id,
+        ativo: true,
+      });
+      toast.success("Perfil criado com sucesso!");
+      setIsDialogOpen(false);
+      setNewProfile({ perfil_nome: "", perfil_descricao: "" });
+      loadData();
+    } catch (error) {
+      toast.error("Erro ao criar perfil.");
+    } finally {
+      setIsCreating(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <Card>
@@ -79,7 +116,47 @@ export function ProfileList() {
             <CardTitle>Perfis</CardTitle>
             <CardDescription>Gerencie os papéis de acesso da organização</CardDescription>
           </div>
-          <Button size="sm"><Plus className="h-4 w-4 mr-2" /> Novo Perfil</Button>
+          
+          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+            <DialogTrigger asChild>
+              <Button size="sm"><Plus className="h-4 w-4 mr-2" /> Novo Perfil</Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Novo Perfil de Acesso</DialogTitle>
+                <DialogDescription>
+                  Crie um novo papel para agrupar permissões de usuários.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4 py-4">
+                <div className="space-y-2">
+                  <Label htmlFor="name">Nome do Perfil</Label>
+                  <Input 
+                    id="name" 
+                    placeholder="Ex: Gestor Financeiro" 
+                    value={newProfile.perfil_nome}
+                    onChange={(e) => setNewProfile({ ...newProfile, perfil_nome: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="description">Descrição</Label>
+                  <Textarea 
+                    id="description" 
+                    placeholder="Descreva as responsabilidades deste perfil..." 
+                    value={newProfile.perfil_descricao}
+                    onChange={(e) => setNewProfile({ ...newProfile, perfil_descricao: e.target.value })}
+                  />
+                </div>
+              </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setIsDialogOpen(false)}>Cancelar</Button>
+                <Button onClick={handleCreateProfile} disabled={isCreating || !newProfile.perfil_nome}>
+                  {isCreating ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+                  Criar Perfil
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </CardHeader>
         <CardContent>
           <div className="space-y-2">
