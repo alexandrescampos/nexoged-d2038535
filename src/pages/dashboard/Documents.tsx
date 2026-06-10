@@ -724,7 +724,8 @@ export default function DocumentsPage() {
                               page_count: doc.page_count || 1,
                               description: doc.description || "",
                               expiration_date: doc.expiration_date || "",
-                              document_creation_date: doc.document_creation_date || ""
+                              document_creation_date: doc.document_creation_date || "",
+                              tags: Array.isArray(doc.tags) ? doc.tags : [],
                             });
                           }}
                         >
