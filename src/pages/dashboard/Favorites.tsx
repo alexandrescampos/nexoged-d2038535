@@ -1,5 +1,6 @@
 import { useState, useRef } from "react";
 import { useGED } from "@/hooks/useGED";
+import { useGEDSettings } from "@/hooks/useGEDSettings";
 import { 
   FileText, 
   Search, 
@@ -55,6 +56,8 @@ export default function FavoritesPage() {
     toggleFavorite,
     getDownloadUrl
   } = useGED(null, true); // null for folderId, true for filterFavorites
+
+  const { documentTypes } = useGEDSettings();
 
   const getFileIcon = (mime: string) => {
     if (mime?.includes("pdf")) return <FileText className="h-6 w-6 text-red-500" />;
@@ -155,7 +158,9 @@ export default function FavoritesPage() {
                         <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
                       </div>
                       <div className="flex items-center gap-2 mt-1">
-                        <Badge variant="outline" className="text-[10px] h-4 py-0 font-normal">{doc.document_type || "Geral"}</Badge>
+                        <Badge variant="outline" className="text-[10px] h-4 py-0 font-normal">
+                          {doc.document_type_data?.name || doc.document_type || "Geral"}
+                        </Badge>
                         <span className="text-[10px] text-muted-foreground">{new Date(doc.updated_at).toLocaleDateString()}</span>
                       </div>
                     </div>
