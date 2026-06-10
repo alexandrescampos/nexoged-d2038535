@@ -27,6 +27,12 @@ export function ProfileList() {
   const [selectedProfileId, setSelectedProfileId] = useState<string | null>(null);
   const [selectedPerms, setSelectedPerms] = useState<string[]>([]);
   const [isSaving, setIsSaving] = useState(false);
+  const [isCreating, setIsCreating] = useState(false);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [newProfile, setNewProfile] = useState({
+    perfil_nome: "",
+    perfil_descricao: "",
+  });
 
   useEffect(() => {
     if (organization?.id) {
