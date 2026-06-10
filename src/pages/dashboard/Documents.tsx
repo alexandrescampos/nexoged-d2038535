@@ -18,6 +18,7 @@ import { useGED } from "@/hooks/useGED";
 import { useAuth } from "@/hooks/useAuth";
 import { UsageIndicator } from "@/components/dashboard/UsageIndicator";
 import { GedTreeView } from "@/components/dashboard/ged/GedTreeView";
+import { useOrganizationStructure } from "@/hooks/useOrganizationStructure";
 import { 
   FileText, 
   Upload, 
@@ -118,6 +119,7 @@ export default function DocumentsPage() {
 
   const { documentTypes } = useGEDSettings();
   const { organization } = useAuth();
+  const { moveItem } = useOrganizationStructure();
   
   useEffect(() => {
     const action = searchParams.get("action");
