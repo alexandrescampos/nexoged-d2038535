@@ -188,13 +188,15 @@ export default function FavoritesPage() {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end" className="w-48">
-                        <DropdownMenuItem 
-                          className="gap-2"
-                          disabled={!doc.has_file}
-                          onClick={() => handleDownloadFile(doc)}
-                        >
-                          <Download className="h-4 w-4" /> Baixar
-                        </DropdownMenuItem>
+                        {canUserDownload(doc) && (
+                          <DropdownMenuItem 
+                            className="gap-2"
+                            disabled={!doc.has_file}
+                            onClick={() => handleDownloadFile(doc)}
+                          >
+                            <Download className="h-4 w-4" /> Baixar
+                          </DropdownMenuItem>
+                        )}
                         <DropdownMenuItem 
                           className="gap-2"
                           onClick={() => toggleFavorite({ id: doc.id, isFavorite: false })}
