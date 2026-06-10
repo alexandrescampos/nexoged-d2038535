@@ -1107,6 +1107,16 @@ export default function DocumentsPage() {
                 onChange={(e) => setEditData({ ...editData, description: e.target.value })}
               />
             </div>
+            <div className="grid gap-2">
+              <Label>Tags</Label>
+              <TagsInput
+                value={editData.tags}
+                onChange={(next) => setEditData({ ...editData, tags: next })}
+              />
+              <p className="text-xs text-muted-foreground">
+                Use tags para encontrar o arquivo na busca e em filtros.
+              </p>
+            </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setDocumentToEdit(null)}>Cancelar</Button>
