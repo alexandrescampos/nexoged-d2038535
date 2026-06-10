@@ -47,6 +47,7 @@ export function useGED(folderId: string | null = null, filterFavorites: boolean 
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["ged-documents"] });
       queryClient.invalidateQueries({ queryKey: ["ged-documents-total"] });
+      queryClient.invalidateQueries({ queryKey: ["ged-tags"] });
       queryClient.invalidateQueries({ queryKey: ["organization-usage"] });
       toast.success("Documento enviado com sucesso!");
     },
