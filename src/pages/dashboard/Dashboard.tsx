@@ -28,7 +28,45 @@ import { supabase } from "@/integrations/supabase/client";
 export default function OrgDashboard() {
   const { organization, profile } = useAuth();
   const navigate = useNavigate();
-  const { departments, sectors, folders, isLoading: isLoadingStructure } = useOrganizationStructure();
+  const { departments: allDepartments, sectors: allSectors, folders: allFolders, isLoading: isLoadingStructure } = useOrganizationStructure();
+  const { scopes } = useUserScopes();
+
+  // Filtragem hierárquica por escopo do usuário
+  const folderAncestors = React.useMemo(() => {
+    const map = new Map<string, string[]>();
+    const byId = new Map(allFolders.map(f => [f.past_id, f]));
+    allFolders.forEach(f => {
+      const chain: string[] = [];
+      let cur: any = f;
+      while (cur) { chain.push(cur.past_id); cur = cur.past_id_pai ? byId.get(cur.past_id_pai) : null; }
+      map.set(f.past_id, chain);
+    });
+    return map;
+  }, [allFolders]);
+
+  const folderAllowed = (folderId: string, sectorId: string, deptId: string) => {
+    if (scopes.unrestricted) return true;
+    if (scopes.departmentIds.has(deptId)) return true;
+    if (scopes.sectorIds.has(sectorId)) return true;
+    return (folderAncestors.get(folderId) || [folderId]).some(id => scopes.folderIds.has(id));
+  };
+  const sectorAllowed = (sectorId: string, deptId: string) => {
+    if (scopes.unrestricted) return true;
+    if (scopes.departmentIds.has(deptId) || scopes.sectorIds.has(sectorId)) return true;
+    return allFolders.some(f => f.set_id === sectorId && folderAllowed(f.past_id, sectorId, deptId));
+  };
+  const departmentAllowed = (deptId: string) => {
+    if (scopes.unrestricted) return true;
+    if (scopes.departmentIds.has(deptId)) return true;
+    return allSectors.some(s => s.dept_id === deptId && sectorAllowed(s.set_id, deptId));
+  };
+
+  const departments = allDepartments.filter(d => departmentAllowed(d.dept_id));
+  const sectors = allSectors.filter(s => sectorAllowed(s.set_id, s.dept_id));
+  const folders = allFolders.filter(f => {
+    const sec = allSectors.find(s => s.set_id === f.set_id);
+    return sec ? folderAllowed(f.past_id, sec.set_id, sec.dept_id) : false;
+  });
   const { documents: recentDocuments, isLoading: isLoadingRecent } = useGED(null, false, true);
   const { documents: favoriteDocuments, isLoading: isLoadingFavorites } = useGED(null, true, false);
 
