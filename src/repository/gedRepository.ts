@@ -45,9 +45,43 @@ export const gedRepository = {
       // Sanitize term to avoid breaking the PostgREST `or` syntax
       const term = params.searchTerm.replace(/[,(){}"]/g, " ").trim();
       if (term) {
-        // Match title/description (partial) or any tag/keyword (exact element contains)
+        // For tag/keyword partial match we cannot use ilike directly on array columns
+        // via PostgREST. Pre-fetch ids of docs whose any tag/keyword matches partially.
+        const lowerTerm = term.toLowerCase();
+        const { data: tagMatchRows } = await supabase
+          .from("ged_documents")
+          .select("id, tags, keywords")
+          .eq("organization_id", params.organizationId)
+          .neq("status", "deleted")
+          .or(`tags.cs.{${term}},keywords.cs.{${term}}`)
+          // also pull rows that have any tag/keyword set so we can do partial match client-side
+          .limit(2000);
+        const matchedIds = new Set<string>();
+        const { data: allTagRows } = await supabase
+          .from("ged_documents")
+          .select("id, tags, keywords")
+          .eq("organization_id", params.organizationId)
+          .neq("status", "deleted")
+          .or("tags.neq.{},keywords.neq.{}")
+          .limit(5000);
+        (allTagRows || []).forEach((row: any) => {
+          const tags: string[] = Array.isArray(row.tags) ? row.tags : [];
+          const kws: string[] = Array.isArray(row.keywords) ? row.keywords : [];
+          if (
+            tags.some(t => typeof t === "string" && t.toLowerCase().includes(lowerTerm)) ||
+            kws.some(k => typeof k === "string" && k.toLowerCase().includes(lowerTerm))
+          ) {
+            matchedIds.add(row.id);
+          }
+        });
+        (tagMatchRows || []).forEach((row: any) => matchedIds.add(row.id));
+
+        const idsClause = matchedIds.size > 0
+          ? `,id.in.(${Array.from(matchedIds).join(",")})`
+          : "";
+
         query = query.or(
-          `title.ilike.%${term}%,description.ilike.%${term}%,tags.cs.{${term}},keywords.cs.{${term}}`
+          `title.ilike.%${term}%,description.ilike.%${term}%${idsClause}`
         );
       }
     }
