@@ -16,7 +16,7 @@ export const gedRepository = {
       .from("ged_documents")
       .select(`
         *,
-        versions:ged_document_versions(mime_type, version_number, file_name),
+        versions:ged_document_versions(mime_type, version_number, file_name, file_size, created_by),
         document_type_data:ged_document_types(*)
       `, { count: "exact" })
       .eq("organization_id", params.organizationId);
@@ -59,9 +59,21 @@ export const gedRepository = {
         ...doc,
         has_file: versions.length > 0,
         file_name: latestVersion?.file_name,
+        file_size: latestVersion?.file_size,
         mime_type: latestVersion?.mime_type || 'application/octet-stream'
       };
     });
+
+    // Fetch uploader names
+    const creatorIds = Array.from(new Set(formattedData.map((d: any) => d.created_by).filter(Boolean)));
+    if (creatorIds.length > 0) {
+      const { data: profs } = await supabase
+        .from("profiles")
+        .select("id, full_name")
+        .in("id", creatorIds);
+      const nameMap = new Map((profs || []).map((p: any) => [p.id, p.full_name]));
+      formattedData.forEach((d: any) => { d.creator_name = nameMap.get(d.created_by) || null; });
+    }
 
     return { data: formattedData as unknown as Document[], count };
   },
