@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useGED } from "@/hooks/useGED";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
