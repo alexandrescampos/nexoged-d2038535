@@ -29,6 +29,7 @@ export function useGED(folderId: string | null = null, filterFavorites: boolean 
         folderId,
         searchTerm,
         tags: selectedTags,
+        status: status || undefined,
         page,
         isFavorite: filterFavorites,
         userId: profile?.id
