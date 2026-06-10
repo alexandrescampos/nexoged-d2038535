@@ -41,7 +41,9 @@ import {
   FileCode,
   FileSpreadsheet,
   FileImage,
-  Loader2
+  Loader2,
+  X,
+  Tag as TagIcon
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
