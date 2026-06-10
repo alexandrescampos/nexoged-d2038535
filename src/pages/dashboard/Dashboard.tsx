@@ -20,6 +20,7 @@ import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
+import { useTabs } from "@/contexts/TabsContext";
 import { useOrganizationStructure } from "@/hooks/useOrganizationStructure";
 import { useUserScopes } from "@/hooks/useUserScopes";
 import { Skeleton } from "@/components/ui/skeleton";
