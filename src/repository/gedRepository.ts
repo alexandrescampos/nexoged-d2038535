@@ -108,13 +108,14 @@ export const gedRepository = {
       .range(from, to);
 
     if (error) throw error;
+    const favoriteSet = new Set(favoriteIds);
     const formattedData = (data || []).map(doc => {
       const versions = (doc as any).versions || [];
       const latestVersion = [...versions].sort((a, b) => (b.version_number || 0) - (a.version_number || 0))[0];
 
       return {
         ...doc,
-        is_favorite: !!(doc as any).is_favorite?.[0]?.id,
+        is_favorite: favoriteSet.has(doc.id),
         has_file: versions.length > 0,
         file_name: latestVersion?.file_name,
         file_size: latestVersion?.file_size,
