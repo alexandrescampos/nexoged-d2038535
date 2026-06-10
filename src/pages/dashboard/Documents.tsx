@@ -579,6 +579,7 @@ export default function DocumentsPage() {
                     <SortableTableHead field="file_size" sortField={sortField} sortDirection={sortDirection} onSort={handleSort}>
                       Tamanho
                     </SortableTableHead>
+                    <TableHead>Sigilo</TableHead>
                     <TableHead>Descrição</TableHead>
                     <TableHead className="w-[100px] text-right">Ações</TableHead>
                   </TableRow>
