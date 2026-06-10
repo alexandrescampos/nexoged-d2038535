@@ -9,7 +9,7 @@ export const orgStructureRepository = {
       .eq("organization_id", orgId)
       .order("dept_nm_departamento");
     if (error) throw error;
-    return data as Department[];
+    return (data as any) as Department[];
   },
 
   async createDepartment(dept: Omit<Department, "dept_id" | "dept_dt_cadastro" | "created_at" | "updated_at">): Promise<Department> {
@@ -19,7 +19,7 @@ export const orgStructureRepository = {
       .select()
       .single();
     if (error) throw error;
-    return data as Department;
+    return (data as any) as Department;
   },
 
   async getSectors(orgId: string): Promise<Sector[]> {
@@ -29,7 +29,7 @@ export const orgStructureRepository = {
       .eq("organization_id", orgId)
       .order("set_nm_setor");
     if (error) throw error;
-    return data as Sector[];
+    return (data as any) as Sector[];
   },
 
   async createSector(sector: Omit<Sector, "set_id" | "set_dt_cadastro" | "created_at" | "updated_at">): Promise<Sector> {
@@ -39,7 +39,7 @@ export const orgStructureRepository = {
       .select()
       .single();
     if (error) throw error;
-    return data as Sector;
+    return (data as any) as Sector;
   },
 
   async getFolders(orgId: string): Promise<Folder[]> {
@@ -49,7 +49,7 @@ export const orgStructureRepository = {
       .eq("organization_id", orgId)
       .order("past_nm_pasta");
     if (error) throw error;
-    return data as Folder[];
+    return (data as any) as Folder[];
   },
 
   async createFolder(folder: Omit<Folder, "past_id" | "past_dt_cadastro" | "created_at" | "updated_at">): Promise<Folder> {
@@ -59,6 +59,7 @@ export const orgStructureRepository = {
       .select()
       .single();
     if (error) throw error;
-    return data as Folder;
+    return (data as any) as Folder;
   }
 };
+
