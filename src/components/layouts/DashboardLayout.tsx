@@ -29,6 +29,7 @@ import {
 } from "@/components/ui/sidebar";
 import {
   LayoutDashboard,
+  Calendar,
   Search,
   Star,
   Clock,
