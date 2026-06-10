@@ -14,19 +14,24 @@ export const gedRepository = {
     pageSize?: number;
     userId?: string;
   }) {
+    // Pre-fetch favorite doc ids for this user (used both for is_favorite flag and filtering)
+    let favoriteIds: string[] = [];
+    if (params.userId) {
+      const { data: favs } = await supabase
+        .from("ged_user_favorites")
+        .select("document_id")
+        .eq("user_id", params.userId);
+      favoriteIds = (favs || []).map((f: any) => f.document_id);
+    }
+
     let query = supabase
       .from("ged_documents")
       .select(`
         *,
         versions:ged_document_versions(mime_type, version_number, file_name, file_size, created_by),
-        document_type_data:ged_document_types(*),
-        is_favorite:ged_user_favorites!left(id)
+        document_type_data:ged_document_types(*)
       `, { count: "exact" })
       .eq("organization_id", params.organizationId);
-
-    if (params.userId) {
-      query = query.eq("ged_user_favorites.user_id", params.userId);
-    }
 
     // When searching, look across the whole organization (ignore current folder)
     if (params.folderId !== undefined && !params.searchTerm) {
@@ -38,7 +43,10 @@ export const gedRepository = {
     }
 
     if (params.isFavorite) {
-      query = query.not("ged_user_favorites", "is", null);
+      if (favoriteIds.length === 0) {
+        return { data: [], count: 0 };
+      }
+      query = query.in("id", favoriteIds);
     }
 
     if (params.status) {
