@@ -130,7 +130,7 @@ export default function DocumentsPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { 
     documents, 
-    folders, 
+    folders: allFolders, 
     isLoading, 
     searchTerm, 
     setSearchTerm,
@@ -143,6 +143,9 @@ export default function DocumentsPage() {
     isUpdatingDoc,
     totalCount: folderTotalCount,
   } = useGED(currentFolder);
+  const isSearching = (searchTerm ?? "").trim().length > 0;
+  // Hide folder rows while searching so results are documents-only across all folders
+  const folders = isSearching ? [] : allFolders;
 
   const { documentTypes } = useGEDSettings();
   const { organization } = useAuth();
