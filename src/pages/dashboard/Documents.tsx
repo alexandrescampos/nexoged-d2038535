@@ -76,6 +76,7 @@ export default function DocumentsPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const searchInputRef = useRef<HTMLInputElement>(null);
   const [currentFolder, setCurrentFolder] = useState<string | null>(null);
+  const [folderPath, setFolderPath] = useState<{ id: string; name: string }[]>([]);
   const [viewMode, setViewMode] = useState<"grid" | "list">("list");
   const [isUploadOpen, setIsUploadOpen] = useState(false);
   const [documentToDelete, setDocumentToDelete] = useState<string | null>(null);
