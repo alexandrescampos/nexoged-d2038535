@@ -2,13 +2,23 @@ import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Plus, Edit, Trash2, CheckCircle2, ShieldCheck } from "lucide-react";
+import { Plus, Edit, Trash2, CheckCircle2, ShieldCheck, Loader2 } from "lucide-react";
 import { accessControlRepository } from "@/repository/accessControlRepository";
 import { Perfil, Permissao } from "@/types/ged";
 import { useAuth } from "@/hooks/useAuth";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
 
 export function ProfileList() {
   const { organization } = useAuth();
