@@ -369,7 +369,7 @@ export default function OrgSettingsPage() {
 
         {/* Tipos de Documento - Apenas para Org Admin */}
         {isOrgAdmin && (
-          <div className="md:col-span-2">
+          <div className="md:col-span-2" id="document-types">
             <DocumentTypesSettings />
           </div>
         )}
