@@ -101,6 +101,8 @@ export function useGED(folderId: string | null = null, filterFavorites: boolean 
     searchTerm,
 
     setSearchTerm,
+    selectedTags,
+    setSelectedTags,
     page,
     setPage,
     getDownloadUrl: (id: string) => gedRepository.getDownloadUrl(id)
