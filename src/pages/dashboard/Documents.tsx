@@ -254,8 +254,7 @@ export default function DocumentsPage() {
     p.perfil_permissao.some((pp: any) => pp.permissao.perm_codigo === "baixar_documento")
   );
 
-  const canDownload = (doc: any) => {
-    if (!doc.has_file) return false;
+  const canUserDownload = (doc: any) => {
     // Admins can download everything
     if (isSuperAdmin || isOrgAdmin) return true;
     // Owners can download their own documents
@@ -263,6 +262,7 @@ export default function DocumentsPage() {
     // Otherwise, check for the explicit download permission
     return userHasDownloadPermission;
   };
+
 
 
   // Enriquece documentos com rótulo de tipo de arquivo p/ ordenação
