@@ -1,4 +1,7 @@
 import { useState, useRef } from "react";
+import { useGEDSettings } from "@/hooks/useGEDSettings";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
 import { useGED } from "@/hooks/useGED";
 import { 
   FileText, 
@@ -46,6 +49,15 @@ import { toast } from "sonner";
 export default function RecentPage() {
   const [viewMode, setViewMode] = useState<"grid" | "list">("list");
   const [documentToDelete, setDocumentToDelete] = useState<string | null>(null);
+  const [documentToEdit, setDocumentToEdit] = useState<any | null>(null);
+  const [editData, setEditData] = useState({
+    title: "",
+    document_type_id: "",
+    page_count: 1,
+    description: "",
+    expiration_date: "",
+    document_creation_date: ""
+  });
   
   const { 
     documents, 
@@ -54,8 +66,12 @@ export default function RecentPage() {
     setSearchTerm,
     deleteDocument,
     toggleFavorite,
-    getDownloadUrl
+    getDownloadUrl,
+    updateDocument,
+    isUpdatingDoc
   } = useGED(null, false, true); // null for folderId, false for filterFavorites, true for filterRecent
+
+  const { documentTypes } = useGEDSettings();
 
   const getFileIcon = (mime: string) => {
     if (mime?.includes("pdf")) return <FileText className="h-6 w-6 text-red-500" />;
@@ -156,7 +172,9 @@ export default function RecentPage() {
                         {doc.is_favorite && <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />}
                       </div>
                       <div className="flex items-center gap-2 mt-1">
-                        <Badge variant="outline" className="text-[10px] h-4 py-0 font-normal">{doc.document_type || "Geral"}</Badge>
+                        <Badge variant="outline" className="text-[10px] h-4 py-0 font-normal">
+                          {doc.document_type_data?.name || doc.document_type || "Geral"}
+                        </Badge>
                         <span className="text-[10px] text-muted-foreground">{new Date(doc.updated_at).toLocaleDateString()}</span>
                       </div>
                     </div>

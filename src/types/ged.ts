@@ -67,6 +67,19 @@ export interface Folder {
   updated_at: string;
 }
 
+export interface DocumentType {
+  id: string;
+  organization_id: string;
+  initials: string;
+  name: string;
+  description?: string;
+  requires_expiration_date: boolean;
+  requires_creation_date: boolean;
+  created_at: string;
+  updated_at: string;
+  created_by?: string;
+}
+
 export interface Document {
   id: string;
   organization_id: string;
@@ -74,6 +87,9 @@ export interface Document {
   title: string;
   description?: string;
   document_type?: string;
+  document_type_id?: string;
+  expiration_date?: string;
+  document_creation_date?: string;
   taxonomy?: string;
   status: string;
   tags: string[];
@@ -90,6 +106,7 @@ export interface Document {
   file_name?: string;
   versions_count?: number;
   creator_name?: string;
+  document_type_data?: DocumentType;
 }
 
 export interface DocumentVersion {

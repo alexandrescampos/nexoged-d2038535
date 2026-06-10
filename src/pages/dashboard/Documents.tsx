@@ -1,4 +1,18 @@
 import { useState, useEffect, useRef } from "react";
+import { useGEDSettings } from "@/hooks/useGEDSettings";
+import { CalendarIcon } from "lucide-react";
+import { format } from "date-fns";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { cn } from "@/lib/utils";
+import { ptBR } from "date-fns/locale";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useSearchParams } from "react-router-dom";
 import { useGED } from "@/hooks/useGED";
 import { useAuth } from "@/hooks/useAuth";
@@ -68,15 +82,19 @@ export default function DocumentsPage() {
   const [documentToEdit, setDocumentToEdit] = useState<any | null>(null);
   const [uploadData, setUploadData] = useState({
     title: "",
-    document_type: "",
+    document_type_id: "",
     page_count: 1,
-    description: ""
+    description: "",
+    expiration_date: "",
+    document_creation_date: ""
   });
   const [editData, setEditData] = useState({
     title: "",
-    document_type: "",
+    document_type_id: "",
     page_count: 1,
-    description: ""
+    description: "",
+    expiration_date: "",
+    document_creation_date: ""
   });
 
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -96,6 +114,7 @@ export default function DocumentsPage() {
     isUpdatingDoc
   } = useGED(currentFolder);
 
+  const { documentTypes } = useGEDSettings();
   const { organization } = useAuth();
   
   useEffect(() => {
@@ -244,7 +263,9 @@ export default function DocumentsPage() {
                         {doc.is_favorite && <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />}
                       </div>
                       <div className="flex items-center gap-2 mt-1">
-                        <Badge variant="outline" className="text-[10px] h-4 py-0 font-normal">{doc.document_type || "Geral"}</Badge>
+                        <Badge variant="outline" className="text-[10px] h-4 py-0 font-normal">
+                          {doc.document_type_data?.name || doc.document_type || "Geral"}
+                        </Badge>
                         <span className="text-[10px] text-muted-foreground">{new Date(doc.updated_at).toLocaleDateString()}</span>
                       </div>
                     </div>
@@ -280,9 +301,11 @@ export default function DocumentsPage() {
                             setDocumentToEdit(doc);
                             setEditData({
                               title: doc.title || "",
-                              document_type: doc.document_type || "",
+                              document_type_id: doc.document_type_id || "",
                               page_count: doc.page_count || 1,
-                              description: doc.description || ""
+                              description: doc.description || "",
+                              expiration_date: doc.expiration_date || "",
+                              document_creation_date: doc.document_creation_date || ""
                             });
                           }}
                         >
@@ -362,12 +385,19 @@ export default function DocumentsPage() {
             <div className="grid grid-cols-2 gap-4">
               <div className="grid gap-2">
                 <Label htmlFor="type">Tipo Documental</Label>
-                <Input 
-                  id="type" 
-                  placeholder="Ex: Jurídico..." 
-                  value={uploadData.document_type}
-                  onChange={(e) => setUploadData({ ...uploadData, document_type: e.target.value })}
-                />
+                <Select 
+                  value={uploadData.document_type_id} 
+                  onValueChange={(val) => setUploadData({ ...uploadData, document_type_id: val })}
+                >
+                  <SelectTrigger id="type">
+                    <SelectValue placeholder="Selecione um tipo..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {documentTypes.map(type => (
+                      <SelectItem key={type.id} value={type.id}>{type.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="pages">Número de Páginas</Label>
@@ -380,6 +410,70 @@ export default function DocumentsPage() {
                 />
               </div>
             </div>
+
+            {/* Campos Condicionais baseados no tipo */}
+            {uploadData.document_type_id && (() => {
+              const selectedType = documentTypes.find(t => t.id === uploadData.document_type_id);
+              if (!selectedType) return null;
+              return (
+                <div className="grid grid-cols-2 gap-4">
+                  {selectedType.requires_creation_date && (
+                    <div className="grid gap-2">
+                      <Label>Data de Criação</Label>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant={"outline"}
+                            className={cn(
+                              "w-full justify-start text-left font-normal",
+                              !uploadData.document_creation_date && "text-muted-foreground"
+                            )}
+                          >
+                            <CalendarIcon className="mr-2 h-4 w-4" />
+                            {uploadData.document_creation_date ? format(new Date(uploadData.document_creation_date), "PPP", { locale: ptBR }) : <span>Escolha uma data</span>}
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0">
+                          <Calendar
+                            mode="single"
+                            selected={uploadData.document_creation_date ? new Date(uploadData.document_creation_date) : undefined}
+                            onSelect={(date) => setUploadData({ ...uploadData, document_creation_date: date ? date.toISOString() : "" })}
+                            initialFocus
+                          />
+                        </PopoverContent>
+                      </Popover>
+                    </div>
+                  )}
+                  {selectedType.requires_expiration_date && (
+                    <div className="grid gap-2">
+                      <Label>Data de Vencimento</Label>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant={"outline"}
+                            className={cn(
+                              "w-full justify-start text-left font-normal",
+                              !uploadData.expiration_date && "text-muted-foreground"
+                            )}
+                          >
+                            <CalendarIcon className="mr-2 h-4 w-4" />
+                            {uploadData.expiration_date ? format(new Date(uploadData.expiration_date), "PPP", { locale: ptBR }) : <span>Escolha uma data</span>}
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0">
+                          <Calendar
+                            mode="single"
+                            selected={uploadData.expiration_date ? new Date(uploadData.expiration_date) : undefined}
+                            onSelect={(date) => setUploadData({ ...uploadData, expiration_date: date ? date.toISOString() : "" })}
+                            initialFocus
+                          />
+                        </PopoverContent>
+                      </Popover>
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
             <div 
               className="border-2 border-dashed rounded-lg p-10 flex flex-col items-center justify-center bg-muted/30 cursor-pointer hover:bg-muted/50 transition-colors"
               onClick={() => fileInputRef.current?.click()}
@@ -416,7 +510,9 @@ export default function DocumentsPage() {
               uploadDocument({
                 doc: {
                   title: uploadData.title,
-                  document_type: uploadData.document_type,
+                  document_type_id: uploadData.document_type_id || null,
+                  expiration_date: uploadData.expiration_date || null,
+                  document_creation_date: uploadData.document_creation_date || null,
                   page_count: uploadData.page_count,
                   organization_id: organization.id,
                   folder_id: currentFolder,
@@ -428,7 +524,14 @@ export default function DocumentsPage() {
               }, {
                 onSuccess: () => {
                   setIsUploadOpen(false);
-                  setUploadData({ title: "", document_type: "", page_count: 1, description: "" });
+                  setUploadData({ 
+                    title: "", 
+                    document_type_id: "", 
+                    page_count: 1, 
+                    description: "",
+                    expiration_date: "",
+                    document_creation_date: ""
+                  });
                   setSelectedFile(null);
                 }
               });
@@ -461,11 +564,19 @@ export default function DocumentsPage() {
             <div className="grid grid-cols-2 gap-4">
               <div className="grid gap-2">
                 <Label htmlFor="edit-type">Tipo Documental</Label>
-                <Input 
-                  id="edit-type" 
-                  value={editData.document_type}
-                  onChange={(e) => setEditData({ ...editData, document_type: e.target.value })}
-                />
+                <Select 
+                  value={editData.document_type_id} 
+                  onValueChange={(val) => setEditData({ ...editData, document_type_id: val })}
+                >
+                  <SelectTrigger id="edit-type">
+                    <SelectValue placeholder="Selecione um tipo..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {documentTypes.map(type => (
+                      <SelectItem key={type.id} value={type.id}>{type.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="edit-pages">Número de Páginas</Label>
@@ -478,6 +589,70 @@ export default function DocumentsPage() {
                 />
               </div>
             </div>
+
+            {/* Campos Condicionais baseados no tipo (Edição) */}
+            {editData.document_type_id && (() => {
+              const selectedType = documentTypes.find(t => t.id === editData.document_type_id);
+              if (!selectedType) return null;
+              return (
+                <div className="grid grid-cols-2 gap-4">
+                  {selectedType.requires_creation_date && (
+                    <div className="grid gap-2">
+                      <Label>Data de Criação</Label>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant={"outline"}
+                            className={cn(
+                              "w-full justify-start text-left font-normal",
+                              !editData.document_creation_date && "text-muted-foreground"
+                            )}
+                          >
+                            <CalendarIcon className="mr-2 h-4 w-4" />
+                            {editData.document_creation_date ? format(new Date(editData.document_creation_date), "PPP", { locale: ptBR }) : <span>Escolha uma data</span>}
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0">
+                          <Calendar
+                            mode="single"
+                            selected={editData.document_creation_date ? new Date(editData.document_creation_date) : undefined}
+                            onSelect={(date) => setEditData({ ...editData, document_creation_date: date ? date.toISOString() : "" })}
+                            initialFocus
+                          />
+                        </PopoverContent>
+                      </Popover>
+                    </div>
+                  )}
+                  {selectedType.requires_expiration_date && (
+                    <div className="grid gap-2">
+                      <Label>Data de Vencimento</Label>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant={"outline"}
+                            className={cn(
+                              "w-full justify-start text-left font-normal",
+                              !editData.expiration_date && "text-muted-foreground"
+                            )}
+                          >
+                            <CalendarIcon className="mr-2 h-4 w-4" />
+                            {editData.expiration_date ? format(new Date(editData.expiration_date), "PPP", { locale: ptBR }) : <span>Escolha uma data</span>}
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0">
+                          <Calendar
+                            mode="single"
+                            selected={editData.expiration_date ? new Date(editData.expiration_date) : undefined}
+                            onSelect={(date) => setEditData({ ...editData, expiration_date: date ? date.toISOString() : "" })}
+                            initialFocus
+                          />
+                        </PopoverContent>
+                      </Popover>
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
             <div className="grid gap-2">
               <Label htmlFor="edit-description">Descrição</Label>
               <Input 
