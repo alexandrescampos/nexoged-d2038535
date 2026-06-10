@@ -1062,8 +1062,8 @@ export default function DocumentsPage() {
                   <SelectItem value="SIGILOSO">Sigiloso</SelectItem>
                 </SelectContent>
               </Select>
-              <p className="text-xs text-muted-foreground">
-                Define quem pode visualizar e baixar o documento. Níveis mais altos (Restrito a Sigiloso) exigem permissões específicas.
+              <p className="text-xs text-muted-foreground bg-muted/50 p-2 rounded-sm border border-border/50">
+                {SIGILO_DESCRIPTIONS[uploadData.sigilo] || "Define quem pode visualizar e baixar o documento."}
               </p>
             </div>
 
