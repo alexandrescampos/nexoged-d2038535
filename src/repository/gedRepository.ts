@@ -16,7 +16,7 @@ export const gedRepository = {
       .from("ged_documents")
       .select(`
         *,
-        versions:ged_document_versions(mime_type, version_number, file_name),
+        versions:ged_document_versions(mime_type, version_number, file_name, file_size, created_by),
         document_type_data:ged_document_types(*)
       `, { count: "exact" })
       .eq("organization_id", params.organizationId);
