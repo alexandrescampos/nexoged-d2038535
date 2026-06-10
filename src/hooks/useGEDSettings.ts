@@ -16,10 +16,17 @@ export function useGEDSettings() {
   });
 
   const createTypeMutation = useMutation({
-    mutationFn: (type: Partial<DocumentType>) => gedSettingsRepository.createDocumentType({
-      ...type,
-      organization_id: organization!.id
-    }),
+    mutationFn: (type: Partial<DocumentType>) => {
+      if (!type.name || !type.initials) throw new Error("Nome e Sigla são obrigatórios");
+      return gedSettingsRepository.createDocumentType({
+        name: type.name,
+        initials: type.initials,
+        organization_id: organization!.id,
+        description: type.description,
+        requires_expiration_date: !!type.requires_expiration_date,
+        requires_creation_date: !!type.requires_creation_date
+      });
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["ged-document-types"] });
       toast.success("Tipo de documento criado com sucesso!");
