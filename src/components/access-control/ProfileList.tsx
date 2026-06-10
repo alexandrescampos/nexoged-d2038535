@@ -1,0 +1,135 @@
+import { useState, useEffect } from "react";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Plus, Edit, Trash2, CheckCircle2, ShieldCheck } from "lucide-react";
+import { accessControlRepository } from "@/repository/accessControlRepository";
+import { Perfil, Permissao } from "@/types/ged";
+import { useAuth } from "@/hooks/useAuth";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
+import { toast } from "sonner";
+
+export function ProfileList() {
+  const { organization } = useAuth();
+  const [profiles, setProfiles] = useState<Perfil[]>([]);
+  const [permissions, setPermissions] = useState<Permissao[]>([]);
+  const [selectedProfileId, setSelectedProfileId] = useState<string | null>(null);
+  const [selectedPerms, setSelectedPerms] = useState<string[]>([]);
+  const [isSaving, setIsSaving] = useState(false);
+
+  useEffect(() => {
+    if (organization?.id) {
+      loadData();
+    }
+  }, [organization?.id]);
+
+  useEffect(() => {
+    if (selectedProfileId) {
+      loadProfilePermissions(selectedProfileId);
+    }
+  }, [selectedProfileId]);
+
+  const loadData = async () => {
+    try {
+      const [profs, perms] = await Promise.all([
+        accessControlRepository.getProfiles(organization!.id),
+        accessControlRepository.getAllPermissions()
+      ]);
+      setProfiles(profs);
+      setPermissions(perms);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const loadProfilePermissions = async (id: string) => {
+    try {
+      const perms = await accessControlRepository.getProfilePermissions(id);
+      setSelectedPerms(perms);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const handleTogglePerm = (id: string) => {
+    setSelectedPerms(prev => 
+      prev.includes(id) ? prev.filter(p => p !== id) : [...prev, id]
+    );
+  };
+
+  const handleSavePerms = async () => {
+    if (!selectedProfileId) return;
+    setIsSaving(true);
+    try {
+      await accessControlRepository.setProfilePermissions(selectedProfileId, selectedPerms);
+      toast.success("Permissões do perfil atualizadas com sucesso!");
+    } catch (error) {
+      toast.error("Erro ao salvar permissões.");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <div>
+            <CardTitle>Perfis</CardTitle>
+            <CardDescription>Gerencie os papéis de acesso da organização</CardDescription>
+          </div>
+          <Button size="sm"><Plus className="h-4 w-4 mr-2" /> Novo Perfil</Button>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-2">
+            {profiles.map(profile => (
+              <button
+                key={profile.perfil_id}
+                onClick={() => setSelectedProfileId(profile.perfil_id)}
+                className={`w-full flex items-center justify-between p-3 rounded-lg border text-left transition-all ${selectedProfileId === profile.perfil_id ? 'border-primary bg-primary/5 ring-1 ring-primary/20' : 'hover:bg-muted'}`}
+              >
+                <div>
+                  <p className="font-semibold text-sm">{profile.perfil_nome}</p>
+                  <p className="text-xs text-muted-foreground">{profile.perfil_descricao}</p>
+                </div>
+                {selectedProfileId === profile.perfil_id && <ShieldCheck className="h-4 w-4 text-primary" />}
+              </button>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
+      {selectedProfileId && (
+        <Card className="animate-in fade-in slide-in-from-top-4 duration-300">
+          <CardHeader>
+            <CardTitle className="text-lg">Permissões do Perfil</CardTitle>
+            <CardDescription>Defina o que usuários deste perfil podem fazer</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-[400px] overflow-y-auto pr-2 mb-4">
+              {permissions.map(perm => (
+                <div key={perm.perm_id} className="flex items-center space-x-2 p-2 rounded hover:bg-muted/50 transition-colors">
+                  <Checkbox 
+                    id={perm.perm_id} 
+                    checked={selectedPerms.includes(perm.perm_id)}
+                    onCheckedChange={() => handleTogglePerm(perm.perm_id)}
+                  />
+                  <Label htmlFor={perm.perm_id} className="text-xs cursor-pointer leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                    <span className="font-bold block">{perm.perm_nome}</span>
+                    <span className="text-[10px] text-muted-foreground">{perm.perm_descricao}</span>
+                  </Label>
+                </div>
+              ))}
+            </div>
+            <div className="flex justify-end pt-4 border-t">
+              <Button onClick={handleSavePerms} disabled={isSaving}>
+                {isSaving ? "Salvando..." : "Salvar Alterações"}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+    </div>
+  );
+}
