@@ -71,7 +71,7 @@ export function useOrganizationStructure() {
           return supabase.from('folders').update({ past_id_pai: targetId }).eq('past_id', id);
         }
       } else if (type === 'DOCUMENT') {
-        return supabase.from('ged_documents').update({ past_id: targetId }).eq('id', id);
+        return supabase.from('ged_documents').update({ past_id: targetId, folder_id: targetId, updated_at: new Date().toISOString() }).eq('id', id);
       }
     },
     onSuccess: () => {
