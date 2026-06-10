@@ -1,7 +1,9 @@
 import { useState, useRef } from "react";
 import { useGED } from "@/hooks/useGED";
 import { useGEDSettings } from "@/hooks/useGEDSettings";
+import { useDocumentPermissions } from "@/hooks/useDocumentPermissions";
 import { 
+
   FileText, 
   Search, 
   Filter, 
