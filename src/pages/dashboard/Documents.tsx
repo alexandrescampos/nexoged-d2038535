@@ -181,6 +181,7 @@ export default function DocumentsPage() {
     expiration_date: "",
     document_creation_date: "",
     tags: [] as string[],
+    sigilo: "PUBLICO" as any,
   });
   const [editData, setEditData] = useState({
     title: "",
@@ -190,6 +191,7 @@ export default function DocumentsPage() {
     expiration_date: "",
     document_creation_date: "",
     tags: [] as string[],
+    sigilo: "PUBLICO" as any,
   });
 
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
