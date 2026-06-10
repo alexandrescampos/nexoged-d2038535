@@ -776,7 +776,6 @@ export default function DocumentsPage() {
                 }, {
                   onSuccess: () => setDocumentToEdit(null)
                 });
-                });
               }} 
               disabled={isUpdatingDoc}
             >
