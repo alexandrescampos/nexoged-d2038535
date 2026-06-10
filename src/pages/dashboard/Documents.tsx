@@ -1082,7 +1082,8 @@ export default function DocumentsPage() {
                   past_id: currentFolder,
                   status: 'active',
                   tags: uploadData.tags,
-                  keywords: []
+                   keywords: [],
+                   sigilo: uploadData.sigilo,
                 },
                 file: selectedFile
               }, {
