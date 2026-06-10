@@ -15,7 +15,7 @@ export function useGED(folderId: string | null = null, filterFavorites: boolean 
 
   // Documentos
   const { data: documentsData, isLoading: isLoadingDocs } = useQuery({
-    queryKey: ["ged-documents", organization?.id, profile?.id, folderId, searchTerm, selectedTags, page, filterFavorites, filterRecent],
+    queryKey: ["ged-documents", organization?.id, profile?.id, folderId, searchTerm, selectedTags, page, filterFavorites, filterRecent, status],
     queryFn: () => {
       if (filterRecent && profile?.id) {
         return gedRepository.getRecentDocuments({
