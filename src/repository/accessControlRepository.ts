@@ -117,7 +117,7 @@ export const accessControlRepository = {
   async addUserScope(scope: Partial<UsuarioEscopo>): Promise<UsuarioEscopo> {
     const { data, error } = await supabase
       .from("usuario_escopo")
-      .insert([scope])
+      .insert([scope as any])
       .select()
       .single();
     if (error) throw error;
