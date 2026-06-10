@@ -202,6 +202,19 @@ export default function DocumentsPage() {
         </div>
         
         <div className="flex items-center gap-2">
+          {folderPath.length > 0 && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                const newPath = folderPath.slice(0, -1);
+                setFolderPath(newPath);
+                setCurrentFolder(newPath.length ? newPath[newPath.length - 1].id : null);
+              }}
+            >
+              ← Voltar
+            </Button>
+          )}
           <Button variant="outline" size="sm" className="hidden sm:flex">
             <History className="mr-2 h-4 w-4" /> Histórico
           </Button>
