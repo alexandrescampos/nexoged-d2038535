@@ -37,8 +37,8 @@ export const gedRepository = {
       query = query.eq("organization_id", params.organizationId);
     }
 
-    // When searching, look across the whole organization (ignore current folder)
-    if (params.folderId !== undefined && !params.searchTerm) {
+    // When searching or filtering favorites, look across the whole organization (ignore current folder)
+    if (params.folderId !== undefined && !params.searchTerm && !params.isFavorite) {
       if (params.folderId === null) {
         query = query.is("past_id", null);
       } else {
