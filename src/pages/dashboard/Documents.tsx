@@ -1068,6 +1068,7 @@ export default function DocumentsPage() {
                     expiration_date: "",
                     document_creation_date: "",
                     tags: [],
+                    sigilo: "PUBLICO",
                   });
                   setSelectedFile(null);
                 }
