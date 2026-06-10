@@ -913,6 +913,7 @@ export type Database = {
         Row: {
           ativo: boolean | null
           created_at: string | null
+          niveis_sigilo_permitidos: string[] | null
           organization_id: string | null
           perfil_descricao: string | null
           perfil_id: string
@@ -921,6 +922,7 @@ export type Database = {
         Insert: {
           ativo?: boolean | null
           created_at?: string | null
+          niveis_sigilo_permitidos?: string[] | null
           organization_id?: string | null
           perfil_descricao?: string | null
           perfil_id?: string
@@ -929,6 +931,7 @@ export type Database = {
         Update: {
           ativo?: boolean | null
           created_at?: string | null
+          niveis_sigilo_permitidos?: string[] | null
           organization_id?: string | null
           perfil_descricao?: string | null
           perfil_id?: string

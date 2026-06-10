@@ -29,10 +29,20 @@ export function ProfileList() {
   const [isSaving, setIsSaving] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [selectedSigilos, setSelectedSigilos] = useState<string[]>([]);
   const [newProfile, setNewProfile] = useState({
     perfil_nome: "",
     perfil_descricao: "",
+    niveis_sigilo_permitidos: ["PUBLICO", "INTERNO"],
   });
+
+  const sigiloOptions = [
+    { value: "PUBLICO", label: "Público" },
+    { value: "INTERNO", label: "Interno" },
+    { value: "RESTRITO", label: "Restrito" },
+    { value: "CONFIDENCIAL", label: "Confidencial" },
+    { value: "SIGILOSO", label: "Sigiloso" },
+  ];
 
   useEffect(() => {
     if (organization?.id) {
@@ -99,7 +109,7 @@ export function ProfileList() {
       });
       toast.success("Perfil criado com sucesso!");
       setIsDialogOpen(false);
-      setNewProfile({ perfil_nome: "", perfil_descricao: "" });
+      setNewProfile({ perfil_nome: "", perfil_descricao: "", niveis_sigilo_permitidos: ["PUBLICO", "INTERNO"] });
       loadData();
       window.dispatchEvent(new CustomEvent("perfis-changed"));
     } catch (error) {
@@ -164,12 +174,20 @@ export function ProfileList() {
             {profiles.map(profile => (
               <button
                 key={profile.perfil_id}
-                onClick={() => setSelectedProfileId(profile.perfil_id)}
+                onClick={() => {
+                  setSelectedProfileId(profile.perfil_id);
+                  setSelectedSigilos(profile.niveis_sigilo_permitidos || ["PUBLICO", "INTERNO"]);
+                }}
                 className={`w-full flex items-center justify-between p-3 rounded-lg border text-left transition-all ${selectedProfileId === profile.perfil_id ? 'border-primary bg-primary/5 ring-1 ring-primary/20' : 'hover:bg-muted'}`}
               >
                 <div>
                   <p className="font-semibold text-sm">{profile.perfil_nome}</p>
                   <p className="text-xs text-muted-foreground">{profile.perfil_descricao}</p>
+                  <div className="flex flex-wrap gap-1 mt-1">
+                    {(profile.niveis_sigilo_permitidos || ["PUBLICO", "INTERNO"]).map(s => (
+                      <span key={s} className="text-[9px] px-1 bg-muted rounded border text-muted-foreground uppercase">{s}</span>
+                    ))}
+                  </div>
                 </div>
                 {selectedProfileId === profile.perfil_id && <ShieldCheck className="h-4 w-4 text-primary" />}
               </button>
@@ -181,27 +199,74 @@ export function ProfileList() {
       {selectedProfileId && (
         <Card className="animate-in fade-in slide-in-from-top-4 duration-300">
           <CardHeader>
-            <CardTitle className="text-lg">Permissões do Perfil</CardTitle>
-            <CardDescription>Defina o que usuários deste perfil podem fazer</CardDescription>
+            <CardTitle className="text-lg">Configurações do Perfil</CardTitle>
+            <CardDescription>Defina as permissões e níveis de acesso deste perfil</CardDescription>
           </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-[400px] overflow-y-auto pr-2 mb-4">
-              {permissions.map(perm => (
-                <div key={perm.perm_id} className="flex items-center space-x-2 p-2 rounded hover:bg-muted/50 transition-colors">
-                  <Checkbox 
-                    id={perm.perm_id} 
-                    checked={selectedPerms.includes(perm.perm_id)}
-                    onCheckedChange={() => handleTogglePerm(perm.perm_id)}
-                  />
-                  <Label htmlFor={perm.perm_id} className="text-xs cursor-pointer leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                    <span className="font-bold block">{perm.perm_nome}</span>
-                    <span className="text-[10px] text-muted-foreground">{perm.perm_descricao}</span>
-                  </Label>
-                </div>
-              ))}
+          <CardContent className="space-y-6">
+            <div className="space-y-4">
+              <h3 className="text-sm font-semibold flex items-center gap-2">
+                <ShieldCheck className="h-4 w-4 text-primary" />
+                Níveis de Sigilo Permitidos
+              </h3>
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
+                {sigiloOptions.map((option) => (
+                  <div key={option.value} className="flex items-center space-x-2 p-2 rounded border bg-card/50 hover:bg-muted/30 transition-colors">
+                    <Checkbox 
+                      id={`sigilo-${option.value}`} 
+                      checked={selectedSigilos.includes(option.value)}
+                      onCheckedChange={() => {
+                        setSelectedSigilos(prev => 
+                          prev.includes(option.value) ? prev.filter(s => s !== option.value) : [...prev, option.value]
+                        );
+                      }}
+                    />
+                    <Label htmlFor={`sigilo-${option.value}`} className="text-[10px] font-medium cursor-pointer leading-none">
+                      {option.label}
+                    </Label>
+                  </div>
+                ))}
+              </div>
             </div>
+
+            <div className="space-y-4 pt-4 border-t">
+              <h3 className="text-sm font-semibold flex items-center gap-2">
+                <CheckCircle2 className="h-4 w-4 text-primary" />
+                Ações Permitidas (Permissões)
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-[300px] overflow-y-auto pr-2">
+                {permissions.map(perm => (
+                  <div key={perm.perm_id} className="flex items-center space-x-2 p-2 rounded hover:bg-muted/50 transition-colors">
+                    <Checkbox 
+                      id={perm.perm_id} 
+                      checked={selectedPerms.includes(perm.perm_id)}
+                      onCheckedChange={() => handleTogglePerm(perm.perm_id)}
+                    />
+                    <Label htmlFor={perm.perm_id} className="text-xs cursor-pointer leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                      <span className="font-bold block">{perm.perm_nome}</span>
+                      <span className="text-[10px] text-muted-foreground">{perm.perm_descricao}</span>
+                    </Label>
+                  </div>
+                ))}
+              </div>
+            </div>
+
             <div className="flex justify-end pt-4 border-t">
-              <Button onClick={handleSavePerms} disabled={isSaving}>
+              <Button onClick={async () => {
+                if (!selectedProfileId) return;
+                setIsSaving(true);
+                try {
+                  await Promise.all([
+                    accessControlRepository.setProfilePermissions(selectedProfileId, selectedPerms),
+                    accessControlRepository.updateProfile(selectedProfileId, { niveis_sigilo_permitidos: selectedSigilos })
+                  ]);
+                  toast.success("Perfil atualizado com sucesso!");
+                  loadData(); 
+                } catch (error) {
+                  toast.error("Erro ao salvar alterações.");
+                } finally {
+                  setIsSaving(false);
+                }
+              }} disabled={isSaving}>
                 {isSaving ? "Salvando..." : "Salvar Alterações"}
               </Button>
             </div>
