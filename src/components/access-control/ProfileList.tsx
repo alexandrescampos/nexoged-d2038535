@@ -2,13 +2,22 @@ import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Plus, Edit, Trash2, CheckCircle2, ShieldCheck, Loader2 } from "lucide-react";
+import { Plus, Edit, Trash2, CheckCircle2, ShieldCheck, Loader2, FolderTree, Map, Building2, X } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 import { accessControlRepository } from "@/repository/accessControlRepository";
 import { Perfil, Permissao } from "@/types/ged";
 import { useAuth } from "@/hooks/useAuth";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
 import {
   Dialog,
   DialogContent,
@@ -29,6 +38,16 @@ export function ProfileList() {
   const [isSaving, setIsSaving] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [profileScopes, setProfileScopes] = useState<any[]>([]);
+  const [isAddingScope, setIsAddingScope] = useState(false);
+  const [newScope, setNewScope] = useState({
+    tipo_escopo: "DEPARTAMENTO" as "DEPARTAMENTO" | "SETOR" | "PASTA",
+    referencia_id: "",
+  });
+  const [departments, setDepartments] = useState<any[]>([]);
+  const [sectors, setSectors] = useState<any[]>([]);
+  const [folders, setFolders] = useState<any[]>([]);
+
   const [selectedSigilos, setSelectedSigilos] = useState<string[]>([]);
   const [newProfile, setNewProfile] = useState({
     perfil_nome: "",
@@ -52,7 +71,7 @@ export function ProfileList() {
 
   useEffect(() => {
     if (selectedProfileId) {
-      loadProfilePermissions(selectedProfileId);
+      loadProfileData(selectedProfileId);
     }
   }, [selectedProfileId]);
 
@@ -69,14 +88,39 @@ export function ProfileList() {
     }
   };
 
-  const loadProfilePermissions = async (id: string) => {
+  const loadProfileData = async (id: string) => {
     try {
-      const perms = await accessControlRepository.getProfilePermissions(id);
+      const [perms, scopes] = await Promise.all([
+        accessControlRepository.getProfilePermissions(id),
+        accessControlRepository.getProfileScopes(id)
+      ]);
       setSelectedPerms(perms);
+      setProfileScopes(scopes);
     } catch (error) {
       console.error(error);
     }
   };
+
+  const loadHierarchyData = async () => {
+    if (!organization?.id) return;
+    try {
+      const { data: depts } = await supabase.from("departments").select("*").eq("organization_id", organization.id).eq("dept_in_ativo", true);
+      const { data: sets } = await supabase.from("sectors").select("*").eq("organization_id", organization.id).eq("set_in_ativo", true);
+      const { data: psts } = await supabase.from("folders").select("*").eq("organization_id", organization.id).eq("past_in_ativa", true);
+      setDepartments(depts || []);
+      setSectors(sets || []);
+      setFolders(psts || []);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  useEffect(() => {
+    if (organization?.id) {
+      loadHierarchyData();
+    }
+  }, [organization?.id]);
+
 
   const handleTogglePerm = (id: string) => {
     setSelectedPerms(prev => 
@@ -228,6 +272,115 @@ export function ProfileList() {
               </div>
             </div>
 
+            <div className="space-y-4 pt-4 border-t">
+              <h3 className="text-sm font-semibold flex items-center gap-2">
+                <FolderTree className="h-4 w-4 text-primary" />
+                Escopo de Hierarquia (Departamentos, Setores e Pastas)
+              </h3>
+              
+              <div className="flex gap-2">
+                <div className="flex-1">
+                  <Select
+                    value={newScope.tipo_escopo}
+                    onValueChange={(val: any) => setNewScope({ ...newScope, tipo_escopo: val, referencia_id: "" })}
+                  >
+                    <SelectTrigger className="h-9">
+                      <SelectValue placeholder="Tipo de Escopo" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="DEPARTAMENTO">Departamento</SelectItem>
+                      <SelectItem value="SETOR">Setor</SelectItem>
+                      <SelectItem value="PASTA">Pasta</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="flex-[2]">
+                  <Select
+                    value={newScope.referencia_id}
+                    onValueChange={(val) => setNewScope({ ...newScope, referencia_id: val })}
+                  >
+                    <SelectTrigger className="h-9">
+                      <SelectValue placeholder="Selecione o item..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {newScope.tipo_escopo === "DEPARTAMENTO" && departments.map(d => (
+                        <SelectItem key={d.dept_id} value={d.dept_id}>{d.dept_nm_departamento}</SelectItem>
+                      ))}
+                      {newScope.tipo_escopo === "SETOR" && sectors.map(s => (
+                        <SelectItem key={s.set_id} value={s.set_id}>{s.set_nm_setor}</SelectItem>
+                      ))}
+                      {newScope.tipo_escopo === "PASTA" && folders.map(f => (
+                        <SelectItem key={f.past_id} value={f.past_id}>{f.past_nm_pasta}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <Button 
+                  size="sm" 
+                  className="h-9" 
+                  onClick={async () => {
+                    if (!newScope.referencia_id || !organization?.id) return;
+                    setIsAddingScope(true);
+                    try {
+                      await accessControlRepository.addProfileScope({
+                        perfil_id: selectedProfileId,
+                        tipo_escopo: newScope.tipo_escopo,
+                        referencia_id: newScope.referencia_id,
+                        organization_id: organization.id
+                      });
+                      toast.success("Escopo adicionado com sucesso!");
+                      loadProfileData(selectedProfileId);
+                      setNewScope({ ...newScope, referencia_id: "" });
+                    } catch (error) {
+                      toast.error("Erro ao adicionar escopo.");
+                    } finally {
+                      setIsAddingScope(false);
+                    }
+                  }}
+                  disabled={isAddingScope || !newScope.referencia_id}
+                >
+                  <Plus className="h-4 w-4" />
+                </Button>
+              </div>
+
+              <div className="flex flex-wrap gap-2 mt-2">
+                {profileScopes.map(scope => {
+                  let label = "Item desconhecido";
+                  let Icon = Building2;
+                  if (scope.tipo_escopo === "DEPARTAMENTO") {
+                    label = departments.find(d => d.dept_id === scope.referencia_id)?.dept_nm_departamento || "Depto";
+                    Icon = Building2;
+                  } else if (scope.tipo_escopo === "SETOR") {
+                    label = sectors.find(s => s.set_id === scope.referencia_id)?.set_nm_setor || "Setor";
+                    Icon = Map;
+                  } else if (scope.tipo_escopo === "PASTA") {
+                    label = folders.find(f => f.past_id === scope.referencia_id)?.past_nm_pasta || "Pasta";
+                    Icon = FolderTree;
+                  }
+
+                  return (
+                    <Badge key={scope.id} variant="secondary" className="gap-2 py-1.5 pl-2 pr-1 h-auto">
+                      <Icon className="h-3 w-3 opacity-70" />
+                      <span className="text-[10px] font-medium max-w-[120px] truncate">{label}</span>
+                      <button 
+                        onClick={async () => {
+                          try {
+                            await accessControlRepository.removeProfileScope(scope.id);
+                            loadProfileData(selectedProfileId);
+                            toast.success("Escopo removido.");
+                          } catch (error) {
+                            toast.error("Erro ao remover escopo.");
+                          }
+                        }}
+                        className="p-0.5 hover:bg-muted rounded"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </Badge>
+                  );
+                })}
+              </div>
+            </div>
             <div className="space-y-4 pt-4 border-t">
               <h3 className="text-sm font-semibold flex items-center gap-2">
                 <CheckCircle2 className="h-4 w-4 text-primary" />
