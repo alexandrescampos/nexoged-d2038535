@@ -390,13 +390,180 @@ export default function DocumentsPage() {
           <div className="flex items-center justify-center py-20">
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
           </div>
+        ) : viewMode === "list" ? (
+          <>
+            {documents.length === 0 && folders.length === 0 ? (
+              <div className="py-20 text-center">
+                <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4 opacity-20" />
+                <p className="text-muted-foreground">Nenhum documento encontrado nesta pasta.</p>
+                <Button variant="link" onClick={() => setIsUploadOpen(true)}>Fazer meu primeiro upload</Button>
+              </div>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="w-[80px]">Arquivo</TableHead>
+                    <SortableTableHead field="title" sortField={sortField} sortDirection={sortDirection} onSort={handleSort}>
+                      Título
+                    </SortableTableHead>
+                    <SortableTableHead field="file_type_label" sortField={sortField} sortDirection={sortDirection} onSort={handleSort}>
+                      Tipo
+                    </SortableTableHead>
+                    <SortableTableHead field="document_type_data.name" sortField={sortField} sortDirection={sortDirection} onSort={handleSort}>
+                      Tipo Documento
+                    </SortableTableHead>
+                    <SortableTableHead field="created_at" sortField={sortField} sortDirection={sortDirection} onSort={handleSort}>
+                      Criado em
+                    </SortableTableHead>
+                    <SortableTableHead field="creator_name" sortField={sortField} sortDirection={sortDirection} onSort={handleSort}>
+                      Por
+                    </SortableTableHead>
+                    <SortableTableHead field="file_size" sortField={sortField} sortDirection={sortDirection} onSort={handleSort}>
+                      Tamanho
+                    </SortableTableHead>
+                    <TableHead>Descrição</TableHead>
+                    <TableHead className="w-[100px] text-right">Ações</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {/* Pastas */}
+                  {folders.map((folder) => (
+                    <TableRow
+                      key={folder.past_id}
+                      className="cursor-pointer hover:bg-accent/50"
+                      onClick={() => {
+                        setCurrentFolder(folder.past_id);
+                        setFolderPath([...folderPath, { id: folder.past_id, name: folder.past_nm_pasta }]);
+                      }}
+                      onDragOver={(e) => { e.preventDefault(); e.currentTarget.classList.add('bg-primary/10'); }}
+                      onDragLeave={(e) => e.currentTarget.classList.remove('bg-primary/10')}
+                      onDrop={(e) => {
+                        e.preventDefault();
+                        e.currentTarget.classList.remove('bg-primary/10');
+                        const id = e.dataTransfer.getData('id');
+                        const type = e.dataTransfer.getData('type');
+                        if (type !== 'DOCUMENT' || !id) return;
+                        moveItem({ type: 'DOCUMENT', id, targetId: folder.past_id });
+                      }}
+                    >
+                      <TableCell><Folder className="h-6 w-6 text-amber-500 fill-amber-500/20" /></TableCell>
+                      <TableCell className="font-medium">{folder.past_nm_pasta}</TableCell>
+                      <TableCell><Badge variant="outline" className="text-[10px]">PASTA</Badge></TableCell>
+                      <TableCell className="text-muted-foreground">—</TableCell>
+                      <TableCell className="text-muted-foreground">—</TableCell>
+                      <TableCell className="text-muted-foreground">—</TableCell>
+                      <TableCell className="text-muted-foreground">—</TableCell>
+                      <TableCell className="text-muted-foreground">Pasta de arquivos</TableCell>
+                      <TableCell></TableCell>
+                    </TableRow>
+                  ))}
+
+                  {/* Documentos */}
+                  {sortedDocuments.map((doc: any) => (
+                    <TableRow
+                      key={doc.id}
+                      draggable
+                      onDragStart={(e) => {
+                        e.dataTransfer.setData("id", doc.id);
+                        e.dataTransfer.setData("type", "DOCUMENT");
+                        e.dataTransfer.effectAllowed = "move";
+                      }}
+                      className="cursor-grab active:cursor-grabbing group"
+                    >
+                      <TableCell>{getFileIcon(doc.mime_type)}</TableCell>
+                      <TableCell className="font-medium max-w-[220px]">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <span className="truncate">{doc.title}</span>
+                          {doc.is_favorite && <Star className="h-3 w-3 fill-yellow-400 text-yellow-400 flex-shrink-0" />}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="secondary" className="text-[10px] font-mono">{doc.file_type_label}</Badge>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="outline" className="text-[10px] font-normal">
+                          {doc.document_type_data?.name || doc.document_type || "Geral"}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-xs text-muted-foreground whitespace-nowrap">
+                        {new Date(doc.created_at).toLocaleDateString('pt-BR')}
+                      </TableCell>
+                      <TableCell className="text-xs text-muted-foreground">
+                        {doc.creator_name || "—"}
+                      </TableCell>
+                      <TableCell className="text-xs text-muted-foreground whitespace-nowrap">
+                        {typeof doc.file_size === 'number'
+                          ? (doc.file_size < 1024 * 1024
+                              ? `${(doc.file_size / 1024).toFixed(1)} KB`
+                              : `${(doc.file_size / (1024 * 1024)).toFixed(2)} MB`)
+                          : "—"}
+                      </TableCell>
+                      <TableCell className="text-xs text-muted-foreground max-w-[240px]">
+                        <span className="truncate block">{doc.description || "—"}</span>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex items-center justify-end gap-1">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-muted-foreground hover:text-primary"
+                            disabled={!doc.has_file}
+                            onClick={() => handleViewFile(doc.id)}
+                          >
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="icon" className="h-8 w-8">
+                                <MoreVertical className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="w-48">
+                              <DropdownMenuItem className="gap-2" disabled={!doc.has_file} onClick={() => handleDownloadFile(doc)}>
+                                <Download className="h-4 w-4" /> Baixar
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                className="gap-2"
+                                onClick={() => {
+                                  setDocumentToEdit(doc);
+                                  setEditData({
+                                    title: doc.title || "",
+                                    document_type_id: doc.document_type_id || "",
+                                    page_count: doc.page_count || 1,
+                                    description: doc.description || "",
+                                    expiration_date: doc.expiration_date || "",
+                                    document_creation_date: doc.document_creation_date || ""
+                                  });
+                                }}
+                              >
+                                <FileCode className="h-4 w-4" /> Editar Dados
+                              </DropdownMenuItem>
+                              <DropdownMenuItem className="gap-2" onClick={() => toggleFavorite({ id: doc.id, isFavorite: !doc.is_favorite })}>
+                                <Star className={`h-4 w-4 ${doc.is_favorite ? 'fill-yellow-400 text-yellow-400' : ''}`} />
+                                {doc.is_favorite ? 'Remover Favorito' : 'Favoritar'}
+                              </DropdownMenuItem>
+                              <DropdownMenuItem className="gap-2"><History className="h-4 w-4" /> Versões</DropdownMenuItem>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem className="gap-2 text-destructive" onClick={() => setDocumentToDelete(doc.id)}>
+                                <Trash2 className="h-4 w-4" /> Excluir
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
+          </>
         ) : (
-          <div className={viewMode === "grid" ? "grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4" : "space-y-1"}>
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
             {/* Render Pastas */}
             {folders.map((folder) => (
               <Card 
                 key={folder.past_id} 
-                className={`cursor-pointer transition-all hover:bg-accent/50 group ${viewMode === 'list' ? 'border-none shadow-none bg-transparent rounded-md' : ''}`}
+                className="cursor-pointer transition-all hover:bg-accent/50 group"
                 onClick={() => {
                   setCurrentFolder(folder.past_id);
                   setFolderPath([...folderPath, { id: folder.past_id, name: folder.past_nm_pasta }]);
@@ -412,18 +579,13 @@ export default function DocumentsPage() {
                   moveItem({ type: 'DOCUMENT', id, targetId: folder.past_id });
                 }}
               >
-                <CardContent className={viewMode === 'list' ? 'p-2 flex items-center gap-3' : 'p-4 flex flex-col items-center gap-2 text-center'}>
+                <CardContent className="p-4 flex flex-col items-center gap-2 text-center">
                   <Folder className="h-8 w-8 text-amber-500 fill-amber-500/20" />
-                  <div className={viewMode === 'list' ? 'flex-1' : ''}>
-                    <p className="font-medium text-sm truncate max-w-[150px]">{folder.past_nm_pasta}</p>
-                    {viewMode === 'list' && <p className="text-xs text-muted-foreground">Pasta de arquivos</p>}
-                  </div>
-                  {viewMode === 'list' && <MoreVertical className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100" />}
+                  <p className="font-medium text-sm truncate max-w-[150px]">{folder.past_nm_pasta}</p>
                 </CardContent>
               </Card>
             ))}
 
-            {/* Render Documentos */}
             {documents.length === 0 && folders.length === 0 && (
               <div className="col-span-full py-20 text-center">
                 <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4 opacity-20" />
@@ -432,65 +594,40 @@ export default function DocumentsPage() {
               </div>
             )}
 
-            {documents.map((doc) => (
-              <Card 
-                key={doc.id} 
+            {documents.map((doc: any) => (
+              <Card
+                key={doc.id}
                 draggable
                 onDragStart={(e) => {
                   e.dataTransfer.setData("id", doc.id);
                   e.dataTransfer.setData("type", "DOCUMENT");
                   e.dataTransfer.effectAllowed = "move";
                 }}
-                className={`transition-all hover:bg-accent/50 group cursor-grab active:cursor-grabbing ${viewMode === 'list' ? 'border-none shadow-none bg-transparent rounded-md border-b' : ''}`}
+                className="transition-all hover:bg-accent/50 group cursor-grab active:cursor-grabbing"
               >
-                <CardContent className={viewMode === 'list' ? 'p-3 flex items-center gap-4' : 'p-4 flex flex-col items-center gap-3 text-center h-full justify-between'}>
-                  <div className={viewMode === 'list' ? 'flex items-center gap-4 flex-1 min-w-0' : 'flex flex-col items-center gap-2'}>
+                <CardContent className="p-4 flex flex-col items-center gap-3 text-center h-full justify-between">
+                  <div className="flex flex-col items-center gap-2">
                     {getFileIcon(doc.mime_type)}
-                    <div className={viewMode === 'list' ? 'flex-1 min-w-0' : ''}>
+                    <div>
                       <div className="flex items-center gap-2">
                         <p className="font-semibold text-sm truncate">{doc.title}</p>
                         {doc.is_favorite && <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />}
                       </div>
-                      {viewMode === 'list' ? (
-                        <>
-                          <div className="flex items-center gap-2 mt-1 flex-wrap">
-                            <Badge variant="outline" className="text-[10px] h-4 py-0 font-normal">
-                              {doc.document_type_data?.name || doc.document_type || "Geral"}
-                            </Badge>
-                            <span className="text-[10px] text-muted-foreground">
-                              Criado em {new Date(doc.created_at).toLocaleDateString('pt-BR')}
-                            </span>
-                            {doc.creator_name && (
-                              <span className="text-[10px] text-muted-foreground">• por {doc.creator_name}</span>
-                            )}
-                            {typeof doc.file_size === 'number' && (
-                              <span className="text-[10px] text-muted-foreground">
-                                • {doc.file_size < 1024 * 1024
-                                  ? `${(doc.file_size / 1024).toFixed(1)} KB`
-                                  : `${(doc.file_size / (1024 * 1024)).toFixed(2)} MB`}
-                              </span>
-                            )}
-                          </div>
-                          {doc.description && (
-                            <p className="text-[11px] text-muted-foreground mt-1 truncate">{doc.description}</p>
-                          )}
-                        </>
-                      ) : (
-                        <div className="flex items-center gap-2 mt-1">
-                          <Badge variant="outline" className="text-[10px] h-4 py-0 font-normal">
-                            {doc.document_type_data?.name || doc.document_type || "Geral"}
-                          </Badge>
-                          <span className="text-[10px] text-muted-foreground">{new Date(doc.updated_at).toLocaleDateString()}</span>
-                        </div>
-                      )}
+                      <div className="flex items-center justify-center gap-2 mt-1">
+                        <Badge variant="secondary" className="text-[10px] h-4 py-0 font-mono">
+                          {getFileTypeLabel(doc.mime_type, doc.file_name)}
+                        </Badge>
+                        <Badge variant="outline" className="text-[10px] h-4 py-0 font-normal">
+                          {doc.document_type_data?.name || doc.document_type || "Geral"}
+                        </Badge>
+                      </div>
+                      <span className="text-[10px] text-muted-foreground">{new Date(doc.updated_at).toLocaleDateString()}</span>
                     </div>
                   </div>
-
-
                   <div className="flex items-center gap-1">
-                    <Button 
-                      variant="ghost" 
-                      size="icon" 
+                    <Button
+                      variant="ghost"
+                      size="icon"
                       className="h-8 w-8 text-muted-foreground group-hover:text-primary"
                       disabled={!doc.has_file}
                       onClick={() => handleViewFile(doc.id)}
@@ -504,14 +641,10 @@ export default function DocumentsPage() {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end" className="w-48">
-                        <DropdownMenuItem 
-                          className="gap-2"
-                          disabled={!doc.has_file}
-                          onClick={() => handleDownloadFile(doc)}
-                        >
+                        <DropdownMenuItem className="gap-2" disabled={!doc.has_file} onClick={() => handleDownloadFile(doc)}>
                           <Download className="h-4 w-4" /> Baixar
                         </DropdownMenuItem>
-                        <DropdownMenuItem 
+                        <DropdownMenuItem
                           className="gap-2"
                           onClick={() => {
                             setDocumentToEdit(doc);
@@ -527,20 +660,13 @@ export default function DocumentsPage() {
                         >
                           <FileCode className="h-4 w-4" /> Editar Dados
                         </DropdownMenuItem>
-                        <DropdownMenuItem 
-                          className="gap-2"
-                          onClick={() => toggleFavorite({ id: doc.id, isFavorite: !doc.is_favorite })}
-                        >
-
-                          <Star className={`h-4 w-4 ${doc.is_favorite ? 'fill-yellow-400 text-yellow-400' : ''}`} /> 
+                        <DropdownMenuItem className="gap-2" onClick={() => toggleFavorite({ id: doc.id, isFavorite: !doc.is_favorite })}>
+                          <Star className={`h-4 w-4 ${doc.is_favorite ? 'fill-yellow-400 text-yellow-400' : ''}`} />
                           {doc.is_favorite ? 'Remover Favorito' : 'Favoritar'}
                         </DropdownMenuItem>
                         <DropdownMenuItem className="gap-2"><History className="h-4 w-4" /> Versões</DropdownMenuItem>
                         <DropdownMenuSeparator />
-                        <DropdownMenuItem 
-                          className="gap-2 text-destructive"
-                          onClick={() => setDocumentToDelete(doc.id)}
-                        >
+                        <DropdownMenuItem className="gap-2 text-destructive" onClick={() => setDocumentToDelete(doc.id)}>
                           <Trash2 className="h-4 w-4" /> Excluir
                         </DropdownMenuItem>
                       </DropdownMenuContent>
