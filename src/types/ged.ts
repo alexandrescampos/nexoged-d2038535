@@ -114,6 +114,7 @@ export interface Document {
   mime_type?: string; // Do primeiro arquivo da versão
   has_file?: boolean;
   file_name?: string;
+  file_size?: number;
   versions_count?: number;
   creator_name?: string;
   document_type_data?: DocumentType;
