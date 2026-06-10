@@ -6,6 +6,8 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
+import { useTableSort } from "@/hooks/useTableSort";
+import { SortableTableHead } from "@/components/SortableTableHead";
 import { 
   Table, 
   TableBody, 
@@ -27,6 +29,7 @@ import { Plus, Trash2, Edit2, Loader2, FileText } from "lucide-react";
 
 export default function DocumentTypesSettings() {
   const { documentTypes, isLoading, createType, updateType, deleteType, isCreating } = useGEDSettings();
+  const { sortedItems, sortField, sortDirection, handleSort } = useTableSort(documentTypes || []);
   const [isOpen, setIsOpen] = useState(false);
   const [editingType, setEditingType] = useState<any>(null);
   const [formData, setFormData] = useState({
@@ -187,21 +190,21 @@ export default function DocumentTypesSettings() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Sigla</TableHead>
-                <TableHead>Nome</TableHead>
+                <SortableTableHead field="initials" sortField={sortField} sortDirection={sortDirection} onSort={handleSort}>Sigla</SortableTableHead>
+                <SortableTableHead field="name" sortField={sortField} sortDirection={sortDirection} onSort={handleSort}>Nome</SortableTableHead>
                 <TableHead>Requisitos</TableHead>
                 <TableHead className="text-right">Ações</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {documentTypes.length === 0 ? (
+              {sortedItems.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={4} className="text-center text-muted-foreground py-8">
                     Nenhum tipo cadastrado.
                   </TableCell>
                 </TableRow>
               ) : (
-                documentTypes.map((type) => (
+                sortedItems.map((type: any) => (
                   <TableRow key={type.id}>
                     <TableCell className="font-mono font-bold text-xs">{type.initials}</TableCell>
                     <TableCell>{type.name}</TableCell>

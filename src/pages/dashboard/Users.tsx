@@ -632,7 +632,9 @@ export default function OrgUsersPage() {
     }
   };
 
-  const filteredUsers = users.filter((user) => {
+  const { sortedItems: sortedUsers, sortField, sortDirection, handleSort } = useTableSort(users);
+
+  const filteredUsers = sortedUsers.filter((user) => {
     const matchesSearch =
       user.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       user.email?.toLowerCase().includes(searchTerm.toLowerCase());
@@ -645,8 +647,8 @@ export default function OrgUsersPage() {
     return matchesSearch && matchesRole;
   });
 
-  const { sortedItems: sortedUsers, sortField, sortDirection, handleSort } = useTableSort(filteredUsers);
-  const userPag = usePagination(sortedUsers);
+  const userPag = usePagination(filteredUsers);
+
 
   const getRoleBadge = (role: AppRole) => {
     switch (role) {
