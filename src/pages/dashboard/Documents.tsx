@@ -117,7 +117,8 @@ export default function DocumentsPage() {
     toggleFavorite,
     getDownloadUrl,
     updateDocument,
-    isUpdatingDoc
+    isUpdatingDoc,
+    totalCount: folderTotalCount,
   } = useGED(currentFolder);
 
   const { documentTypes } = useGEDSettings();
