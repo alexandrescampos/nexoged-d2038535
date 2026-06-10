@@ -82,6 +82,12 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { SortableTableHead } from "@/components/SortableTableHead";
 import { useTableSort } from "@/hooks/useTableSort";
 import { toast } from "sonner";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 function getFileTypeLabel(mime?: string, name?: string): string {
   const ext = (name?.split(".").pop() || "").toLowerCase();
@@ -699,12 +705,21 @@ export default function DocumentsPage() {
                           : "—"}
                       </TableCell>
                       <TableCell>
-                        <Badge 
-                          variant={doc.sigilo === 'PUBLICO' ? 'secondary' : 'destructive'} 
-                          className="text-[9px] px-1.5 py-0"
-                        >
-                          {doc.sigilo}
-                        </Badge>
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Badge 
+                                variant={doc.sigilo === 'PUBLICO' ? 'secondary' : 'destructive'} 
+                                className="text-[9px] px-1.5 py-0 cursor-help"
+                              >
+                                {doc.sigilo}
+                              </Badge>
+                            </TooltipTrigger>
+                            <TooltipContent className="max-w-[200px] text-xs">
+                              {SIGILO_DESCRIPTIONS[doc.sigilo] || "Nível de acesso definido para este documento."}
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
                       </TableCell>
                       <TableCell className="text-xs text-muted-foreground max-w-[240px]">
                         <span className="truncate block">{doc.description || "—"}</span>
@@ -833,7 +848,24 @@ export default function DocumentsPage() {
                           {doc.document_type_data?.name || doc.document_type || "Geral"}
                         </Badge>
                       </div>
-                      <span className="text-[10px] text-muted-foreground">{new Date(doc.updated_at).toLocaleDateString()}</span>
+                      <div className="flex items-center justify-center gap-1 mt-1">
+                        <span className="text-[10px] text-muted-foreground">{new Date(doc.updated_at).toLocaleDateString()}</span>
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Badge 
+                                variant={doc.sigilo === 'PUBLICO' ? 'secondary' : 'destructive'} 
+                                className="text-[9px] h-4 py-0 px-1 cursor-help"
+                              >
+                                {doc.sigilo}
+                              </Badge>
+                            </TooltipTrigger>
+                            <TooltipContent className="max-w-[200px] text-xs">
+                              {SIGILO_DESCRIPTIONS[doc.sigilo] || "Nível de acesso definido."}
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      </div>
                     </div>
                   </div>
                   <div className="flex items-center gap-1">
