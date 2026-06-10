@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { useDepartments } from "@/hooks/useDepartments";
+import { useTableSort } from "@/hooks/useTableSort";
+import { SortableTableHead } from "@/components/SortableTableHead";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -45,6 +47,8 @@ export default function DepartmentsPage() {
     d.code?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  const { sortedItems, sortField, sortDirection, handleSort } = useTableSort(filteredDepartments);
+
   const handleCreate = () => {
     if (!newDeptName.trim() || !organization?.id) return;
     createDepartment({
@@ -88,9 +92,9 @@ export default function DepartmentsPage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="w-[400px]">Nome</TableHead>
-                <TableHead>Código</TableHead>
-                <TableHead>Status</TableHead>
+                <SortableTableHead field="name" sortField={sortField} sortDirection={sortDirection} onSort={handleSort} className="w-[400px]">Nome</SortableTableHead>
+                <SortableTableHead field="code" sortField={sortField} sortDirection={sortDirection} onSort={handleSort}>Código</SortableTableHead>
+                <SortableTableHead field="is_active" sortField={sortField} sortDirection={sortDirection} onSort={handleSort}>Status</SortableTableHead>
                 <TableHead className="text-right">Ações</TableHead>
               </TableRow>
             </TableHeader>
@@ -101,14 +105,14 @@ export default function DepartmentsPage() {
                     <Loader2 className="h-6 w-6 animate-spin mx-auto text-muted-foreground" />
                   </TableCell>
                 </TableRow>
-              ) : filteredDepartments.length === 0 ? (
+              ) : sortedItems.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={4} className="text-center py-8 text-muted-foreground">
                     Nenhum departamento encontrado.
                   </TableCell>
                 </TableRow>
               ) : (
-                filteredDepartments.map((dept) => (
+                sortedItems.map((dept) => (
                   <TableRow key={dept.id}>
                     <TableCell className="font-medium">
                       <div className="flex items-center gap-2">
