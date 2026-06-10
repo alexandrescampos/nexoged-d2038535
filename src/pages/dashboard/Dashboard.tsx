@@ -182,7 +182,15 @@ export default function OrgDashboard() {
           <p className="text-muted-foreground">Aqui está um resumo do seu Nexo GED</p>
         </div>
         <div className="flex gap-2">
-          <Button onClick={() => navigate("/dashboard/documents?action=new")} className="gap-2 shadow-sm">
+          <Button onClick={() => {
+            const item = { title: "Documentos", url: "/dashboard/documents", icon: FileText };
+            openTab({
+              id: item.url,
+              title: item.title,
+              icon: item.icon,
+            });
+            navigate("/dashboard/documents?action=new");
+          }} className="gap-2 shadow-sm">
             <Plus className="h-4 w-4" /> Novo Documento
           </Button>
         </div>
@@ -267,7 +275,15 @@ export default function OrgDashboard() {
                   ) : (
                     <div className="divide-y">
                       {favoriteDocuments.slice(0, 5).map(doc => (
-                        <div key={doc.id} className="p-3 hover:bg-accent/50 cursor-pointer flex items-center gap-3 transition-colors" onClick={() => navigate(`/dashboard/documents?id=${doc.id}`)}>
+                        <div key={doc.id} className="p-3 hover:bg-accent/50 cursor-pointer flex items-center gap-3 transition-colors" onClick={() => {
+                          const item = { title: "Documentos", url: "/dashboard/documents", icon: FileText };
+                          openTab({
+                            id: item.url,
+                            title: item.title,
+                            icon: item.icon,
+                          });
+                          navigate(`/dashboard/documents?id=${doc.id}`);
+                        }}>
                           <div className="bg-primary/10 p-2 rounded-md"><FileText className="h-4 w-4 text-primary" /></div>
                           <div className="flex-1 min-w-0">
                             <p className="text-xs font-semibold truncate">{doc.title}</p>
@@ -301,7 +317,15 @@ export default function OrgDashboard() {
                   ) : (
                     <div className="divide-y">
                       {recentDocuments.slice(0, 5).map(doc => (
-                        <div key={doc.id} className="p-3 hover:bg-accent/50 cursor-pointer flex items-center gap-3 transition-colors" onClick={() => navigate(`/dashboard/documents?id=${doc.id}`)}>
+                        <div key={doc.id} className="p-3 hover:bg-accent/50 cursor-pointer flex items-center gap-3 transition-colors" onClick={() => {
+                          const item = { title: "Documentos", url: "/dashboard/documents", icon: FileText };
+                          openTab({
+                            id: item.url,
+                            title: item.title,
+                            icon: item.icon,
+                          });
+                          navigate(`/dashboard/documents?id=${doc.id}`);
+                        }}>
                           <div className="bg-blue-500/10 p-2 rounded-md"><FileText className="h-4 w-4 text-blue-500" /></div>
                           <div className="flex-1 min-w-0">
                             <p className="text-xs font-semibold truncate">{doc.title}</p>
