@@ -657,6 +657,14 @@ export default function DocumentsPage() {
                               : `${(doc.file_size / (1024 * 1024)).toFixed(2)} MB`)
                           : "—"}
                       </TableCell>
+                      <TableCell>
+                        <Badge 
+                          variant={doc.sigilo === 'PUBLICO' ? 'secondary' : 'destructive'} 
+                          className="text-[9px] px-1.5 py-0"
+                        >
+                          {doc.sigilo}
+                        </Badge>
+                      </TableCell>
                       <TableCell className="text-xs text-muted-foreground max-w-[240px]">
                         <span className="truncate block">{doc.description || "—"}</span>
                       </TableCell>
