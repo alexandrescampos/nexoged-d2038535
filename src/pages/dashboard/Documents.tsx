@@ -219,8 +219,51 @@ export default function DocumentsPage() {
   const folders = isFiltering ? [] : allFolders;
 
   const { documentTypes } = useGEDSettings();
-  const { organization } = useAuth();
+  const { organization, user, isSuperAdmin, isOrgAdmin } = useAuth();
   const { moveItem } = useOrganizationStructure();
+
+  // Fetch effective permissions for the current user
+  const { data: effectivePermissions } = useQuery({
+    queryKey: ["user-effective-permissions", user?.id, organization?.id],
+    queryFn: async () => {
+      const { data: profiles, error } = await supabase
+        .from("usuario_perfil")
+        .select(`
+          perfil (
+            perfil_id,
+            perfil_nome,
+            perfil_permissao (
+              permissao (
+                perm_codigo,
+                perm_nome
+              )
+            )
+          )
+        `)
+        .eq("usuario_id", user?.id);
+
+      if (error) throw error;
+      return {
+        profiles: (profiles || []).map((p: any) => p.perfil)
+      };
+    },
+    enabled: !!user?.id && !!organization?.id,
+  });
+
+  const userHasDownloadPermission = isSuperAdmin || isOrgAdmin || effectivePermissions?.profiles.some((p: any) => 
+    p.perfil_permissao.some((pp: any) => pp.permissao.perm_codigo === "baixar_documento")
+  );
+
+  const canDownload = (doc: any) => {
+    if (!doc.has_file) return false;
+    // Admins can download everything
+    if (isSuperAdmin || isOrgAdmin) return true;
+    // Owners can download their own documents
+    if (doc.owner_id === user?.id || doc.created_by === user?.id) return true;
+    // Otherwise, check for the explicit download permission
+    return userHasDownloadPermission;
+  };
+
 
   // Enriquece documentos com rótulo de tipo de arquivo p/ ordenação
   const enrichedDocuments = (documents || []).map((d: any) => ({
