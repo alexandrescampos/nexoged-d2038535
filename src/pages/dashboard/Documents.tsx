@@ -699,12 +699,21 @@ export default function DocumentsPage() {
                           : "—"}
                       </TableCell>
                       <TableCell>
-                        <Badge 
-                          variant={doc.sigilo === 'PUBLICO' ? 'secondary' : 'destructive'} 
-                          className="text-[9px] px-1.5 py-0"
-                        >
-                          {doc.sigilo}
-                        </Badge>
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Badge 
+                                variant={doc.sigilo === 'PUBLICO' ? 'secondary' : 'destructive'} 
+                                className="text-[9px] px-1.5 py-0 cursor-help"
+                              >
+                                {doc.sigilo}
+                              </Badge>
+                            </TooltipTrigger>
+                            <TooltipContent className="max-w-[200px] text-xs">
+                              {SIGILO_DESCRIPTIONS[doc.sigilo] || "Nível de acesso definido para este documento."}
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
                       </TableCell>
                       <TableCell className="text-xs text-muted-foreground max-w-[240px]">
                         <span className="truncate block">{doc.description || "—"}</span>
