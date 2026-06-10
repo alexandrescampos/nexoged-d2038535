@@ -45,7 +45,7 @@ export const gedRepository = {
       const term = params.searchTerm.replace(/[,()]/g, " ").trim();
       if (term) {
         query = query.or(
-          `title.ilike.%${term}%,description.ilike.%${term}%,file_name.ilike.%${term}%`
+          `title.ilike.%${term}%,description.ilike.%${term}%`
         );
       }
     }
