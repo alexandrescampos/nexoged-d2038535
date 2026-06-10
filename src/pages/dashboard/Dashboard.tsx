@@ -86,9 +86,10 @@ export default function OrgDashboard() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold text-foreground">Olá, {profile?.full_name?.split(' ')[0] || 'Usuário'}</h1>
-          <p className="text-muted-foreground">Aqui está um resumo do seu Nexo GED</p>
+          <p className="text-muted-foreground font-medium">Aqui está um resumo do seu Nexo GED</p>
         </div>
       </div>
+
 
 
 
