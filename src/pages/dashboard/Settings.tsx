@@ -16,6 +16,7 @@ import ApiIntegrationSettings from "@/components/dashboard/ApiIntegrationSetting
 import UserAuditLog from "@/components/dashboard/UserAuditLog";
 import DocumentTypesSettings from "@/components/dashboard/DocumentTypesSettings";
 
+
 export default function OrgSettingsPage() {
   const { organization, profile, isOrgAdmin } = useAuth();
   const fileInputRef = useRef<HTMLInputElement>(null);

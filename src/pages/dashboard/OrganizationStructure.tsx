@@ -8,9 +8,9 @@ import {
   ChevronDown, 
   Search, 
   Plus, 
-  GripVertical,
   MoreVertical,
-  FileText
+  CheckCircle2,
+  Loader2
 } from "lucide-react";
 import { useOrganizationStructure } from "@/hooks/useOrganizationStructure";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -19,16 +19,41 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { useAuth } from "@/hooks/useAuth";
 
 export default function OrganizationStructurePage() {
-  const { departments, sectors, folders, isLoading, moveItem } = useOrganizationStructure();
+  const { organization } = useAuth();
+  const { 
+    departments, 
+    sectors, 
+    folders, 
+    isLoading, 
+    createDepartment,
+    createSector,
+    createFolder
+  } = useOrganizationStructure();
+  
   const [searchTerm, setSearchTerm] = useState("");
   const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
+  
+  // Dialog states
+  const [isDeptDialogOpen, setIsDeptDialogOpen] = useState(false);
+  const [isSectorDialogOpen, setIsSectorDialogOpen] = useState(false);
+  const [isFolderDialogOpen, setIsFolderDialogOpen] = useState(false);
+  
+  const [selectedParentId, setSelectedParentId] = useState<string | null>(null);
+  const [selectedParentType, setSelectedParentType] = useState<'DEP' | 'SET' | 'PAST' | null>(null);
+  
+  const [newItemName, setNewItemName] = useState("");
+  const [newItemCode, setNewItemCode] = useState("");
 
   const toggleExpand = (id: string) => {
     const newExpanded = new Set(expandedItems);
@@ -38,6 +63,59 @@ export default function OrganizationStructurePage() {
       newExpanded.add(id);
     }
     setExpandedItems(newExpanded);
+  };
+
+  const handleCreateDept = () => {
+    if (!newItemName.trim() || !organization?.id) return;
+    createDepartment({
+      dept_nm_departamento: newItemName.trim(),
+      dept_cd_departamento: newItemCode.trim() || null,
+      organization_id: organization.id,
+      dept_in_ativo: true,
+    });
+    setNewItemName("");
+    setNewItemCode("");
+    setIsDeptDialogOpen(false);
+  };
+
+  const handleCreateSector = () => {
+    if (!newItemName.trim() || !organization?.id || !selectedParentId) return;
+    createSector({
+      set_nm_setor: newItemName.trim(),
+      set_cd_setor: newItemCode.trim() || null,
+      dept_id: selectedParentId,
+      organization_id: organization.id,
+      set_in_ativo: true,
+    });
+    setNewItemName("");
+    setNewItemCode("");
+    setIsSectorDialogOpen(false);
+  };
+
+  const handleCreateFolder = () => {
+    if (!newItemName.trim() || !organization?.id) return;
+    
+    const folderData: any = {
+      past_nm_pasta: newItemName.trim(),
+      past_cd_pasta: newItemCode.trim() || null,
+      organization_id: organization.id,
+      past_in_ativa: true,
+      past_in_restrita: false,
+      past_in_permite_subpastas: true,
+    };
+
+    if (selectedParentType === 'SET') {
+      folderData.set_id = selectedParentId;
+    } else if (selectedParentType === 'PAST') {
+      const parentFolder = folders.find(f => f.past_id === selectedParentId);
+      folderData.set_id = parentFolder?.set_id;
+      folderData.past_id_pai = selectedParentId;
+    }
+
+    createFolder(folderData);
+    setNewItemName("");
+    setNewItemCode("");
+    setIsFolderDialogOpen(false);
   };
 
   const renderTree = () => {
@@ -55,8 +133,20 @@ export default function OrganizationStructurePage() {
                 <span className="font-medium text-sm">{dept.dept_nm_departamento}</span>
                 <Badge variant="outline" className="ml-2 text-[10px] h-4">DEP</Badge>
                 <div className="ml-auto opacity-0 group-hover:opacity-100 flex items-center gap-1">
-                  <Button variant="ghost" size="icon" className="h-6 w-6"><Plus className="h-3 w-3" /></Button>
-                  <Button variant="ghost" size="icon" className="h-6 w-6"><MoreVertical className="h-3 w-3" /></Button>
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="h-6 w-6"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setSelectedParentId(dept.dept_id);
+                      setSelectedParentType('DEP');
+                      setIsSectorDialogOpen(true);
+                    }}
+                    title="Adicionar Setor"
+                  >
+                    <Plus className="h-3 w-3" />
+                  </Button>
                 </div>
               </div>
 
@@ -74,8 +164,20 @@ export default function OrganizationStructurePage() {
                           <span className="text-sm">{sec.set_nm_setor}</span>
                           <Badge variant="outline" className="ml-2 text-[10px] h-4">SET</Badge>
                           <div className="ml-auto opacity-0 group-hover:opacity-100 flex items-center gap-1">
-                            <Button variant="ghost" size="icon" className="h-6 w-6"><Plus className="h-3 w-3" /></Button>
-                            <Button variant="ghost" size="icon" className="h-6 w-6"><MoreVertical className="h-3 w-3" /></Button>
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              className="h-6 w-6"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setSelectedParentId(sec.set_id);
+                                setSelectedParentType('SET');
+                                setIsFolderDialogOpen(true);
+                              }}
+                              title="Adicionar Pasta"
+                            >
+                              <Plus className="h-3 w-3" />
+                            </Button>
                           </div>
                         </div>
 
@@ -112,8 +214,20 @@ export default function OrganizationStructurePage() {
           <Folder className={`h-4 w-4 mr-2 ${folder.past_in_restrita ? 'text-red-400' : 'text-amber-500'}`} />
           <span className="text-sm">{folder.past_nm_pasta}</span>
           <div className="ml-auto opacity-0 group-hover:opacity-100 flex items-center gap-1">
-            <Button variant="ghost" size="icon" className="h-6 w-6"><Plus className="h-3 w-3" /></Button>
-            <Button variant="ghost" size="icon" className="h-6 w-6"><MoreVertical className="h-3 w-3" /></Button>
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="h-6 w-6"
+              onClick={(e) => {
+                e.stopPropagation();
+                setSelectedParentId(folder.past_id);
+                setSelectedParentType('PAST');
+                setIsFolderDialogOpen(true);
+              }}
+              title="Adicionar Subpasta"
+            >
+              <Plus className="h-3 w-3" />
+            </Button>
           </div>
         </div>
         {expandedItems.has(folder.past_id) && hasChildren && (
@@ -133,11 +247,12 @@ export default function OrganizationStructurePage() {
           <p className="text-muted-foreground">Visualize e gerencie a hierarquia de armazenamento do GED</p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" className="gap-2">
-            <Plus className="h-4 w-4" /> Novo Setor
-          </Button>
-          <Button className="gap-2">
-            <Plus className="h-4 w-4" /> Nova Pasta
+          <Button onClick={() => {
+            setNewItemName("");
+            setNewItemCode("");
+            setIsDeptDialogOpen(true);
+          }} className="gap-2">
+            <Plus className="h-4 w-4" /> Novo Departamento
           </Button>
         </div>
       </div>
@@ -188,6 +303,78 @@ export default function OrganizationStructurePage() {
           </CardContent>
         </Card>
       </div>
+
+      {/* New Dept Dialog */}
+      <Dialog open={isDeptDialogOpen} onOpenChange={setIsDeptDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Novo Departamento</DialogTitle>
+            <DialogDescription>Crie um departamento no topo da hierarquia.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="dept-name">Nome</Label>
+              <Input id="dept-name" value={newItemName} onChange={(e) => setNewItemName(e.target.value)} />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="dept-code">Código (Opcional)</Label>
+              <Input id="dept-code" value={newItemCode} onChange={(e) => setNewItemCode(e.target.value)} />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsDeptDialogOpen(false)}>Cancelar</Button>
+            <Button onClick={handleCreateDept}>Criar</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* New Sector Dialog */}
+      <Dialog open={isSectorDialogOpen} onOpenChange={setIsSectorDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Novo Setor</DialogTitle>
+            <DialogDescription>Crie um setor dentro do departamento selecionado.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="sector-name">Nome</Label>
+              <Input id="sector-name" value={newItemName} onChange={(e) => setNewItemName(e.target.value)} />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="sector-code">Código (Opcional)</Label>
+              <Input id="sector-code" value={newItemCode} onChange={(e) => setNewItemCode(e.target.value)} />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsSectorDialogOpen(false)}>Cancelar</Button>
+            <Button onClick={handleCreateSector}>Criar</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* New Folder Dialog */}
+      <Dialog open={isFolderDialogOpen} onOpenChange={setIsFolderDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Nova Pasta</DialogTitle>
+            <DialogDescription>Crie uma pasta ou subpasta.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="folder-name">Nome</Label>
+              <Input id="folder-name" value={newItemName} onChange={(e) => setNewItemName(e.target.value)} />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="folder-code">Código (Opcional)</Label>
+              <Input id="folder-code" value={newItemCode} onChange={(e) => setNewItemCode(e.target.value)} />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsFolderDialogOpen(false)}>Cancelar</Button>
+            <Button onClick={handleCreateFolder}>Criar</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
