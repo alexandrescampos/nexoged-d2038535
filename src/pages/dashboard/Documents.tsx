@@ -428,9 +428,72 @@ export default function DocumentsPage() {
                   <TabsTrigger value="grid" className="h-7 px-3"><LayoutGrid className="h-4 w-4" /></TabsTrigger>
                 </TabsList>
               </Tabs>
-              <Button variant="outline" size="sm" className="h-9">
-                <Filter className="mr-2 h-4 w-4" /> Filtros
-              </Button>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" size="sm" className="h-9">
+                    <Filter className="mr-2 h-4 w-4" /> Filtros
+                    {selectedTags.length > 0 && (
+                      <Badge variant="secondary" className="ml-2 h-5 px-1.5 text-xs">
+                        {selectedTags.length}
+                      </Badge>
+                    )}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent align="end" className="w-72 p-0">
+                  <div className="flex items-center justify-between border-b px-3 py-2">
+                    <div className="flex items-center gap-2 text-sm font-medium">
+                      <TagIcon className="h-4 w-4" /> Filtrar por tag
+                    </div>
+                    {selectedTags.length > 0 && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="h-7 px-2 text-xs"
+                        onClick={() => setSelectedTags([])}
+                      >
+                        Limpar
+                      </Button>
+                    )}
+                  </div>
+                  <ScrollArea className="max-h-64">
+                    <div className="p-2">
+                      {availableTags.length === 0 ? (
+                        <p className="px-2 py-4 text-center text-xs text-muted-foreground">
+                          Nenhuma tag cadastrada ainda.
+                        </p>
+                      ) : (
+                        <div className="flex flex-wrap gap-1.5">
+                          {availableTags.map((tag) => {
+                            const active = selectedTags.includes(tag);
+                            return (
+                              <button
+                                key={tag}
+                                type="button"
+                                onClick={() => {
+                                  setSelectedTags(
+                                    active
+                                      ? selectedTags.filter((t) => t !== tag)
+                                      : [...selectedTags, tag]
+                                  );
+                                }}
+                                className={cn(
+                                  "rounded-full border px-2.5 py-1 text-xs transition-colors",
+                                  active
+                                    ? "border-primary bg-primary text-primary-foreground"
+                                    : "border-input bg-background hover:bg-accent"
+                                )}
+                              >
+                                {tag}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  </ScrollArea>
+                </PopoverContent>
+              </Popover>
             </div>
           </div>
 
