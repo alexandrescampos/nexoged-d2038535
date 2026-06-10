@@ -117,7 +117,8 @@ export default function DocumentsPage() {
     toggleFavorite,
     getDownloadUrl,
     updateDocument,
-    isUpdatingDoc
+    isUpdatingDoc,
+    totalCount: folderTotalCount,
   } = useGED(currentFolder);
 
   const { documentTypes } = useGEDSettings();
@@ -253,8 +254,15 @@ export default function DocumentsPage() {
             <Files className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{totalDocuments.toLocaleString()}</div>
-            <p className="text-xs text-muted-foreground mt-2">Documentos ativos na organização</p>
+            <div className="text-2xl font-bold">
+              {(folderTotalCount ?? 0).toLocaleString()}
+              <span className="text-base font-normal text-muted-foreground"> / {totalDocuments.toLocaleString()}</span>
+            </div>
+            <p className="text-xs text-muted-foreground mt-2">
+              {currentFolder
+                ? `Nesta pasta · ${totalDocuments.toLocaleString()} no total da organização`
+                : "Documentos na raiz · total da organização"}
+            </p>
           </CardContent>
         </Card>
         <div className="md:col-span-2">
