@@ -311,6 +311,46 @@ export default function DocumentsPage() {
             </div>
           </div>
 
+      {/* Breadcrumbs da pasta selecionada */}
+      <div className="flex items-center justify-between gap-2 px-1 py-2 border-b">
+        <div className="flex items-center flex-wrap text-sm text-muted-foreground min-w-0">
+          <button
+            type="button"
+            className={`hover:text-primary ${folderPath.length === 0 ? "font-medium text-foreground" : ""}`}
+            onClick={() => { setCurrentFolder(null); setFolderPath([]); }}
+          >
+            Todas as pastas
+          </button>
+          {folderPath.map((f, idx) => (
+            <span key={f.id} className="flex items-center min-w-0">
+              <ChevronRight className="h-4 w-4 mx-1 flex-shrink-0" />
+              <button
+                type="button"
+                className={`truncate ${idx === folderPath.length - 1 ? "font-medium text-foreground" : "hover:text-primary"}`}
+                onClick={() => {
+                  if (idx === folderPath.length - 1) return;
+                  const newPath = folderPath.slice(0, idx + 1);
+                  setFolderPath(newPath);
+                  setCurrentFolder(newPath[newPath.length - 1].id);
+                }}
+              >
+                {f.name}
+              </button>
+            </span>
+          ))}
+        </div>
+        {folderPath.length > 0 && (
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-8 flex-shrink-0"
+            onClick={() => { setCurrentFolder(null); setFolderPath([]); }}
+          >
+            ← Todas as pastas
+          </Button>
+        )}
+      </div>
+
       {/* Grid de Pastas/Documentos */}
       <ScrollArea className="flex-1">
         {isLoading ? (
