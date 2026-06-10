@@ -165,6 +165,14 @@ function TagsInput({ value, onChange }: { value: string[]; onChange: (next: stri
 
 
 
+const SIGILO_DESCRIPTIONS: Record<string, string> = {
+  PUBLICO: "Documento visível para todos os usuários da organização.",
+  INTERNO: "Acesso limitado a colaboradores da organização, sem permissões especiais.",
+  RESTRITO: "Requer permissão de acesso à pasta ou perfil específico para visualização.",
+  CONFIDENCIAL: "Acesso restrito a gestores e usuários com permissão explícita.",
+  SIGILOSO: "Nível máximo de segurança. Acesso monitorado e restrito a administradores ou perfis de alta confiança.",
+};
+
 export default function DocumentsPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const searchInputRef = useRef<HTMLInputElement>(null);
