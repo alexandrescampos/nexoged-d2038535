@@ -109,7 +109,7 @@ export function ProfileList() {
       });
       toast.success("Perfil criado com sucesso!");
       setIsDialogOpen(false);
-      setNewProfile({ perfil_nome: "", perfil_descricao: "" });
+      setNewProfile({ perfil_nome: "", perfil_descricao: "", niveis_sigilo_permitidos: ["PUBLICO", "INTERNO"] });
       loadData();
       window.dispatchEvent(new CustomEvent("perfis-changed"));
     } catch (error) {
