@@ -3,7 +3,9 @@ import { useGEDSettings } from "@/hooks/useGEDSettings";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useGED } from "@/hooks/useGED";
+import { useDocumentPermissions } from "@/hooks/useDocumentPermissions";
 import { 
+
   FileText, 
   Search, 
   Filter, 
