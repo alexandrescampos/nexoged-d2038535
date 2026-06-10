@@ -158,7 +158,16 @@ export const gedRepository = {
       formattedData.forEach((d: any) => { d.creator_name = nameMap.get(d.created_by) || null; });
     }
 
-    return { data: formattedData as unknown as Document[], count };
+    return {
+      data: formattedData as unknown as Document[],
+      count,
+      debug: {
+        favoriteIds,
+        queryParams: queryParamsSnapshot,
+        returnedIds: formattedData.map((d: any) => d.id),
+        count,
+      },
+    };
   },
 
   async getRecentDocuments(params: {
