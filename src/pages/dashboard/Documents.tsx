@@ -369,7 +369,7 @@ export default function DocumentsPage() {
           <DialogHeader>
             <DialogTitle>Upload de Documento</DialogTitle>
             <DialogDescription>
-              Selecione um arquivo para subir para {currentFolder ? 'esta pasta' : 'a raiz'}.
+              Selecione um arquivo para subir. {currentFolder ? "" : <span className="text-destructive font-bold">Aviso: Você deve selecionar uma pasta antes de fazer o upload.</span>}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
@@ -474,6 +474,17 @@ export default function DocumentsPage() {
                 </div>
               );
             })()}
+
+            <div className="grid gap-2">
+              <Label htmlFor="description">Descrição</Label>
+              <Input 
+                id="description" 
+                placeholder="Descrição opcional..."
+                value={uploadData.description}
+                onChange={(e) => setUploadData({ ...uploadData, description: e.target.value })}
+              />
+            </div>
+
             <div 
               className="border-2 border-dashed rounded-lg p-10 flex flex-col items-center justify-center bg-muted/30 cursor-pointer hover:bg-muted/50 transition-colors"
               onClick={() => fileInputRef.current?.click()}
@@ -497,6 +508,11 @@ export default function DocumentsPage() {
               setSelectedFile(null);
             }}>Cancelar</Button>
             <Button onClick={() => {
+              if (!currentFolder) {
+                toast.error("Nenhum arquivo pode ser carregado para uma pasta raiz. É obrigatório escolher uma pasta.");
+                return;
+              }
+
               if (!uploadData.title || !selectedFile) {
                 toast.error("Por favor, preencha o título e selecione um arquivo.");
                 return;
@@ -514,6 +530,7 @@ export default function DocumentsPage() {
                   expiration_date: uploadData.expiration_date || null,
                   document_creation_date: uploadData.document_creation_date || null,
                   page_count: uploadData.page_count,
+                  description: uploadData.description || null,
                   organization_id: organization.id,
                   folder_id: currentFolder,
                   status: 'active',
@@ -535,7 +552,7 @@ export default function DocumentsPage() {
                   setSelectedFile(null);
                 }
               });
-            }} disabled={isUploading || !selectedFile || !uploadData.title}>
+            }} disabled={isUploading || !selectedFile || !uploadData.title || !currentFolder}>
               {isUploading ? <Loader2 className="animate-spin mr-2 h-4 w-4" /> : null}
               {isUploading ? "Enviando..." : "Enviar Documento"}
             </Button>
