@@ -93,6 +93,7 @@ const menuGroups: MenuGroup[] = [
       { title: "Tipos de Documento", url: "/dashboard/document-types", icon: Settings2, adminOnly: true },
       
       { title: "Usuários", url: "/dashboard/users", icon: Users, adminOnly: true },
+      { title: "Controle de Acesso", url: "/dashboard/access-control", icon: Shield, adminOnly: true },
     ],
 
   },
