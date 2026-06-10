@@ -88,19 +88,6 @@ export default function OrgDashboard() {
           <h1 className="text-3xl font-bold text-foreground">Olá, {profile?.full_name?.split(' ')[0] || 'Usuário'}</h1>
           <p className="text-muted-foreground">Aqui está um resumo do seu Nexo GED</p>
         </div>
-        <div className="flex gap-2">
-          <Button onClick={() => {
-            const item = { title: "Documentos", url: "/dashboard/documents", icon: FileText };
-            openTab({
-              id: item.url,
-              title: item.title,
-              icon: item.icon,
-            });
-            navigate("/dashboard/documents?action=new");
-          }} className="gap-2 shadow-sm">
-            <Plus className="h-4 w-4" /> Novo Documento
-          </Button>
-        </div>
       </div>
 
       {/* Stats Cards */}
