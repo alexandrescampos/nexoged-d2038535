@@ -154,7 +154,7 @@ const App = () => {
                   </PermissionProtectedRoute>
                 } 
               />
-              <Route path="organization-structure" element={<AdminOnlyRoute><OrganizationStructurePage /></AdminOnlyRoute>} />
+              
 
               <Route path="users" element={<AdminOnlyRoute><OrgUsersPage /></AdminOnlyRoute>} />
               <Route path="permissions" element={<AdminOnlyRoute><PermissionsPage /></AdminOnlyRoute>} />
