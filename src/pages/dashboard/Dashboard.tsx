@@ -20,6 +20,7 @@ import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
+import { useTabs } from "@/contexts/TabsContext";
 import { useOrganizationStructure } from "@/hooks/useOrganizationStructure";
 import { useUserScopes } from "@/hooks/useUserScopes";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -29,6 +30,7 @@ import { supabase } from "@/integrations/supabase/client";
 export default function OrgDashboard() {
   const { organization, profile } = useAuth();
   const navigate = useNavigate();
+  const { openTab } = useTabs();
   const { departments: allDepartments, sectors: allSectors, folders: allFolders, isLoading: isLoadingStructure } = useOrganizationStructure();
   const { scopes } = useUserScopes();
 
@@ -145,7 +147,15 @@ export default function OrgDashboard() {
                       {expandedItems.has(sec.set_id) && (
                         <div className="ml-4 border-l pl-2">
                           {folders.filter(f => f.set_id === sec.set_id && !f.past_id_pai).map(folder => (
-                            <div key={folder.past_id} className="flex items-center hover:bg-accent/50 p-1.5 rounded-md cursor-pointer" onClick={() => navigate(`/dashboard/documents?folder=${folder.past_id}`)}>
+                            <div key={folder.past_id} className="flex items-center hover:bg-accent/50 p-1.5 rounded-md cursor-pointer" onClick={() => {
+                              const item = { title: "Documentos", url: "/dashboard/documents", icon: FileText };
+                              openTab({
+                                id: item.url,
+                                title: item.title,
+                                icon: item.icon,
+                              });
+                              navigate(`/dashboard/documents?folder=${folder.past_id}`);
+                            }}>
                               <FileText className="h-3.5 w-3.5 mr-2 text-amber-500" />
                               <span className="text-xs truncate">{folder.past_nm_pasta}</span>
                             </div>
@@ -172,7 +182,15 @@ export default function OrgDashboard() {
           <p className="text-muted-foreground">Aqui está um resumo do seu Nexo GED</p>
         </div>
         <div className="flex gap-2">
-          <Button onClick={() => navigate("/dashboard/documents?action=new")} className="gap-2 shadow-sm">
+          <Button onClick={() => {
+            const item = { title: "Documentos", url: "/dashboard/documents", icon: FileText };
+            openTab({
+              id: item.url,
+              title: item.title,
+              icon: item.icon,
+            });
+            navigate("/dashboard/documents?action=new");
+          }} className="gap-2 shadow-sm">
             <Plus className="h-4 w-4" /> Novo Documento
           </Button>
         </div>
@@ -257,7 +275,15 @@ export default function OrgDashboard() {
                   ) : (
                     <div className="divide-y">
                       {favoriteDocuments.slice(0, 5).map(doc => (
-                        <div key={doc.id} className="p-3 hover:bg-accent/50 cursor-pointer flex items-center gap-3 transition-colors" onClick={() => navigate(`/dashboard/documents?id=${doc.id}`)}>
+                        <div key={doc.id} className="p-3 hover:bg-accent/50 cursor-pointer flex items-center gap-3 transition-colors" onClick={() => {
+                          const item = { title: "Documentos", url: "/dashboard/documents", icon: FileText };
+                          openTab({
+                            id: item.url,
+                            title: item.title,
+                            icon: item.icon,
+                          });
+                          navigate(`/dashboard/documents?id=${doc.id}`);
+                        }}>
                           <div className="bg-primary/10 p-2 rounded-md"><FileText className="h-4 w-4 text-primary" /></div>
                           <div className="flex-1 min-w-0">
                             <p className="text-xs font-semibold truncate">{doc.title}</p>
@@ -291,7 +317,15 @@ export default function OrgDashboard() {
                   ) : (
                     <div className="divide-y">
                       {recentDocuments.slice(0, 5).map(doc => (
-                        <div key={doc.id} className="p-3 hover:bg-accent/50 cursor-pointer flex items-center gap-3 transition-colors" onClick={() => navigate(`/dashboard/documents?id=${doc.id}`)}>
+                        <div key={doc.id} className="p-3 hover:bg-accent/50 cursor-pointer flex items-center gap-3 transition-colors" onClick={() => {
+                          const item = { title: "Documentos", url: "/dashboard/documents", icon: FileText };
+                          openTab({
+                            id: item.url,
+                            title: item.title,
+                            icon: item.icon,
+                          });
+                          navigate(`/dashboard/documents?id=${doc.id}`);
+                        }}>
                           <div className="bg-blue-500/10 p-2 rounded-md"><FileText className="h-4 w-4 text-blue-500" /></div>
                           <div className="flex-1 min-w-0">
                             <p className="text-xs font-semibold truncate">{doc.title}</p>
@@ -315,7 +349,15 @@ export default function OrgDashboard() {
                   <h4 className="text-sm font-bold text-orange-700">Documentos Pendentes</h4>
                   <p className="text-xs text-orange-600/80">Você possui {stats.pendingDocs} documentos que requerem atenção ou classificação.</p>
                 </div>
-                <Button size="sm" variant="outline" className="border-orange-500/30 text-orange-700 hover:bg-orange-500/10" onClick={() => navigate("/dashboard/documents?status=pending")}>
+                <Button size="sm" variant="outline" className="border-orange-500/30 text-orange-700 hover:bg-orange-500/10" onClick={() => {
+                  const item = { title: "Documentos", url: "/dashboard/documents", icon: FileText };
+                  openTab({
+                    id: item.url,
+                    title: item.title,
+                    icon: item.icon,
+                  });
+                  navigate("/dashboard/documents?status=pending");
+                }}>
                   Resolver Agora
                 </Button>
               </CardContent>

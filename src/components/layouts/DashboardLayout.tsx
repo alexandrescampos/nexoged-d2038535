@@ -127,6 +127,7 @@ function DashboardSidebar() {
   };
 
   const handleMenuClick = (item: MenuItem) => {
+    // Check if the tab already exists to avoid issues
     openTab({
       id: item.url,
       title: item.title,
