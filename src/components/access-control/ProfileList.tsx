@@ -29,6 +29,16 @@ export function ProfileList() {
   const [isSaving, setIsSaving] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [profileScopes, setProfileScopes] = useState<any[]>([]);
+  const [isAddingScope, setIsAddingScope] = useState(false);
+  const [newScope, setNewScope] = useState({
+    tipo_escopo: "DEPARTAMENTO" as "DEPARTAMENTO" | "SETOR" | "PASTA",
+    referencia_id: "",
+  });
+  const [departments, setDepartments] = useState<any[]>([]);
+  const [sectors, setSectors] = useState<any[]>([]);
+  const [folders, setFolders] = useState<any[]>([]);
+
   const [selectedSigilos, setSelectedSigilos] = useState<string[]>([]);
   const [newProfile, setNewProfile] = useState({
     perfil_nome: "",
