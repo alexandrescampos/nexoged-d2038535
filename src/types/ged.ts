@@ -55,6 +55,18 @@ export interface Sector {
   updated_at: string;
 }
 
+export interface Folder {
+  id: string;
+  organization_id: string;
+  sector_id?: string;
+  parent_id?: string;
+  name: string;
+  description?: string;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface DocumentType {
   id: string;
   organization_id: string;

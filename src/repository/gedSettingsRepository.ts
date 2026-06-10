@@ -13,7 +13,7 @@ export const gedSettingsRepository = {
     return data as DocumentType[];
   },
 
-  async createDocumentType(type: Partial<DocumentType>) {
+  async createDocumentType(type: Omit<DocumentType, 'id' | 'created_at' | 'updated_at'>) {
     const { data: { user } } = await supabase.auth.getUser();
     const { data, error } = await supabase
       .from("ged_document_types")
