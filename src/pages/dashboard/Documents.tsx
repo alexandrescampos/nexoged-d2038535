@@ -200,6 +200,8 @@ export default function DocumentsPage() {
     isLoading, 
     searchTerm, 
     setSearchTerm,
+    selectedTags,
+    setSelectedTags,
     uploadDocument,
     isUploading,
     deleteDocument,
@@ -210,8 +212,9 @@ export default function DocumentsPage() {
     totalCount: folderTotalCount,
   } = useGED(currentFolder);
   const isSearching = (searchTerm ?? "").trim().length > 0;
-  // Hide folder rows while searching so results are documents-only across all folders
-  const folders = isSearching ? [] : allFolders;
+  const isFiltering = isSearching || selectedTags.length > 0;
+  // Hide folder rows while searching/filtering so results are documents-only across all folders
+  const folders = isFiltering ? [] : allFolders;
 
   const { documentTypes } = useGEDSettings();
   const { organization } = useAuth();
