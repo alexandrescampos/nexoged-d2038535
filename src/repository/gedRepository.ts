@@ -46,9 +46,29 @@ export const gedRepository = {
       }
     }
 
+    const queryParamsSnapshot = {
+      organizationId: params.organizationId,
+      folderId: params.folderId,
+      isFavorite: params.isFavorite,
+      searchTerm: params.searchTerm,
+      tags: params.tags,
+      page: params.page,
+      userId: params.userId,
+    };
+
     if (params.isFavorite) {
       if (favoriteIds.length === 0) {
-        return { data: [], count: 0 };
+        return {
+          data: [],
+          count: 0,
+          debug: {
+            favoriteIds,
+            queryParams: queryParamsSnapshot,
+            returnedIds: [],
+            count: 0,
+            note: "No favorites found for this user",
+          },
+        };
       }
       query = query.in("id", favoriteIds);
     }
