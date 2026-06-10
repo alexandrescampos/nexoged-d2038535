@@ -575,6 +575,7 @@ export default function DocumentsPage() {
                   description: uploadData.description || null,
                   organization_id: organization.id,
                   folder_id: currentFolder,
+                  past_id: currentFolder,
                   status: 'active',
                   tags: [],
                   keywords: []
