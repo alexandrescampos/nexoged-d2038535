@@ -900,6 +900,18 @@ export default function DocumentsPage() {
               />
             </div>
 
+            <div className="grid gap-2">
+              <Label>Tags</Label>
+              <TagsInput
+                value={uploadData.tags}
+                onChange={(next) => setUploadData({ ...uploadData, tags: next })}
+              />
+              <p className="text-xs text-muted-foreground">
+                Use tags para encontrar o arquivo na busca e em filtros (ex: contrato, 2024, fornecedor).
+              </p>
+            </div>
+
+
             <div 
               className="border-2 border-dashed rounded-lg p-10 flex flex-col items-center justify-center bg-muted/30 cursor-pointer hover:bg-muted/50 transition-colors"
               onClick={() => fileInputRef.current?.click()}
