@@ -564,11 +564,19 @@ export default function DocumentsPage() {
             <div className="grid grid-cols-2 gap-4">
               <div className="grid gap-2">
                 <Label htmlFor="edit-type">Tipo Documental</Label>
-                <Input 
-                  id="edit-type" 
-                  value={editData.document_type}
-                  onChange={(e) => setEditData({ ...editData, document_type: e.target.value })}
-                />
+                <Select 
+                  value={editData.document_type_id} 
+                  onValueChange={(val) => setEditData({ ...editData, document_type_id: val })}
+                >
+                  <SelectTrigger id="edit-type">
+                    <SelectValue placeholder="Selecione um tipo..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {documentTypes.map(type => (
+                      <SelectItem key={type.id} value={type.id}>{type.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="edit-pages">Número de Páginas</Label>
@@ -581,6 +589,70 @@ export default function DocumentsPage() {
                 />
               </div>
             </div>
+
+            {/* Campos Condicionais baseados no tipo (Edição) */}
+            {editData.document_type_id && (() => {
+              const selectedType = documentTypes.find(t => t.id === editData.document_type_id);
+              if (!selectedType) return null;
+              return (
+                <div className="grid grid-cols-2 gap-4">
+                  {selectedType.requires_creation_date && (
+                    <div className="grid gap-2">
+                      <Label>Data de Criação</Label>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant={"outline"}
+                            className={cn(
+                              "w-full justify-start text-left font-normal",
+                              !editData.document_creation_date && "text-muted-foreground"
+                            )}
+                          >
+                            <CalendarIcon className="mr-2 h-4 w-4" />
+                            {editData.document_creation_date ? format(new Date(editData.document_creation_date), "PPP", { locale: ptBR }) : <span>Escolha uma data</span>}
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0">
+                          <Calendar
+                            mode="single"
+                            selected={editData.document_creation_date ? new Date(editData.document_creation_date) : undefined}
+                            onSelect={(date) => setEditData({ ...editData, document_creation_date: date ? date.toISOString() : "" })}
+                            initialFocus
+                          />
+                        </PopoverContent>
+                      </Popover>
+                    </div>
+                  )}
+                  {selectedType.requires_expiration_date && (
+                    <div className="grid gap-2">
+                      <Label>Data de Vencimento</Label>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant={"outline"}
+                            className={cn(
+                              "w-full justify-start text-left font-normal",
+                              !editData.expiration_date && "text-muted-foreground"
+                            )}
+                          >
+                            <CalendarIcon className="mr-2 h-4 w-4" />
+                            {editData.expiration_date ? format(new Date(editData.expiration_date), "PPP", { locale: ptBR }) : <span>Escolha uma data</span>}
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0">
+                          <Calendar
+                            mode="single"
+                            selected={editData.expiration_date ? new Date(editData.expiration_date) : undefined}
+                            onSelect={(date) => setEditData({ ...editData, expiration_date: date ? date.toISOString() : "" })}
+                            initialFocus
+                          />
+                        </PopoverContent>
+                      </Popover>
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
             <div className="grid gap-2">
               <Label htmlFor="edit-description">Descrição</Label>
               <Input 
