@@ -19,6 +19,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useOrganizationStructure } from "@/hooks/useOrganizationStructure";
+import { useUserScopes } from "@/hooks/useUserScopes";
 import { GedQuickCreateDialog, QuickCreateMode } from "./GedQuickCreateDialog";
 
 interface TreeViewProps {
@@ -37,6 +38,7 @@ type TreeItem = {
 
 export function GedTreeView({ onSelectFolder, currentFolderId }: TreeViewProps) {
   const { departments, sectors, folders, moveItem } = useOrganizationStructure();
+  const { scopes } = useUserScopes();
   const [expandedItems, setExpandedItems] = useState<Record<string, boolean>>({});
   const [draggedItem, setDraggedItem] = useState<{ id: string, type: string } | null>(null);
   const [dragOverId, setDragOverId] = useState<string | null>(null);
@@ -53,10 +55,48 @@ export function GedTreeView({ onSelectFolder, currentFolderId }: TreeViewProps) 
     setExpandedItems(prev => ({ ...prev, [id]: !prev[id] }));
   };
 
+  // Pré-computa, para cada pasta, a cadeia de ancestrais (incluindo ela própria)
+  const folderAncestorsById = React.useMemo(() => {
+    const map = new Map<string, string[]>();
+    const byId = new Map(folders.map(f => [f.past_id, f]));
+    folders.forEach(f => {
+      const chain: string[] = [];
+      let cur: any = f;
+      while (cur) {
+        chain.push(cur.past_id);
+        cur = cur.past_id_pai ? byId.get(cur.past_id_pai) : null;
+      }
+      map.set(f.past_id, chain);
+    });
+    return map;
+  }, [folders]);
+
+  const isFolderAllowed = (folderId: string, sectorId: string, deptId: string): boolean => {
+    if (scopes.unrestricted) return true;
+    if (scopes.departmentIds.has(deptId)) return true;
+    if (scopes.sectorIds.has(sectorId)) return true;
+    const chain = folderAncestorsById.get(folderId) || [folderId];
+    return chain.some(id => scopes.folderIds.has(id));
+  };
+
+  const isSectorAllowed = (sectorId: string, deptId: string): boolean => {
+    if (scopes.unrestricted) return true;
+    if (scopes.departmentIds.has(deptId)) return true;
+    if (scopes.sectorIds.has(sectorId)) return true;
+    // Setor é visível se alguma pasta abaixo dele for permitida (via escopo de pasta)
+    return folders.some(f => f.set_id === sectorId && isFolderAllowed(f.past_id, sectorId, deptId));
+  };
+
+  const isDepartmentAllowed = (deptId: string): boolean => {
+    if (scopes.unrestricted) return true;
+    if (scopes.departmentIds.has(deptId)) return true;
+    return sectors.some(s => s.dept_id === deptId && isSectorAllowed(s.set_id, deptId));
+  };
+
   const buildTree = () => {
     const tree: TreeItem[] = [];
 
-    departments.forEach(dept => {
+    departments.filter(d => isDepartmentAllowed(d.dept_id)).forEach(dept => {
       const deptItem: TreeItem = {
         id: dept.dept_id,
         name: dept.dept_nm_departamento,
@@ -64,32 +104,35 @@ export function GedTreeView({ onSelectFolder, currentFolderId }: TreeViewProps) 
         children: []
       };
 
-      sectors.filter(s => s.dept_id === dept.dept_id).forEach(sector => {
-        const sectorItem: TreeItem = {
-          id: sector.set_id,
-          name: sector.set_nm_setor,
-          type: 'SECTOR',
-          parentId: dept.dept_id,
-          sectorId: sector.set_id,
-          children: []
-        };
+      sectors
+        .filter(s => s.dept_id === dept.dept_id && isSectorAllowed(s.set_id, dept.dept_id))
+        .forEach(sector => {
+          const sectorItem: TreeItem = {
+            id: sector.set_id,
+            name: sector.set_nm_setor,
+            type: 'SECTOR',
+            parentId: dept.dept_id,
+            sectorId: sector.set_id,
+            children: []
+          };
 
-        const buildFolderChildren = (parentId: string | null, sectorId: string): TreeItem[] => {
-          return folders
-            .filter(f => f.set_id === sectorId && (f.past_id_pai || null) === parentId)
-            .map(folder => ({
-              id: folder.past_id,
-              name: folder.past_nm_pasta,
-              type: 'FOLDER' as const,
-              parentId: parentId || sectorId,
-              sectorId,
-              children: buildFolderChildren(folder.past_id, sectorId)
-            }));
-        };
+          const buildFolderChildren = (parentId: string | null, sectorId: string): TreeItem[] => {
+            return folders
+              .filter(f => f.set_id === sectorId && (f.past_id_pai || null) === parentId)
+              .filter(f => isFolderAllowed(f.past_id, sectorId, dept.dept_id))
+              .map(folder => ({
+                id: folder.past_id,
+                name: folder.past_nm_pasta,
+                type: 'FOLDER' as const,
+                parentId: parentId || sectorId,
+                sectorId,
+                children: buildFolderChildren(folder.past_id, sectorId)
+              }));
+          };
 
-        sectorItem.children = buildFolderChildren(null, sector.set_id);
-        deptItem.children?.push(sectorItem);
-      });
+          sectorItem.children = buildFolderChildren(null, sector.set_id);
+          deptItem.children?.push(sectorItem);
+        });
 
       tree.push(deptItem);
     });
