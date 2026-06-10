@@ -381,7 +381,7 @@ export function ProfileList() {
                 })}
               </div>
             </div>
-
+            <div className="space-y-4 pt-4 border-t">
               <h3 className="text-sm font-semibold flex items-center gap-2">
                 <CheckCircle2 className="h-4 w-4 text-primary" />
                 Ações Permitidas (Permissões)
