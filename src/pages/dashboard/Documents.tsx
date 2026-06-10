@@ -75,7 +75,30 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { SortableTableHead } from "@/components/SortableTableHead";
+import { useTableSort } from "@/hooks/useTableSort";
 import { toast } from "sonner";
+
+function getFileTypeLabel(mime?: string, name?: string): string {
+  const ext = (name?.split(".").pop() || "").toLowerCase();
+  const m = (mime || "").toLowerCase();
+  if (m.includes("pdf") || ext === "pdf") return "PDF";
+  if (m.includes("wordprocessingml") || m.includes("msword") || ["doc", "docx"].includes(ext)) return "WORD";
+  if (m.includes("spreadsheetml") || m.includes("excel") || ["xls", "xlsx", "csv"].includes(ext)) return "EXCEL";
+  if (m.includes("presentationml") || m.includes("powerpoint") || ["ppt", "pptx"].includes(ext)) return "PPT";
+  if (m.includes("image/")) {
+    if (m.includes("jpeg") || ext === "jpg" || ext === "jpeg") return "JPG";
+    if (m.includes("png") || ext === "png") return "PNG";
+    if (m.includes("gif") || ext === "gif") return "GIF";
+    return "IMG";
+  }
+  if (m.includes("zip") || ["zip", "rar", "7z"].includes(ext)) return "ZIP";
+  if (m.includes("text/") || ["txt", "md"].includes(ext)) return "TXT";
+  if (ext) return ext.toUpperCase();
+  return "ARQUIVO";
+}
+
 
 export default function DocumentsPage() {
   const [searchParams, setSearchParams] = useSearchParams();
