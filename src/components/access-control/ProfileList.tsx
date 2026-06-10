@@ -62,7 +62,7 @@ export function ProfileList() {
 
   useEffect(() => {
     if (selectedProfileId) {
-      loadProfilePermissions(selectedProfileId);
+      loadProfileData(selectedProfileId);
     }
   }, [selectedProfileId]);
 
@@ -79,14 +79,39 @@ export function ProfileList() {
     }
   };
 
-  const loadProfilePermissions = async (id: string) => {
+  const loadProfileData = async (id: string) => {
     try {
-      const perms = await accessControlRepository.getProfilePermissions(id);
+      const [perms, scopes] = await Promise.all([
+        accessControlRepository.getProfilePermissions(id),
+        accessControlRepository.getProfileScopes(id)
+      ]);
       setSelectedPerms(perms);
+      setProfileScopes(scopes);
     } catch (error) {
       console.error(error);
     }
   };
+
+  const loadHierarchyData = async () => {
+    if (!organization?.id) return;
+    try {
+      const { data: depts } = await supabase.from("departments").select("*").eq("organization_id", organization.id).eq("dept_in_ativo", true);
+      const { data: sets } = await supabase.from("sectors").select("*").eq("organization_id", organization.id).eq("set_in_ativo", true);
+      const { data: psts } = await supabase.from("folders").select("*").eq("organization_id", organization.id).eq("past_in_ativa", true);
+      setDepartments(depts || []);
+      setSectors(sets || []);
+      setFolders(psts || []);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  useEffect(() => {
+    if (organization?.id) {
+      loadHierarchyData();
+    }
+  }, [organization?.id]);
+
 
   const handleTogglePerm = (id: string) => {
     setSelectedPerms(prev => 
