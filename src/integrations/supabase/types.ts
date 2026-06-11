@@ -2261,6 +2261,8 @@ export type Database = {
           versao_id: string
         }[]
       }
+      show_limit: { Args: never; Returns: number }
+      show_trgm: { Args: { "": string }; Returns: string[] }
       sum_org_document_size: { Args: { p_org_id: string }; Returns: number }
       trigger_ocr_queue: { Args: never; Returns: undefined }
       unaccent: { Args: { "": string }; Returns: string }
