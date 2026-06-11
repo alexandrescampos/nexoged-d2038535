@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { gedRepository } from "@/repository/gedRepository";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
+import { documentProcessor } from "@/lib/documentProcessor";
 
 export function useGED(folderId: string | null = null, filterFavorites: boolean = false, filterRecent: boolean = false, initialStatus: string | null = null) {
   const { organization } = useAuth();
@@ -47,7 +48,10 @@ export function useGED(folderId: string | null = null, filterFavorites: boolean 
 
   // Mutações
   const uploadMutation = useMutation({
-    mutationFn: ({ doc, file }: { doc: any, file: File }) => gedRepository.createDocument(doc, file),
+    mutationFn: async ({ doc, file }: { doc: any, file: File }) => {
+      const optimizedFile = await documentProcessor.optimizeDocument(file);
+      return gedRepository.createDocument(doc, optimizedFile as File);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["ged-documents"] });
       queryClient.invalidateQueries({ queryKey: ["ged-documents-total"] });

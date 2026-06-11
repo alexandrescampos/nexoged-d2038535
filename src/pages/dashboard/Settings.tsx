@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react";
+import { documentProcessor } from "@/lib/documentProcessor";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -88,13 +89,14 @@ export default function OrgSettingsPage() {
 
     setIsUploading(true);
     try {
-      const fileExt = file.name.split(".").pop();
+      const optimizedFile = await documentProcessor.optimizeDocument(file);
+      const fileExt = (optimizedFile as File).name.split(".").pop();
       const filePath = `${organization.id}/logo.${fileExt}`;
 
       // Upload to storage
       const { error: uploadError } = await supabase.storage
         .from("organization-logos")
-        .upload(filePath, file, { upsert: true });
+        .upload(filePath, optimizedFile, { upsert: true });
 
       if (uploadError) throw uploadError;
 
