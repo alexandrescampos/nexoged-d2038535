@@ -187,8 +187,12 @@ const SIGILO_DESCRIPTIONS: Record<string, string> = {
 export default function DocumentsPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const searchInputRef = useRef<HTMLInputElement>(null);
-  const [currentFolder, setCurrentFolder] = useState<string | null>(null);
+  
+  // Get initial folder from search params or localStorage
+  const initialFolderId = searchParams.get("folder") || localStorage.getItem("ged_last_folder");
+  const [currentFolder, setCurrentFolder] = useState<string | null>(initialFolderId);
   const [folderPath, setFolderPath] = useState<{ id: string; name: string }[]>([]);
+
   const [viewMode, setViewMode] = useState<"grid" | "list">("list");
   const [isUploadOpen, setIsUploadOpen] = useState(false);
   const [documentToDelete, setDocumentToDelete] = useState<string | null>(null);
