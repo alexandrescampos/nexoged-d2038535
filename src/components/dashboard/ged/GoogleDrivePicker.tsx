@@ -49,7 +49,22 @@ export function GoogleDrivePicker({ isOpen, onOpenChange, onFileSelect }: Google
         method: 'GET'
       });
 
-      if (error) throw error;
+      if (error) {
+        const msg = (error as any).message || '';
+        const ctx = (error as any).context;
+        // 409 NOT_CONNECTED handling
+        if (msg.includes('NOT_CONNECTED') || ctx?.status === 409) {
+          toast.error('Google Drive não conectado. Peça a um administrador para conectar em Configurações → Google Drive.', { duration: 7000 });
+          onOpenChange(false);
+          return;
+        }
+        if (msg.includes('REFRESH_FAILED')) {
+          toast.error('A autorização do Google expirou. Um administrador deve reconectar.', { duration: 7000 });
+          onOpenChange(false);
+          return;
+        }
+        throw error;
+      }
       setFiles(data.files || []);
     } catch (error: any) {
       console.error('Error fetching files:', error);
