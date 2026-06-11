@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Loader2, CheckCircle2, XCircle, RefreshCw, Cloud, Link2, Info } from "lucide-react";
 import { toast } from "sonner";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/hooks/useAuth";
 
 interface Status {
   connected: boolean;
