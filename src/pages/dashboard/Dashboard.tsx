@@ -126,12 +126,9 @@ export default function OrgDashboard() {
       const contentWidth = pdfWidth - 20; // Margin
       const contentHeight = (imgProps.height * contentWidth) / imgProps.width;
 
-      // Add simple professional header
-      pdf.setFillColor(245, 245, 245);
-      pdf.rect(0, 0, pdfWidth, 15, "F");
-      pdf.setFontSize(8);
-      pdf.setTextColor(100);
-      pdf.text(`Relatório Nexo GED - ${data?.org_name || ""} - Gerado em ${format(new Date(), "dd/MM/yyyy HH:mm")}`, 10, 10);
+      // Simple professional watermark or header if needed, but since we have a dedicated header in the capture, we don't need much here.
+      // Removing the rect to keep it clean as requested.
+
 
       pdf.addImage(imgData, "PNG", 10, 20, contentWidth, contentHeight);
       
