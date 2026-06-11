@@ -187,7 +187,7 @@ const SIGILO_DESCRIPTIONS: Record<string, string> = {
 export default function DocumentsPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const searchInputRef = useRef<HTMLInputElement>(null);
-  const { organization } = useAuth();
+  const { organization, user, isSuperAdmin, isOrgAdmin } = useAuth();
   
   // Get initial folder from search params or localStorage
   const storageKey = organization?.id ? `ged_last_folder_${organization.id}` : "ged_last_folder";
@@ -255,9 +255,9 @@ export default function DocumentsPage() {
   const folders = isFiltering ? [] : allFolders;
 
   const { documentTypes } = useGEDSettings();
-  const { organization, user, isSuperAdmin, isOrgAdmin } = useAuth();
   const { moveItem, folders: allStructureFolders } = useOrganizationStructure();
   const { canUserDownload, canUserDelete, canUserEdit } = useDocumentPermissions();
+
 
 
 
