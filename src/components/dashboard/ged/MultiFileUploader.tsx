@@ -60,7 +60,18 @@ export function MultiFileUploader({
   const [files, setFiles] = useState<FileWithProgress[]>([]);
 
   const onDrop = useCallback((acceptedFiles: File[], fileRejections: FileRejection[]) => {
-    const newFiles = acceptedFiles.map(file => ({
+    // Extra validation before state update to ensure we don't even add non-allowed files to the list
+    const validatedFiles = acceptedFiles.filter(file => {
+      const mimeType = file.type;
+      const extension = `.${file.name.split('.').pop()?.toLowerCase()}`;
+      
+      const isMimeAllowed = Object.keys(acceptedFileTypes).includes(mimeType);
+      const isExtAllowed = Object.values(acceptedFileTypes).flat().includes(extension);
+      
+      return isMimeAllowed || isExtAllowed;
+    });
+
+    const newFiles = validatedFiles.map(file => ({
       file,
       id: Math.random().toString(36).substring(7),
       progress: 0,
@@ -104,7 +115,23 @@ export function MultiFileUploader({
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
     maxSize: maxSize * 1024 * 1024,
-    accept: acceptedFileTypes
+    accept: acceptedFileTypes,
+    validator: (file) => {
+      // Browser-side pre-validation using react-dropzone's validator
+      const mimeType = file.type;
+      const extension = `.${file.name.split('.').pop()?.toLowerCase()}`;
+      
+      const isMimeAllowed = Object.keys(acceptedFileTypes).includes(mimeType);
+      const isExtAllowed = Object.values(acceptedFileTypes).flat().includes(extension);
+
+      if (!isMimeAllowed && !isExtAllowed) {
+        return {
+          code: "file-invalid-type",
+          message: "Tipo de arquivo não permitido"
+        };
+      }
+      return null;
+    }
   });
 
   const removeFile = (id: string) => {
