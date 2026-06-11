@@ -308,6 +308,11 @@ export const gedRepository = {
 
     await supabase.from("ged_documents").update({ updated_at: new Date().toISOString() }).eq("id", documentId);
 
+    // Trigger backend processing
+    supabase.functions.invoke('process-document', {
+      body: { documentId, versionNumber }
+    }).catch(err => console.error("Erro no processamento backend:", err));
+
     return version;
   },
 
