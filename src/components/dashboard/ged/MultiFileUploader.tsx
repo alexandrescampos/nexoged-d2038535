@@ -6,6 +6,7 @@ import { Progress } from '@/components/ui/progress';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Card } from '@/components/ui/card';
 
 interface FileWithProgress {
   file: File;
@@ -226,5 +227,3 @@ export function MultiFileUploader({
     </div>
   );
 }
-
-import { Card } from '@/components/ui/card';
