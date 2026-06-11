@@ -1191,7 +1191,11 @@ export default function DocumentsPage() {
       </AlertDialog>
 
       {/* Modal de Upload (Simplificado para o Protótipo) */}
-      <Dialog open={isUploadOpen} onOpenChange={setIsUploadOpen}>
+       <Dialog open={isUploadOpen} onOpenChange={(open) => {
+        setIsUploadOpen(open);
+        if (!open) setSelectedUploadUploadFolderId(null);
+      }}>
+
         <DialogContent className="sm:max-w-[700px] max-h-[90vh] flex flex-col p-0 gap-0">
           <DialogHeader className="p-6 pb-2">
             <DialogTitle>Upload de Documentos</DialogTitle>
