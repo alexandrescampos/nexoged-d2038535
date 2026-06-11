@@ -182,7 +182,7 @@ Deno.serve(async (req) => {
       }
 
       // First, fetch metadata to detect Google Workspace files (Docs/Sheets/Slides/Drawings)
-      const metaRes = await fetch(`${DRIVE_API}/files/${fileId}?fields=id,name,mimeType`, { headers });
+      const metaRes = await fetch(`${DRIVE_API}/files/${fileId}?fields=id,name,mimeType&supportsAllDrives=true`, { headers });
       if (!metaRes.ok) {
         const t = await metaRes.text();
         console.error("Metadata error:", t);
