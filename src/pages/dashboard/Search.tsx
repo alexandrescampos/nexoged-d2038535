@@ -6,10 +6,19 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Search as SearchIcon, FileText, Loader2, X } from "lucide-react";
+import { Search as SearchIcon, FileText, Loader2, X, Eye } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useNavigate } from "react-router-dom";
 import { formatBrasiliaDate as formatDate } from "@/lib/timezone";
+import { gedRepository } from "@/repository/gedRepository";
+import { toast } from "sonner";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+
 
 const SEARCH_STORAGE_KEY = "ged_advanced_search_state";
 
@@ -78,6 +87,28 @@ export default function SearchPage() {
   const updateState = (updates: Partial<SearchState>) => {
     setState(prev => ({ ...prev, ...updates }));
   };
+  const handleViewFile = async (documentId: string) => {
+    try {
+      const { url } = await gedRepository.getDownloadUrl(documentId);
+      window.open(url, '_blank', 'noopener,noreferrer');
+    } catch (error: any) {
+      console.error("Erro ao visualizar arquivo:", error);
+      const isPermissionError = 
+        error?.message?.includes("JWT") || 
+        error?.code === "PGRST301" || 
+        error?.message?.includes("permission denied") ||
+        error?.status === 403;
+
+      if (isPermissionError) {
+        toast.error("Acesso Negado", {
+          description: "Você não tem permissão para visualizar este documento.",
+        });
+      } else {
+        toast.error(error?.message || "Erro ao visualizar arquivo.");
+      }
+    }
+  };
+
 
   const clearSearch = () => {
     setState({
@@ -216,6 +247,8 @@ export default function SearchPage() {
                       <TableHead className="w-20">Página</TableHead>
                       <TableHead>Trecho</TableHead>
                       <TableHead className="w-32">Data</TableHead>
+                      <TableHead className="w-[80px] text-right">Ações</TableHead>
+
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -255,6 +288,29 @@ export default function SearchPage() {
                         <TableCell className="text-sm text-muted-foreground">
                           {formatDate(h.created_at)}
                         </TableCell>
+                        <TableCell className="text-right">
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-8 w-8 text-muted-foreground hover:text-primary"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleViewFile(h.documento_id);
+                                  }}
+                                >
+                                  <Eye className="h-4 w-4" />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>Visualizar documento</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        </TableCell>
+
                       </TableRow>
                     ))}
                   </TableBody>
