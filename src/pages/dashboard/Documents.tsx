@@ -1188,6 +1188,7 @@ export default function DocumentsPage() {
                 isUploading={isUploading}
                 requiresCreationDate={!!(uploadData.document_type_id && documentTypes.find(t => t.id === uploadData.document_type_id)?.requires_creation_date)}
                 requiresExpirationDate={!!(uploadData.document_type_id && documentTypes.find(t => t.id === uploadData.document_type_id)?.requires_expiration_date)}
+                associatedFields={uploadData.document_type_id ? documentTypes.find(t => t.id === uploadData.document_type_id)?.associated_fields : []}
                 onUpload={async (items) => {
                   if (!currentFolder || !organization?.id) {
                     toast.error("Pasta ou organização não selecionada.");
@@ -1210,7 +1211,8 @@ export default function DocumentsPage() {
                       keywords: [],
                       sigilo: uploadData.sigilo,
                     },
-                    file: item.file
+                    file: item.file,
+                    customFields: item.customFields
                   }));
 
                   await uploadDocuments(uploadItems);
@@ -1417,7 +1419,8 @@ export default function DocumentsPage() {
                     ...editData,
                     document_creation_date: editData.document_creation_date || null,
                     expiration_date: editData.expiration_date || null,
-                  } as any
+                  } as any,
+                  customFields: editCustomFields
                 }, {
                   onSuccess: () => setDocumentToEdit(null)
                 });
