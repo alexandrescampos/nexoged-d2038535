@@ -8,7 +8,8 @@ import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { toast } from "@/hooks/use-toast";
-import { Upload, Loader2, Image, Save, Server, Phone } from "lucide-react";
+import { Upload, Loader2, Image, Save, Server, Phone, FileSearch } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -22,6 +23,21 @@ export default function SuperAdminSettings() {
   const [systemName, setSystemName] = useState("");
   const [systemVersion, setSystemVersion] = useState("");
   const [supportPhone, setSupportPhone] = useState("");
+  const [ocrMimes, setOcrMimes] = useState<string[]>([]);
+  const [isSavingOcr, setIsSavingOcr] = useState(false);
+
+  const OCR_MIME_OPTIONS = [
+    { value: "application/pdf", label: "PDF (.pdf)" },
+    { value: "application/vnd.openxmlformats-officedocument.wordprocessingml.document", label: "Word (.docx)" },
+    { value: "image/png", label: "PNG (.png)" },
+    { value: "image/jpeg", label: "JPEG (.jpg, .jpeg)" },
+    { value: "image/webp", label: "WebP (.webp)" },
+    { value: "image/gif", label: "GIF (.gif)" },
+    { value: "image/bmp", label: "BMP (.bmp)" },
+    { value: "image/tiff", label: "TIFF (.tif, .tiff)" },
+    { value: "image/heic", label: "HEIC (.heic)" },
+    { value: "image/heif", label: "HEIF (.heif)" },
+  ];
 
   const { data: systemSettings, isLoading: isLoadingSettings } = useQuery({
     queryKey: ["system-settings"],
@@ -44,8 +60,33 @@ export default function SuperAdminSettings() {
       setSystemName(systemSettings.system_name || "");
       setSystemVersion(systemSettings.system_version || "");
       setSupportPhone(systemSettings.support_phone || "");
+      try {
+        const parsed = systemSettings.ocr_allowed_mime_types ? JSON.parse(systemSettings.ocr_allowed_mime_types) : [];
+        setOcrMimes(Array.isArray(parsed) ? parsed : []);
+      } catch { setOcrMimes([]); }
     }
   }, [systemSettings]);
+
+  const toggleOcrMime = (mime: string) => {
+    setOcrMimes((prev) => prev.includes(mime) ? prev.filter((m) => m !== mime) : [...prev, mime]);
+  };
+
+  const handleSaveOcrMimes = async () => {
+    setIsSavingOcr(true);
+    try {
+      const { error } = await supabase
+        .from("system_settings")
+        .upsert({ key: "ocr_allowed_mime_types", value: JSON.stringify(ocrMimes), updated_at: new Date().toISOString() }, { onConflict: "key" });
+      if (error) throw error;
+      queryClient.invalidateQueries({ queryKey: ["system-settings"] });
+      toast({ title: "Whitelist atualizada", description: "Tipos de arquivo aceitos para OCR foram salvos." });
+    } catch (e) {
+      console.error(e);
+      toast({ title: "Erro ao salvar", description: "Não foi possível salvar a whitelist.", variant: "destructive" });
+    } finally {
+      setIsSavingOcr(false);
+    }
+  };
 
   const handleSaveSystemInfo = async () => {
     setIsSaving(true);
@@ -201,6 +242,41 @@ export default function SuperAdminSettings() {
             </div>
           </CardContent>
         </Card>
+
+        {/* OCR Whitelist */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <FileSearch className="h-5 w-5" />
+              Tipos Aceitos para OCR e Indexação
+            </CardTitle>
+            <CardDescription>
+              Selecione os formatos de arquivo que serão processados pelo motor de OCR/indexação.
+              Arquivos enviados em formatos não selecionados não serão indexados.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {OCR_MIME_OPTIONS.map((opt) => (
+                <label key={opt.value} className="flex items-center gap-2 cursor-pointer">
+                  <Checkbox
+                    checked={ocrMimes.includes(opt.value)}
+                    onCheckedChange={() => toggleOcrMime(opt.value)}
+                    disabled={isLoadingSettings}
+                  />
+                  <span className="text-sm">{opt.label}</span>
+                </label>
+              ))}
+            </div>
+            <div className="flex justify-end">
+              <Button onClick={handleSaveOcrMimes} disabled={isSavingOcr || isLoadingSettings}>
+                {isSavingOcr ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
+                {isSavingOcr ? "Salvando..." : "Salvar Whitelist"}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+
 
         {/* Configurações Gerais */}
         <Card>

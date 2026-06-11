@@ -11,9 +11,40 @@ const corsHeaders = {
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
 
 function admin() {
   return createClient(SUPABASE_URL, SERVICE_KEY, { auth: { persistSession: false } });
+}
+
+const DEFAULT_ALLOWED_MIMES = [
+  "application/pdf",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  "image/png", "image/jpeg", "image/webp", "image/gif", "image/bmp", "image/tiff",
+];
+
+async function getAllowedMimes(supa: any): Promise<string[]> {
+  try {
+    const { data } = await supa.from("system_settings").select("value").eq("key", "ocr_allowed_mime_types").maybeSingle();
+    if (data?.value) {
+      const parsed = JSON.parse(data.value);
+      if (Array.isArray(parsed) && parsed.length) return parsed.map((s: string) => s.toLowerCase());
+    }
+  } catch (e) { console.error("Erro lendo whitelist:", e); }
+  return DEFAULT_ALLOWED_MIMES;
+}
+
+function inferMime(fname: string, mime: string): string {
+  if (mime) return mime.toLowerCase();
+  const ext = fname.split(".").pop()?.toLowerCase() || "";
+  const map: Record<string, string> = {
+    pdf: "application/pdf",
+    docx: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    png: "image/png", jpg: "image/jpeg", jpeg: "image/jpeg", webp: "image/webp",
+    gif: "image/gif", bmp: "image/bmp", tif: "image/tiff", tiff: "image/tiff",
+    heic: "image/heic", heif: "image/heif",
+  };
+  return map[ext] || "";
 }
 
 async function extractPdfPages(buffer: ArrayBuffer): Promise<string[]> {
@@ -63,12 +94,56 @@ async function extractDocx(buffer: ArrayBuffer): Promise<string[]> {
 }
 
 async function extractImageWithOCR(buffer: ArrayBuffer, mime: string): Promise<string[]> {
-  // Como as Edge Functions do Supabase (Deno Deploy) não suportam Web Workers nem multithreading,
-  // e o Tesseract.js depende fortemente disso para não travar a thread principal,
-  // a indexação de imagens JPG/PNG requer uma abordagem alternativa (API externa ou worker dedicado).
-  
-  // No momento, registramos o limite técnico mas garantimos que o sistema não trave.
-  return ["[Indexação de imagem (JPG/PNG/TIFF) requer OCR via API externa ou Worker dedicado - Limitação do ambiente Edge]"];
+  if (!LOVABLE_API_KEY) {
+    return ["[OCR de imagem indisponível: LOVABLE_API_KEY não configurada]"];
+  }
+  try {
+    // Convert to base64
+    const bytes = new Uint8Array(buffer);
+    let binary = "";
+    const chunkSize = 0x8000;
+    for (let i = 0; i < bytes.length; i += chunkSize) {
+      binary += String.fromCharCode(...bytes.subarray(i, i + chunkSize));
+    }
+    const base64 = btoa(binary);
+    const dataUrl = `data:${mime};base64,${base64}`;
+
+    const resp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${LOVABLE_API_KEY}`,
+      },
+      body: JSON.stringify({
+        model: "google/gemini-2.5-flash",
+        messages: [
+          {
+            role: "system",
+            content: "Você é um OCR. Extraia TODO o texto visível na imagem fornecida, preservando quebras de linha. Responda apenas com o texto bruto, sem comentários.",
+          },
+          {
+            role: "user",
+            content: [
+              { type: "text", text: "Extraia todo o texto visível desta imagem." },
+              { type: "image_url", image_url: { url: dataUrl } },
+            ],
+          },
+        ],
+      }),
+    });
+
+    if (!resp.ok) {
+      const errText = await resp.text();
+      console.error("Lovable AI OCR falhou:", resp.status, errText);
+      return [`[Falha OCR imagem: HTTP ${resp.status}]`];
+    }
+    const json = await resp.json();
+    const text = json?.choices?.[0]?.message?.content || "";
+    return [String(text).trim() || "[Imagem sem texto detectado]"];
+  } catch (e) {
+    console.error("Erro OCR imagem:", e);
+    return [`[Erro OCR imagem: ${String((e as any)?.message || e)}]`];
+  }
 }
 
 async function processDocument(documentId: string, versionId: string | null) {
@@ -108,11 +183,17 @@ async function processDocument(documentId: string, versionId: string | null) {
     if (dlErr || !file) throw new Error("Falha ao baixar arquivo: " + (dlErr?.message || "desconhecido"));
 
     const buffer = await file.arrayBuffer();
-    const mime = (version.mime_type || "").toLowerCase();
+    const rawMime = (version.mime_type || "").toLowerCase();
     const fname = (version.file_name || "").toLowerCase();
+    const mime = inferMime(fname, rawMime);
+
+    const allowed = await getAllowedMimes(supa);
+    if (mime && !allowed.includes(mime)) {
+      throw new Error(`Tipo de arquivo "${mime}" não permitido pela whitelist de OCR`);
+    }
 
     let pages: string[] = [];
-    if (mime.includes("pdf") || fname.endsWith(".pdf")) {
+    if (mime === "application/pdf" || fname.endsWith(".pdf")) {
       try {
         pages = await extractPdfPages(buffer);
         const totalChars = pages.reduce((s, p) => s + (p?.length || 0), 0);
@@ -125,11 +206,12 @@ async function processDocument(documentId: string, versionId: string | null) {
       }
     } else if (mime.includes("word") || fname.endsWith(".docx")) {
       pages = await extractDocx(buffer);
-    } else if (mime.startsWith("image/") || /\.(png|jpe?g|tiff?)$/i.test(fname)) {
-      pages = await extractImageWithOCR(buffer, mime || "image/png");
+    } else if (mime.startsWith("image/")) {
+      pages = await extractImageWithOCR(buffer, mime);
     } else {
       pages = ["[Tipo de arquivo não suportado para OCR]"];
     }
+
 
     const fullText = pages.join("\n\n");
 
