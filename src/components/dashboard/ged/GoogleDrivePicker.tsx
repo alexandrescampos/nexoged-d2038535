@@ -176,6 +176,22 @@ export function GoogleDrivePicker({ isOpen, onOpenChange, onFileSelect }: Google
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
               <p className="text-sm text-muted-foreground">Carregando arquivos...</p>
             </div>
+          ) : notConfigured ? (
+            <div className="flex flex-col items-center justify-center h-[300px] gap-3 px-6 text-center">
+              <Settings className="h-10 w-10 text-muted-foreground" />
+              <div>
+                <p className="text-sm font-semibold">Google Drive não configurado</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Sua organização ainda não conectou uma conta do Google Drive. Configure as credenciais para começar a importar arquivos.
+                </p>
+              </div>
+              <Button asChild size="sm" onClick={() => onOpenChange(false)}>
+                <Link to="/dashboard/settings">
+                  <Settings className="h-4 w-4 mr-2" />
+                  Ir para Configurações
+                </Link>
+              </Button>
+            </div>
           ) : files.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-[300px] text-muted-foreground">
               <p className="text-sm">Nenhum arquivo encontrado.</p>
