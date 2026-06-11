@@ -44,6 +44,10 @@ function inferMime(fname: string, mime: string): string {
   const map: Record<string, string> = {
     pdf: "application/pdf",
     docx: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    xlsx: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    xls: "application/vnd.ms-excel",
+    csv: "text/csv",
+    txt: "text/plain",
     png: "image/png", jpg: "image/jpeg", jpeg: "image/jpeg", webp: "image/webp",
     gif: "image/gif", bmp: "image/bmp", tif: "image/tiff", tiff: "image/tiff",
     heic: "image/heic", heif: "image/heif",
