@@ -18,15 +18,7 @@ function admin() {
   return createClient(SUPABASE_URL, SERVICE_KEY, { auth: { persistSession: false } });
 }
 
-const DEFAULT_ALLOWED_MIMES = [
-  "application/pdf",
-  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-  "application/vnd.ms-excel",
-  "text/csv",
-  "text/plain",
-  "image/png", "image/jpeg", "image/webp", "image/gif", "image/bmp", "image/tiff",
-];
+const DEFAULT_ALLOWED_MIMES = CANONICAL_MIMES;
 
 async function getAllowedMimes(supa: any): Promise<string[]> {
   try {
@@ -37,23 +29,6 @@ async function getAllowedMimes(supa: any): Promise<string[]> {
     }
   } catch (e) { console.error("Erro lendo whitelist:", e); }
   return DEFAULT_ALLOWED_MIMES;
-}
-
-function inferMime(fname: string, mime: string): string {
-  if (mime) return mime.toLowerCase();
-  const ext = fname.split(".").pop()?.toLowerCase() || "";
-  const map: Record<string, string> = {
-    pdf: "application/pdf",
-    docx: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-    xlsx: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-    xls: "application/vnd.ms-excel",
-    csv: "text/csv",
-    txt: "text/plain",
-    png: "image/png", jpg: "image/jpeg", jpeg: "image/jpeg", webp: "image/webp",
-    gif: "image/gif", bmp: "image/bmp", tif: "image/tiff", tiff: "image/tiff",
-    heic: "image/heic", heif: "image/heif",
-  };
-  return map[ext] || "";
 }
 
 async function extractPdfPages(buffer: ArrayBuffer): Promise<string[]> {
