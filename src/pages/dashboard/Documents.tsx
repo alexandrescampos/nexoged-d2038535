@@ -205,7 +205,10 @@ export default function DocumentsPage() {
   const [documentToDelete, setDocumentToDelete] = useState<string | null>(null);
   const [documentToEdit, setDocumentToEdit] = useState<any | null>(null);
   const [editCustomFields, setEditCustomFields] = useState<Record<string, any>>({});
+  const [selectedUploadFolderId, setSelectedUploadUploadFolderId] = useState<string | null>(null);
+  const [isFolderSelectOpen, setIsFolderSelectOpen] = useState(false);
   const [uploadData, setUploadData] = useState({
+
     title: "",
     document_type_id: "",
     page_count: 1,
