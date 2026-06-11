@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -6,10 +6,21 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Search as SearchIcon, FileText, Loader2 } from "lucide-react";
+import { Search as SearchIcon, FileText, Loader2, X } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useNavigate } from "react-router-dom";
 import { formatBrasiliaDate as formatDate } from "@/lib/timezone";
+
+const SEARCH_STORAGE_KEY = "ged_advanced_search_state";
+
+type SearchState = {
+  query: string;
+  submitted: string;
+  classificacao: string;
+  status: string;
+  page: number;
+};
+
 
 type Hit = {
   documento_id: string;
@@ -45,12 +56,39 @@ function expandQuery(q: string): string {
 export default function SearchPage() {
   const { organization } = useAuth();
   const navigate = useNavigate();
-  const [query, setQuery] = useState("");
-  const [submitted, setSubmitted] = useState("");
-  const [classificacao, setClassificacao] = useState<string>("");
-  const [status, setStatus] = useState<string>("");
-  const [page, setPage] = useState(0);
+
+  const [state, setState] = useState<SearchState>(() => {
+    const saved = localStorage.getItem(SEARCH_STORAGE_KEY);
+    return saved ? JSON.parse(saved) : {
+      query: "",
+      submitted: "",
+      classificacao: "",
+      status: "",
+      page: 0,
+    };
+  });
+
+  useEffect(() => {
+    localStorage.setItem(SEARCH_STORAGE_KEY, JSON.stringify(state));
+  }, [state]);
+
+  const { query, submitted, classificacao, status, page } = state;
   const pageSize = 20;
+
+  const updateState = (updates: Partial<SearchState>) => {
+    setState(prev => ({ ...prev, ...updates }));
+  };
+
+  const clearSearch = () => {
+    setState({
+      query: "",
+      submitted: "",
+      classificacao: "",
+      status: "",
+      page: 0,
+    });
+  };
+
 
   const { data, isFetching } = useQuery({
     queryKey: ["fts-search", submitted, classificacao, status, page, organization?.id],
@@ -91,18 +129,28 @@ export default function SearchPage() {
       </div>
 
       <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2"><SearchIcon className="w-5 h-5" /> Filtros</CardTitle>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0">
+          <CardTitle className="flex items-center gap-2">
+            <SearchIcon className="w-5 h-5" /> Filtros
+          </CardTitle>
+          {(query || submitted || classificacao || status) && (
+            <Button variant="ghost" size="sm" onClick={clearSearch} className="h-8 gap-1">
+              <X className="w-4 h-4" /> Limpar
+            </Button>
+          )}
         </CardHeader>
         <CardContent className="space-y-4">
           <form
-            onSubmit={(e) => { e.preventDefault(); setPage(0); setSubmitted(query.trim()); }}
+            onSubmit={(e) => { 
+              e.preventDefault(); 
+              updateState({ page: 0, submitted: query.trim() }); 
+            }}
             className="flex gap-2"
           >
             <Input
               placeholder='Pesquisar palavras, frases ("entre aspas"), CPF, CNPJ, números...'
               value={query}
-              onChange={(e) => setQuery(e.target.value)}
+              onChange={(e) => updateState({ query: e.target.value })}
               className="flex-1"
             />
             <Button type="submit" disabled={!query.trim()}>
@@ -110,11 +158,13 @@ export default function SearchPage() {
             </Button>
           </form>
 
+
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
             <div>
               <label className="text-sm text-muted-foreground">Classificação</label>
-              <Select value={classificacao || "all"} onValueChange={(v) => setClassificacao(v === "all" ? "" : v)}>
+              <Select value={classificacao || "all"} onValueChange={(v) => updateState({ page: 0, classificacao: v === "all" ? "" : v })}>
                 <SelectTrigger><SelectValue placeholder="Todas" /></SelectTrigger>
+
                 <SelectContent>
                   <SelectItem value="all">Todas</SelectItem>
                   <SelectItem value="PUBLICO">Público</SelectItem>
@@ -126,8 +176,9 @@ export default function SearchPage() {
             </div>
             <div>
               <label className="text-sm text-muted-foreground">Status</label>
-              <Select value={status || "all"} onValueChange={(v) => setStatus(v === "all" ? "" : v)}>
+              <Select value={status || "all"} onValueChange={(v) => updateState({ page: 0, status: v === "all" ? "" : v })}>
                 <SelectTrigger><SelectValue placeholder="Todos" /></SelectTrigger>
+
                 <SelectContent>
                   <SelectItem value="all">Todos</SelectItem>
                   <SelectItem value="active">Ativo</SelectItem>
@@ -215,8 +266,9 @@ export default function SearchPage() {
                       Página {page + 1} de {totalPages}
                     </span>
                     <div className="flex gap-2">
-                      <Button variant="outline" size="sm" disabled={page === 0} onClick={() => setPage(p => p - 1)}>Anterior</Button>
-                      <Button variant="outline" size="sm" disabled={page + 1 >= totalPages} onClick={() => setPage(p => p + 1)}>Próxima</Button>
+                      <Button variant="outline" size="sm" disabled={page === 0} onClick={() => updateState({ page: page - 1 })}>Anterior</Button>
+                      <Button variant="outline" size="sm" disabled={page + 1 >= totalPages} onClick={() => updateState({ page: page + 1 })}>Próxima</Button>
+
                     </div>
                   </div>
                 )}
