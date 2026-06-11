@@ -136,6 +136,18 @@ export function useGED(folderId: string | null = null, filterFavorites: boolean 
     folders,
     isLoading: isLoadingDocs || isLoadingFolders,
     uploadDocument: uploadMutation.mutate,
+    uploadDocuments: async (files: { doc: any, file: File }[]) => {
+      const results = [];
+      for (const item of files) {
+        try {
+          const res = await uploadMutation.mutateAsync(item);
+          results.push(res);
+        } catch (error) {
+          console.error("Erro ao subir arquivo:", error);
+        }
+      }
+      return results;
+    },
     isUploading: uploadMutation.isPending,
     toggleFavorite: toggleFavoriteMutation.mutate,
     deleteDocument: deleteDocumentMutation.mutate,

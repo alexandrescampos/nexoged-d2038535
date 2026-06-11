@@ -230,7 +230,7 @@ export const gedRepository = {
     return { data: formattedData as unknown as Document[], count: formattedData.length };
   },
 
-  async createDocument(doc: any, file?: File) {
+  async createDocument(doc: any, file?: File, onProgress?: (p: number) => void) {
     const { data: { user } } = await supabase.auth.getUser();
     
     const { data: document, error: docError } = await supabase
@@ -249,7 +249,7 @@ export const gedRepository = {
 
     if (file && document) {
       try {
-        await this.uploadVersion(document.id, 1, file);
+        await this.uploadVersion(document.id, 1, file, onProgress);
       } catch (error) {
         await supabase
           .from("ged_documents")
@@ -277,7 +277,7 @@ export const gedRepository = {
     return data;
   },
 
-  async uploadVersion(documentId: string, versionNumber: number, file: File) {
+  async uploadVersion(documentId: string, versionNumber: number, file: File, onProgress?: (p: number) => void) {
     const sanitizedName = file.name
       .normalize("NFD")
       .replace(/[\u0300-\u036f]/g, "")

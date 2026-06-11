@@ -22,6 +22,7 @@ import { useOrganizationStructure } from "@/hooks/useOrganizationStructure";
 import { useQuery } from "@tanstack/react-query";
 import { useDocumentPermissions } from "@/hooks/useDocumentPermissions";
 import { supabase } from "@/integrations/supabase/client";
+import { MultiFileUploader } from "@/components/dashboard/ged/MultiFileUploader";
 import { Files } from "lucide-react";
 import { 
   FileText, 
@@ -222,6 +223,7 @@ export default function DocumentsPage() {
     status,
     setStatus,
     uploadDocument,
+    uploadDocuments,
     isUploading,
     deleteDocument,
     toggleFavorite,
@@ -1026,234 +1028,108 @@ export default function DocumentsPage() {
 
       {/* Modal de Upload (Simplificado para o Protótipo) */}
       <Dialog open={isUploadOpen} onOpenChange={setIsUploadOpen}>
-        <DialogContent className="sm:max-w-[500px]">
-          <DialogHeader>
-            <DialogTitle>Upload de Documento</DialogTitle>
+        <DialogContent className="sm:max-w-[700px] max-h-[90vh] flex flex-col p-0 gap-0">
+          <DialogHeader className="p-6 pb-2">
+            <DialogTitle>Upload de Documentos</DialogTitle>
             <DialogDescription>
-              Selecione um arquivo para subir. {currentFolder ? "" : <span className="text-destructive font-bold">Aviso: Você deve selecionar uma pasta antes de fazer o upload.</span>}
+              Arraste múltiplos arquivos ou selecione do seu computador. {currentFolder ? "" : <span className="text-destructive font-bold">Aviso: Selecione uma pasta no menu lateral antes do upload.</span>}
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="grid gap-2">
-              <Label htmlFor="title">Título do Documento</Label>
-              <Input 
-                id="title" 
-                placeholder="Ex: Contrato_Fornecedor_A" 
-                value={uploadData.title}
-                onChange={(e) => setUploadData({ ...uploadData, title: e.target.value })}
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="grid gap-2">
-                <Label htmlFor="type">Tipo Documental</Label>
-                <Select 
-                  value={uploadData.document_type_id} 
-                  onValueChange={(val) => setUploadData({ ...uploadData, document_type_id: val })}
-                >
-                  <SelectTrigger id="type">
-                    <SelectValue placeholder="Selecione um tipo..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {documentTypes.map(type => (
-                      <SelectItem key={type.id} value={type.id}>{type.name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="pages">Número de Páginas</Label>
-                <Input 
-                  id="pages" 
-                  type="number" 
-                  min={1} 
-                  value={uploadData.page_count}
-                  onChange={(e) => setUploadData({ ...uploadData, page_count: parseInt(e.target.value) || 1 })}
-                />
-              </div>
-            </div>
 
-            {/* Campos Condicionais baseados no tipo */}
-            {uploadData.document_type_id && (() => {
-              const selectedType = documentTypes.find(t => t.id === uploadData.document_type_id);
-              if (!selectedType) return null;
-              return (
-                <div className="grid grid-cols-2 gap-4">
-                  {selectedType.requires_creation_date && (
-                    <div className="grid gap-2">
-                      <Label>Data de Criação</Label>
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <Button
-                            variant={"outline"}
-                            className={cn(
-                              "w-full justify-start text-left font-normal",
-                              !uploadData.document_creation_date && "text-muted-foreground"
-                            )}
-                          >
-                            <CalendarIcon className="mr-2 h-4 w-4" />
-                            {uploadData.document_creation_date ? format(new Date(uploadData.document_creation_date), "PPP", { locale: ptBR }) : <span>Escolha uma data</span>}
-                          </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0">
-                          <Calendar
-                            mode="single"
-                            selected={uploadData.document_creation_date ? new Date(uploadData.document_creation_date) : undefined}
-                            onSelect={(date) => setUploadData({ ...uploadData, document_creation_date: date ? date.toISOString() : "" })}
-                            initialFocus
-                          />
-                        </PopoverContent>
-                      </Popover>
-                    </div>
-                  )}
-                  {selectedType.requires_expiration_date && (
-                    <div className="grid gap-2">
-                      <Label>Data de Vencimento</Label>
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <Button
-                            variant={"outline"}
-                            className={cn(
-                              "w-full justify-start text-left font-normal",
-                              !uploadData.expiration_date && "text-muted-foreground"
-                            )}
-                          >
-                            <CalendarIcon className="mr-2 h-4 w-4" />
-                            {uploadData.expiration_date ? format(new Date(uploadData.expiration_date), "PPP", { locale: ptBR }) : <span>Escolha uma data</span>}
-                          </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0">
-                          <Calendar
-                            mode="single"
-                            selected={uploadData.expiration_date ? new Date(uploadData.expiration_date) : undefined}
-                            onSelect={(date) => setUploadData({ ...uploadData, expiration_date: date ? date.toISOString() : "" })}
-                            initialFocus
-                          />
-                        </PopoverContent>
-                      </Popover>
-                    </div>
-                  )}
+          <div className="flex-1 overflow-y-auto p-6 pt-2 space-y-6">
+            <section className="space-y-4">
+              <h3 className="text-sm font-semibold flex items-center gap-2">
+                <Badge variant="outline" className="h-5 w-5 rounded-full p-0 flex items-center justify-center">1</Badge>
+                Metadados Padrão (Opcional)
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-muted/30 p-4 rounded-lg border border-border/50">
+                <div className="grid gap-2">
+                  <Label htmlFor="type">Tipo Documental</Label>
+                  <Select 
+                    value={uploadData.document_type_id} 
+                    onValueChange={(val) => setUploadData({ ...uploadData, document_type_id: val })}
+                  >
+                    <SelectTrigger id="type" className="bg-background">
+                      <SelectValue placeholder="Selecione um tipo..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {documentTypes.map(type => (
+                        <SelectItem key={type.id} value={type.id}>{type.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
-              );
-            })()}
 
-            <div className="grid gap-2">
-              <Label htmlFor="description">Descrição</Label>
-              <Input 
-                id="description" 
-                placeholder="Descrição opcional..."
-                value={uploadData.description}
-                onChange={(e) => setUploadData({ ...uploadData, description: e.target.value })}
+                <div className="grid gap-2">
+                  <Label>Nível de Sigilo</Label>
+                  <Select
+                    value={uploadData.sigilo}
+                    onValueChange={(value) => setUploadData({ ...uploadData, sigilo: value as any })}
+                  >
+                    <SelectTrigger className="bg-background">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="PUBLICO">Público</SelectItem>
+                      <SelectItem value="INTERNO">Interno</SelectItem>
+                      <SelectItem value="RESTRITO">Restrito</SelectItem>
+                      <SelectItem value="CONFIDENCIAL">Confidencial</SelectItem>
+                      <SelectItem value="SIGILOSO">Sigiloso</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="md:col-span-2 grid gap-2">
+                  <Label>Tags Padrão</Label>
+                  <TagsInput
+                    value={uploadData.tags}
+                    onChange={(next) => setUploadData({ ...uploadData, tags: next })}
+                  />
+                </div>
+              </div>
+            </section>
+
+            <section className="space-y-4">
+              <h3 className="text-sm font-semibold flex items-center gap-2">
+                <Badge variant="outline" className="h-5 w-5 rounded-full p-0 flex items-center justify-center">2</Badge>
+                Arquivos
+              </h3>
+              <MultiFileUploader 
+                isUploading={isUploading}
+                onUpload={async (files) => {
+                  if (!currentFolder || !organization?.id) {
+                    toast.error("Pasta ou organização não selecionada.");
+                    return;
+                  }
+
+                  const uploadItems = files.map(file => ({
+                    doc: {
+                      title: file.name.split('.').slice(0, -1).join('.') || file.name,
+                      document_type_id: uploadData.document_type_id || null,
+                      expiration_date: uploadData.expiration_date || null,
+                      document_creation_date: uploadData.document_creation_date || null,
+                      page_count: 1,
+                      description: uploadData.description || null,
+                      organization_id: organization.id,
+                      folder_id: currentFolder,
+                      past_id: currentFolder,
+                      status: 'active',
+                      tags: uploadData.tags,
+                      keywords: [],
+                      sigilo: uploadData.sigilo,
+                    },
+                    file
+                  }));
+
+                  await uploadDocuments(uploadItems);
+                }}
               />
-            </div>
-
-            <div className="grid gap-2">
-              <Label>Nível de Sigilo</Label>
-              <Select
-                value={uploadData.sigilo}
-                onValueChange={(value) => setUploadData({ ...uploadData, sigilo: value as any })}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="PUBLICO">Público</SelectItem>
-                  <SelectItem value="INTERNO">Interno</SelectItem>
-                  <SelectItem value="RESTRITO">Restrito</SelectItem>
-                  <SelectItem value="CONFIDENCIAL">Confidencial</SelectItem>
-                  <SelectItem value="SIGILOSO">Sigiloso</SelectItem>
-                </SelectContent>
-              </Select>
-              <p className="text-xs text-muted-foreground bg-muted/50 p-2 rounded-sm border border-border/50">
-                {SIGILO_DESCRIPTIONS[uploadData.sigilo] || "Define quem pode visualizar e baixar o documento."}
-              </p>
-            </div>
-
-            <div className="grid gap-2">
-              <Label>Tags</Label>
-              <TagsInput
-                value={uploadData.tags}
-                onChange={(next) => setUploadData({ ...uploadData, tags: next })}
-              />
-              <p className="text-xs text-muted-foreground">
-                Use tags para encontrar o arquivo na busca e em filtros (ex: contrato, 2024, fornecedor).
-              </p>
-            </div>
-
-
-            <div 
-              className="border-2 border-dashed rounded-lg p-10 flex flex-col items-center justify-center bg-muted/30 cursor-pointer hover:bg-muted/50 transition-colors"
-              onClick={() => fileInputRef.current?.click()}
-            >
-              <Input
-                type="file"
-                className="hidden"
-                ref={fileInputRef}
-                onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
-              />
-              <Upload className="h-10 w-10 text-muted-foreground mb-4 opacity-30" />
-              <p className="text-sm font-medium">
-                {selectedFile ? selectedFile.name : "Arraste e solte ou clique para selecionar"}
-              </p>
-              <p className="text-xs text-muted-foreground mt-1">PDF, DOCX, XLSX, PNG, JPG (Max 50MB)</p>
-            </div>
+            </section>
           </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => {
-              setIsUploadOpen(false);
-              setSelectedFile(null);
-            }}>Cancelar</Button>
-            <Button onClick={() => {
-              if (!currentFolder) {
-                toast.error("Nenhum arquivo pode ser carregado para uma pasta raiz. É obrigatório escolher uma pasta.");
-                return;
-              }
 
-              if (!uploadData.title || !selectedFile) {
-                toast.error("Por favor, preencha o título e selecione um arquivo.");
-                return;
-              }
-              
-              if (!organization?.id) {
-                toast.error("Organização não identificada. Por favor, recarregue a página.");
-                return;
-              }
-
-              uploadDocument({
-                doc: {
-                  title: uploadData.title,
-                  document_type_id: uploadData.document_type_id || null,
-                  expiration_date: uploadData.expiration_date || null,
-                  document_creation_date: uploadData.document_creation_date || null,
-                  page_count: uploadData.page_count,
-                  description: uploadData.description || null,
-                  organization_id: organization.id,
-                  folder_id: currentFolder,
-                  past_id: currentFolder,
-                  status: 'active',
-                  tags: uploadData.tags,
-                   keywords: [],
-                   sigilo: uploadData.sigilo,
-                },
-                file: selectedFile
-              }, {
-                onSuccess: () => {
-                  setIsUploadOpen(false);
-                  setUploadData({ 
-                    title: "", 
-                    document_type_id: "", 
-                    page_count: 1, 
-                    description: "",
-                    expiration_date: "",
-                    document_creation_date: "",
-                    tags: [],
-                    sigilo: "PUBLICO",
-                  });
-                  setSelectedFile(null);
-                }
-              });
-            }} disabled={isUploading || !selectedFile || !uploadData.title || !currentFolder}>
-              {isUploading ? <Loader2 className="animate-spin mr-2 h-4 w-4" /> : null}
-              {isUploading ? "Enviando..." : "Enviar Documento"}
+          <DialogFooter className="p-6 pt-2 border-t bg-muted/10">
+            <Button variant="outline" onClick={() => setIsUploadOpen(false)}>
+              Fechar
             </Button>
           </DialogFooter>
         </DialogContent>
