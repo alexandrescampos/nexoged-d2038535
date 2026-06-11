@@ -1,0 +1,1 @@
+UPDATE public.system_settings SET value = '["application/pdf","application/vnd.openxmlformats-officedocument.wordprocessingml.document","application/vnd.openxmlformats-officedocument.spreadsheetml.sheet","application/vnd.ms-excel","text/csv","text/plain","image/png","image/jpeg","image/webp","image/gif","image/bmp","image/tiff"]' WHERE key = 'ocr_allowed_mime_types';
