@@ -183,11 +183,17 @@ async function processDocument(documentId: string, versionId: string | null) {
     if (dlErr || !file) throw new Error("Falha ao baixar arquivo: " + (dlErr?.message || "desconhecido"));
 
     const buffer = await file.arrayBuffer();
-    const mime = (version.mime_type || "").toLowerCase();
+    const rawMime = (version.mime_type || "").toLowerCase();
     const fname = (version.file_name || "").toLowerCase();
+    const mime = inferMime(fname, rawMime);
+
+    const allowed = await getAllowedMimes(supa);
+    if (mime && !allowed.includes(mime)) {
+      throw new Error(`Tipo de arquivo "${mime}" não permitido pela whitelist de OCR`);
+    }
 
     let pages: string[] = [];
-    if (mime.includes("pdf") || fname.endsWith(".pdf")) {
+    if (mime === "application/pdf" || fname.endsWith(".pdf")) {
       try {
         pages = await extractPdfPages(buffer);
         const totalChars = pages.reduce((s, p) => s + (p?.length || 0), 0);
@@ -200,11 +206,12 @@ async function processDocument(documentId: string, versionId: string | null) {
       }
     } else if (mime.includes("word") || fname.endsWith(".docx")) {
       pages = await extractDocx(buffer);
-    } else if (mime.startsWith("image/") || /\.(png|jpe?g|tiff?)$/i.test(fname)) {
-      pages = await extractImageWithOCR(buffer, mime || "image/png");
+    } else if (mime.startsWith("image/")) {
+      pages = await extractImageWithOCR(buffer, mime);
     } else {
       pages = ["[Tipo de arquivo não suportado para OCR]"];
     }
+
 
     const fullText = pages.join("\n\n");
 
