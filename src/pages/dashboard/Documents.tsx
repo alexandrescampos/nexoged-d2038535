@@ -1208,6 +1208,55 @@ export default function DocumentsPage() {
                 Metadados Padrão (Opcional)
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-muted/30 p-4 rounded-lg border border-border/50">
+                {!currentFolder && (
+                  <div className="md:col-span-2 grid gap-2">
+                    <Label>Pasta de Destino <span className="text-destructive">*</span></Label>
+                    <Popover open={isFolderSelectOpen} onOpenChange={setIsFolderSelectOpen}>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          role="combobox"
+                          aria-expanded={isFolderSelectOpen}
+                          className="w-full justify-between bg-background"
+                        >
+                          {selectedUploadFolderId
+                            ? sortedOrgFolders.find((folder) => folder.past_id === selectedUploadFolderId)?.past_nm_pasta
+                            : "Selecione uma pasta..."}
+                          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
+                        <Command>
+                          <CommandInput placeholder="Buscar pasta..." />
+                          <CommandList>
+                            <CommandEmpty>Nenhuma pasta encontrada.</CommandEmpty>
+                            <CommandGroup>
+                              {sortedOrgFolders.map((folder) => (
+                                <CommandItem
+                                  key={folder.past_id}
+                                  value={folder.past_nm_pasta}
+                                  onSelect={() => {
+                                    setSelectedUploadUploadFolderId(folder.past_id);
+                                    setIsFolderSelectOpen(false);
+                                  }}
+                                >
+                                  <Check
+                                    className={cn(
+                                      "mr-2 h-4 w-4",
+                                      selectedUploadFolderId === folder.past_id ? "opacity-100" : "opacity-0"
+                                    )}
+                                  />
+                                  {folder.past_nm_pasta}
+                                </CommandItem>
+                              ))}
+                            </CommandGroup>
+                          </CommandList>
+                        </Command>
+                      </PopoverContent>
+                    </Popover>
+                  </div>
+                )}
+
                 <div className="grid gap-2">
                   <Label htmlFor="type">Tipo Documental</Label>
                   <Select 
