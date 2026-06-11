@@ -51,6 +51,7 @@ import {
   Share2,
   FolderTree,
   List as ListIcon,
+  Cloud,
 } from "lucide-react";
 import { TabsProvider, useTabs } from "@/contexts/TabsContext";
 import { TabsBar } from "@/components/TabsBar";
