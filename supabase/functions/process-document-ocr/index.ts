@@ -11,9 +11,40 @@ const corsHeaders = {
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
 
 function admin() {
   return createClient(SUPABASE_URL, SERVICE_KEY, { auth: { persistSession: false } });
+}
+
+const DEFAULT_ALLOWED_MIMES = [
+  "application/pdf",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  "image/png", "image/jpeg", "image/webp", "image/gif", "image/bmp", "image/tiff",
+];
+
+async function getAllowedMimes(supa: any): Promise<string[]> {
+  try {
+    const { data } = await supa.from("system_settings").select("value").eq("key", "ocr_allowed_mime_types").maybeSingle();
+    if (data?.value) {
+      const parsed = JSON.parse(data.value);
+      if (Array.isArray(parsed) && parsed.length) return parsed.map((s: string) => s.toLowerCase());
+    }
+  } catch (e) { console.error("Erro lendo whitelist:", e); }
+  return DEFAULT_ALLOWED_MIMES;
+}
+
+function inferMime(fname: string, mime: string): string {
+  if (mime) return mime.toLowerCase();
+  const ext = fname.split(".").pop()?.toLowerCase() || "";
+  const map: Record<string, string> = {
+    pdf: "application/pdf",
+    docx: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    png: "image/png", jpg: "image/jpeg", jpeg: "image/jpeg", webp: "image/webp",
+    gif: "image/gif", bmp: "image/bmp", tif: "image/tiff", tiff: "image/tiff",
+    heic: "image/heic", heif: "image/heif",
+  };
+  return map[ext] || "";
 }
 
 async function extractPdfPages(buffer: ArrayBuffer): Promise<string[]> {
