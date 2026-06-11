@@ -19,14 +19,14 @@ function admin() {
 async function extractPdfPages(buffer: ArrayBuffer): Promise<string[]> {
   const { extractText, getDocumentProxy } = await import("https://esm.sh/unpdf@0.12.1");
   const pdf = await getDocumentProxy(new Uint8Array(buffer));
-  const { totalPages } = await extractText(pdf, { mergePages: false });
-  const pages: string[] = [];
-  for (let i = 1; i <= totalPages; i++) {
-    const { text } = await extractText(pdf, { mergePages: false, page: i } as any);
-    pages.push(Array.isArray(text) ? text.join("\n") : String(text || ""));
+  const { text } = await extractText(pdf, { mergePages: false });
+  // Quando mergePages:false, `text` é um array (uma string por página)
+  if (Array.isArray(text)) {
+    return text.map((p) => String(p || ""));
   }
-  return pages;
+  return [String(text || "")];
 }
+
 
 async function extractDocx(buffer: ArrayBuffer): Promise<string[]> {
   const mammoth = await import("https://esm.sh/mammoth@1.8.0");
