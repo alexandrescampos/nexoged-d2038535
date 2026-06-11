@@ -185,6 +185,7 @@ export interface Document {
   versions_count?: number;
   creator_name?: string;
   document_type_data?: DocumentType;
+  custom_field_values?: CustomFieldValue[];
 }
 
 export interface DocumentVersion {
