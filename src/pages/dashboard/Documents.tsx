@@ -331,7 +331,18 @@ export default function DocumentsPage() {
     if (newParams.get("folder") !== searchParams.get("folder")) {
       setSearchParams(newParams, { replace: true });
     }
-  }, [currentFolder, setSearchParams, searchParams]);
+  }, [currentFolder]);
+
+  // Handle URL changes (like back button)
+  useEffect(() => {
+    const urlFolder = searchParams.get("folder");
+    if (urlFolder !== currentFolder) {
+      setCurrentFolder(urlFolder);
+      // We reset the path here, it will be reconstructed by the other effect
+      setFolderPath([]);
+    }
+  }, [searchParams, currentFolder]);
+
 
   // Reconstruct folder path if we have a currentFolder but no path (e.g., initial load or refresh)
   useEffect(() => {
