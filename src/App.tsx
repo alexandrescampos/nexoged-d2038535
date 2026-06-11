@@ -59,6 +59,7 @@ import AboutPage from "./pages/dashboard/About";
 import ListsPage from "./pages/dashboard/Lists";
 import CustomFieldsPage from "./pages/dashboard/CustomFields";
 import SearchPage from "./pages/dashboard/Search";
+import GoogleDriveIntegrationPage from "./pages/dashboard/GoogleDriveIntegration";
 import SuperAdminAboutPage from "./pages/super-admin/About";
 
 
@@ -186,6 +187,7 @@ const App = () => {
               <Route path="terms" element={<TermsPage />} />
               <Route path="privacy" element={<PrivacyPage />} />
               <Route path="about" element={<AboutPage />} />
+              <Route path="integrations/google-drive" element={<AdminOnlyRoute><GoogleDriveIntegrationPage /></AdminOnlyRoute>} />
             </Route>
 
             {/* Catch-all */}

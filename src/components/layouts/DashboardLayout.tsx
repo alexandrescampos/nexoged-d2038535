@@ -51,6 +51,7 @@ import {
   Share2,
   FolderTree,
   List as ListIcon,
+  Cloud,
 } from "lucide-react";
 import { TabsProvider, useTabs } from "@/contexts/TabsContext";
 import { TabsBar } from "@/components/TabsBar";
@@ -103,6 +104,7 @@ const menuGroups: MenuGroup[] = [
     label: "Configurações",
     items: [
       { title: "Configurações", url: "/dashboard/settings", icon: Settings, hideForUser: true },
+      { title: "Google Drive", url: "/dashboard/integrations/google-drive", icon: Cloud, adminOnly: true },
       { title: "Sobre", url: "/dashboard/about", icon: Info },
     ],
   },
