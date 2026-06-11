@@ -55,7 +55,8 @@ export function MultiFileUploader({
     'text/xml': ['.xml']
   },
   requiresCreationDate = false,
-  requiresExpirationDate = false
+  requiresExpirationDate = false,
+  associatedFields = []
 }: MultiFileUploaderProps) {
   const [files, setFiles] = useState<FileWithProgress[]>([]);
 
@@ -78,7 +79,8 @@ export function MultiFileUploader({
       status: 'pending' as const,
       description: '',
       creationDate: undefined,
-      expirationDate: undefined
+      expirationDate: undefined,
+      customFields: {}
     }));
 
     setFiles(prev => [...prev, ...newFiles]);
@@ -157,7 +159,8 @@ export function MultiFileUploader({
         file: f.file,
         description: f.description,
         creationDate: f.creationDate,
-        expirationDate: f.expirationDate
+        expirationDate: f.expirationDate,
+        customFields: f.customFields
       })));
       
       setFiles(prev => prev.map(f => 
@@ -324,6 +327,20 @@ export function MultiFileUploader({
                           </div>
                         )}
                       </div>
+                    </div>
+                  )}
+
+                  {(fileData.status === 'pending' || fileData.status === 'error') && associatedFields.length > 0 && (
+                    <div className="border-t pt-3 mt-1">
+                      <p className="text-[10px] font-semibold uppercase text-muted-foreground mb-2">Campos Específicos do Tipo de Documento</p>
+                      <CustomFieldsForm 
+                        fields={associatedFields} 
+                        values={fileData.customFields} 
+                        onChange={(fieldId, value) => {
+                          const newCustomFields = { ...fileData.customFields, [fieldId]: value };
+                          updateFileMeta(fileData.id, { customFields: newCustomFields });
+                        }}
+                      />
                     </div>
                   )}
                 </div>

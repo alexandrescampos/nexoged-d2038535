@@ -48,6 +48,7 @@ import {
   Tag as TagIcon,
   ChevronLeft
 } from "lucide-react";
+import { CustomFieldsForm } from "@/components/dashboard/ged/CustomFieldsForm";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -190,6 +191,7 @@ export default function DocumentsPage() {
   const [isUploadOpen, setIsUploadOpen] = useState(false);
   const [documentToDelete, setDocumentToDelete] = useState<string | null>(null);
   const [documentToEdit, setDocumentToEdit] = useState<any | null>(null);
+  const [editCustomFields, setEditCustomFields] = useState<Record<string, any>>({});
   const [uploadData, setUploadData] = useState({
     title: "",
     document_type_id: "",
@@ -1258,9 +1260,21 @@ export default function DocumentsPage() {
                       <SelectItem key={type.id} value={type.id}>{type.name}</SelectItem>
                     ))}
                   </SelectContent>
-                </Select>
+              </Select>
+            </div>
+
+            {editData.document_type_id && documentTypes.find(t => t.id === editData.document_type_id)?.associated_fields?.length > 0 && (
+              <div className="border-t pt-4">
+                <Label className="text-sm font-semibold mb-2 block uppercase text-muted-foreground">Campos Personalizados</Label>
+                <CustomFieldsForm 
+                  fields={documentTypes.find(t => t.id === editData.document_type_id)?.associated_fields || []}
+                  values={editCustomFields}
+                  onChange={(fieldId, value) => setEditCustomFields(prev => ({ ...prev, [fieldId]: value }))}
+                />
               </div>
-              <div className="grid gap-2">
+            )}
+
+            <div className="grid gap-2">
                 <Label htmlFor="edit-pages">Número de Páginas</Label>
                 <div className="flex items-center gap-2">
                   <Input 
