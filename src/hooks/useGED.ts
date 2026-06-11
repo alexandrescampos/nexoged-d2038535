@@ -50,7 +50,7 @@ export function useGED(folderId: string | null = null, filterFavorites: boolean 
 
   // Mutações
   const uploadMutation = useMutation({
-    mutationFn: async ({ doc, file }: { doc: any, file: File }) => {
+    mutationFn: async ({ doc, file, customFields }: { doc: any, file: File, customFields?: Record<string, any> }) => {
       const optimizedFile = await documentProcessor.optimizeDocument(file);
       
       // Auto-calculate page count if not provided or to ensure accuracy
@@ -60,7 +60,7 @@ export function useGED(folderId: string | null = null, filterFavorites: boolean 
         page_count: actualPageCount
       };
 
-      return gedRepository.createDocument(updatedDoc, optimizedFile as File);
+      return gedRepository.createDocument(updatedDoc, optimizedFile as File, undefined, customFields);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["ged-documents"] });
@@ -128,7 +128,7 @@ export function useGED(folderId: string | null = null, filterFavorites: boolean 
   });
 
   const updateDocumentMutation = useMutation({
-    mutationFn: ({ id, updates }: { id: string, updates: any }) => gedRepository.updateDocument(id, updates),
+    mutationFn: ({ id, updates, customFields }: { id: string, updates: any, customFields?: Record<string, any> }) => gedRepository.updateDocument(id, updates, customFields),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["ged-documents"] });
       queryClient.invalidateQueries({ queryKey: ["ged-tags"] });
@@ -146,7 +146,7 @@ export function useGED(folderId: string | null = null, filterFavorites: boolean 
     folders,
     isLoading: isLoadingDocs || isLoadingFolders,
     uploadDocument: uploadMutation.mutate,
-    uploadDocuments: async (files: { doc: any, file: File }[]) => {
+    uploadDocuments: async (files: { doc: any, file: File, customFields?: Record<string, any> }[]) => {
       const results = [];
       for (const item of files) {
         try {

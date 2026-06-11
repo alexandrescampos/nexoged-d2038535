@@ -48,6 +48,7 @@ import {
   Tag as TagIcon,
   ChevronLeft
 } from "lucide-react";
+import { CustomFieldsForm } from "@/components/dashboard/ged/CustomFieldsForm";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -190,6 +191,7 @@ export default function DocumentsPage() {
   const [isUploadOpen, setIsUploadOpen] = useState(false);
   const [documentToDelete, setDocumentToDelete] = useState<string | null>(null);
   const [documentToEdit, setDocumentToEdit] = useState<any | null>(null);
+  const [editCustomFields, setEditCustomFields] = useState<Record<string, any>>({});
   const [uploadData, setUploadData] = useState({
     title: "",
     document_type_id: "",
@@ -745,6 +747,26 @@ export default function DocumentsPage() {
                         <div className="flex items-center gap-2 min-w-0">
                           <span className="truncate">{doc.title}</span>
                           {doc.is_favorite && <Star className="h-3 w-3 fill-yellow-400 text-yellow-400 flex-shrink-0" />}
+                          {doc.custom_field_values?.length > 0 && (
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <AlertCircle className="h-3 w-3 text-primary flex-shrink-0 cursor-help" />
+                                </TooltipTrigger>
+                                <TooltipContent className="p-3">
+                                  <p className="text-xs font-bold mb-2 uppercase border-b pb-1">Campos Adicionais</p>
+                                  <div className="space-y-1.5">
+                                    {doc.custom_field_values.map((cv: any) => (
+                                      <div key={cv.id} className="text-[10px]">
+                                        <span className="font-semibold">{cv.field_data?.name || 'Campo'}: </span>
+                                        <span className="text-muted-foreground">{cv.value || '—'}</span>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+                          )}
                         </div>
                       </TableCell>
                       <TableCell>
@@ -1186,6 +1208,7 @@ export default function DocumentsPage() {
                 isUploading={isUploading}
                 requiresCreationDate={!!(uploadData.document_type_id && documentTypes.find(t => t.id === uploadData.document_type_id)?.requires_creation_date)}
                 requiresExpirationDate={!!(uploadData.document_type_id && documentTypes.find(t => t.id === uploadData.document_type_id)?.requires_expiration_date)}
+                associatedFields={uploadData.document_type_id ? documentTypes.find(t => t.id === uploadData.document_type_id)?.associated_fields : []}
                 onUpload={async (items) => {
                   if (!currentFolder || !organization?.id) {
                     toast.error("Pasta ou organização não selecionada.");
@@ -1208,7 +1231,8 @@ export default function DocumentsPage() {
                       keywords: [],
                       sigilo: uploadData.sigilo,
                     },
-                    file: item.file
+                    file: item.file,
+                    customFields: item.customFields
                   }));
 
                   await uploadDocuments(uploadItems);
@@ -1258,9 +1282,21 @@ export default function DocumentsPage() {
                       <SelectItem key={type.id} value={type.id}>{type.name}</SelectItem>
                     ))}
                   </SelectContent>
-                </Select>
+              </Select>
+            </div>
+
+            {editData.document_type_id && documentTypes.find(t => t.id === editData.document_type_id)?.associated_fields?.length > 0 && (
+              <div className="border-t pt-4">
+                <Label className="text-sm font-semibold mb-2 block uppercase text-muted-foreground">Campos Personalizados</Label>
+                <CustomFieldsForm 
+                  fields={documentTypes.find(t => t.id === editData.document_type_id)?.associated_fields || []}
+                  values={editCustomFields}
+                  onChange={(fieldId, value) => setEditCustomFields(prev => ({ ...prev, [fieldId]: value }))}
+                />
               </div>
-              <div className="grid gap-2">
+            )}
+
+            <div className="grid gap-2">
                 <Label htmlFor="edit-pages">Número de Páginas</Label>
                 <div className="flex items-center gap-2">
                   <Input 
@@ -1403,7 +1439,8 @@ export default function DocumentsPage() {
                     ...editData,
                     document_creation_date: editData.document_creation_date || null,
                     expiration_date: editData.expiration_date || null,
-                  } as any
+                  } as any,
+                  customFields: editCustomFields
                 }, {
                   onSuccess: () => setDocumentToEdit(null)
                 });

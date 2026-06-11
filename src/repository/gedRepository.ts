@@ -30,7 +30,8 @@ export const gedRepository = {
       .select(`
         *,
         versions:ged_document_versions(mime_type, version_number, file_name, file_size, created_by),
-        document_type_data:ged_document_types(*)
+        document_type_data:ged_document_types(*, associated_fields:ged_document_type_custom_fields(custom_field:custom_fields(*))),
+        custom_field_values:ged_document_custom_field_values(*, field_data:custom_fields(*))
       `, { count: "exact" });
     
     if (params.organizationId) {
@@ -150,7 +151,12 @@ export const gedRepository = {
         has_file: versions.length > 0,
         file_name: latestVersion?.file_name,
         file_size: latestVersion?.file_size,
-        mime_type: latestVersion?.mime_type || 'application/octet-stream'
+        mime_type: latestVersion?.mime_type || 'application/octet-stream',
+        custom_field_values: doc.custom_field_values || [],
+        document_type_data: doc.document_type_data ? {
+          ...doc.document_type_data,
+          associated_fields: (doc.document_type_data as any).associated_fields?.map((af: any) => af.custom_field)
+        } : null
       };
     });
 
@@ -230,7 +236,7 @@ export const gedRepository = {
     return { data: formattedData as unknown as Document[], count: formattedData.length };
   },
 
-  async createDocument(doc: any, file?: File, onProgress?: (p: number) => void) {
+  async createDocument(doc: any, file?: File, onProgress?: (p: number) => void, customFields?: Record<string, any>) {
     const { data: { user } } = await supabase.auth.getUser();
     
     const { data: document, error: docError } = await supabase
@@ -247,6 +253,21 @@ export const gedRepository = {
 
     if (docError) throw docError;
 
+    if (customFields && document) {
+      const values = Object.entries(customFields).map(([fieldId, value]) => ({
+        document_id: document.id,
+        custom_field_id: fieldId,
+        value: value?.toString()
+      }));
+      
+      if (values.length > 0) {
+        const { error: valuesError } = await supabase
+          .from("ged_document_custom_field_values")
+          .insert(values);
+        if (valuesError) console.error("Erro ao salvar campos customizados:", valuesError);
+      }
+    }
+
     if (file && document) {
       try {
         await this.uploadVersion(document.id, 1, file, onProgress);
@@ -262,7 +283,7 @@ export const gedRepository = {
     return document;
   },
 
-  async updateDocument(id: string, updates: any) {
+  async updateDocument(id: string, updates: any, customFields?: Record<string, any>) {
     const { data, error } = await supabase
       .from("ged_documents")
       .update({
@@ -274,6 +295,27 @@ export const gedRepository = {
       .single();
 
     if (error) throw error;
+
+    if (customFields) {
+      // Refresh values
+      await supabase
+        .from("ged_document_custom_field_values")
+        .delete()
+        .eq("document_id", id);
+
+      const values = Object.entries(customFields).map(([fieldId, value]) => ({
+        document_id: id,
+        custom_field_id: fieldId,
+        value: value?.toString()
+      }));
+      
+      if (values.length > 0) {
+        const { error: valuesError } = await supabase
+          .from("ged_document_custom_field_values")
+          .insert(values);
+        if (valuesError) console.error("Erro ao atualizar campos customizados:", valuesError);
+      }
+    }
     return data;
   },
 

@@ -13,6 +13,8 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Calendar } from '@/components/ui/calendar';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { CustomFieldsForm } from './CustomFieldsForm';
+import { CustomField } from '@/types/ged';
 
 interface FileWithProgress {
   file: File;
@@ -23,15 +25,17 @@ interface FileWithProgress {
   description: string;
   creationDate?: string;
   expirationDate?: string;
+  customFields: Record<string, any>;
 }
 
 interface MultiFileUploaderProps {
-  onUpload: (files: { file: File; description: string; creationDate?: string; expirationDate?: string }[]) => Promise<void>;
+  onUpload: (files: { file: File; description: string; creationDate?: string; expirationDate?: string; customFields?: Record<string, any> }[]) => Promise<void>;
   isUploading: boolean;
   maxSize?: number; // in MB
   acceptedFileTypes?: Record<string, string[]>;
   requiresCreationDate?: boolean;
   requiresExpirationDate?: boolean;
+  associatedFields?: CustomField[];
 }
 
 export function MultiFileUploader({ 
@@ -55,7 +59,8 @@ export function MultiFileUploader({
     'text/xml': ['.xml']
   },
   requiresCreationDate = false,
-  requiresExpirationDate = false
+  requiresExpirationDate = false,
+  associatedFields = []
 }: MultiFileUploaderProps) {
   const [files, setFiles] = useState<FileWithProgress[]>([]);
 
@@ -78,7 +83,8 @@ export function MultiFileUploader({
       status: 'pending' as const,
       description: '',
       creationDate: undefined,
-      expirationDate: undefined
+      expirationDate: undefined,
+      customFields: {}
     }));
 
     setFiles(prev => [...prev, ...newFiles]);
@@ -157,7 +163,8 @@ export function MultiFileUploader({
         file: f.file,
         description: f.description,
         creationDate: f.creationDate,
-        expirationDate: f.expirationDate
+        expirationDate: f.expirationDate,
+        customFields: f.customFields
       })));
       
       setFiles(prev => prev.map(f => 
@@ -267,6 +274,7 @@ export function MultiFileUploader({
                   </div>
 
                   {(fileData.status === 'pending' || fileData.status === 'error') && (
+                    <>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
                       <div className="grid gap-1.5">
                         <Label htmlFor={`desc-${fileData.id}`} className="text-xs">Descrição</Label>
@@ -325,6 +333,20 @@ export function MultiFileUploader({
                         )}
                       </div>
                     </div>
+                    {associatedFields.length > 0 && (
+                      <div className="border-t pt-3 mt-1">
+                        <p className="text-[10px] font-semibold uppercase text-muted-foreground mb-2">Campos Específicos do Tipo de Documento</p>
+                        <CustomFieldsForm 
+                          fields={associatedFields} 
+                          values={fileData.customFields} 
+                          onChange={(fieldId, value) => {
+                            const newCustomFields = { ...fileData.customFields, [fieldId]: value };
+                            updateFileMeta(fileData.id, { customFields: newCustomFields });
+                          }}
+                        />
+                      </div>
+                    )}
+                    </>
                   )}
                 </div>
               ))}
