@@ -31,6 +31,19 @@ async function getAllowedMimes(supa: any): Promise<string[]> {
   return DEFAULT_ALLOWED_MIMES;
 }
 
+function normalizeText(text: string): string {
+  if (!text) return "";
+  return text
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "") // Remove acentos
+    .replace(/[\x00-\x1F\x7F-\x9F]/g, " ") // Remove caracteres de controle
+    .replace(/[\t\r\n]/g, " ") // Remove tabs e quebras de linha
+    .replace(/[^a-z0-9 ]/g, " ") // Remove caracteres especiais
+    .replace(/\s+/g, " ") // Remove espaços duplicados
+    .trim();
+}
+
 async function extractPdfPages(buffer: ArrayBuffer): Promise<string[]> {
   const { getDocumentProxy } = await import("https://esm.sh/unpdf@0.12.1");
   const pdf: any = await getDocumentProxy(new Uint8Array(buffer));
@@ -275,7 +288,9 @@ async function processDocument(documentId: string, versionId: string | null) {
 
     // Atualiza o registro de OCR com o resultado final
     const { data: ocrRow, error: ocrErr } = await supa.from("documento_ocr").update({
-      texto_extraido: fullText,
+      texto_extraido: fullText, // Mantido por retrocompatibilidade se necessário
+      texto_original: fullText,
+      texto_normalizado: normalizeText(fullText),
       total_paginas: pages.length,
       status: "processado",
       data_processamento: new Date().toISOString(),
@@ -291,7 +306,9 @@ async function processDocument(documentId: string, versionId: string | null) {
         documento_id: documentId,
         organization_id: orgId,
         numero_pagina: idx + 1,
-        texto_pagina: texto,
+        texto_pagina: texto, // Mantido por retrocompatibilidade
+        texto_original: texto,
+        texto_normalizado: normalizeText(texto),
       }));
       await supa.from("documento_ocr_pagina").insert(rows);
     }
