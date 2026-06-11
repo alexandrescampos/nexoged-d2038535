@@ -156,6 +156,14 @@ const App = () => {
                   </PermissionProtectedRoute>
                 } 
               />
+              <Route 
+                path="search" 
+                element={
+                  <PermissionProtectedRoute permission="visualizar_documento">
+                    <SearchPage />
+                  </PermissionProtectedRoute>
+                } 
+              />
               
 
               <Route path="users" element={<AdminOnlyRoute><OrgUsersPage /></AdminOnlyRoute>} />
