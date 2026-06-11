@@ -1,12 +1,18 @@
 import React, { useState, useCallback } from 'react';
 import { useDropzone, FileRejection } from 'react-dropzone';
-import { Upload, X, FileText, CheckCircle2, AlertCircle, Loader2, FileImage, FileSpreadsheet, FileCode } from 'lucide-react';
+import { Upload, X, FileText, CheckCircle2, AlertCircle, Loader2, FileImage, FileSpreadsheet, FileCode, CalendarIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Card } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/calendar';
+import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 
 interface FileWithProgress {
   file: File;
@@ -14,13 +20,18 @@ interface FileWithProgress {
   progress: number;
   status: 'pending' | 'uploading' | 'completed' | 'error';
   error?: string;
+  description: string;
+  creationDate?: string;
+  expirationDate?: string;
 }
 
 interface MultiFileUploaderProps {
-  onUpload: (files: File[]) => Promise<void>;
+  onUpload: (files: { file: File; description: string; creationDate?: string; expirationDate?: string }[]) => Promise<void>;
   isUploading: boolean;
   maxSize?: number; // in MB
   acceptedFileTypes?: Record<string, string[]>;
+  requiresCreationDate?: boolean;
+  requiresExpirationDate?: boolean;
 }
 
 export function MultiFileUploader({ 
@@ -34,7 +45,9 @@ export function MultiFileUploader({
     'image/jpeg': ['.jpg', '.jpeg'],
     'image/png': ['.png'],
     'text/plain': ['.txt']
-  }
+  },
+  requiresCreationDate = false,
+  requiresExpirationDate = false
 }: MultiFileUploaderProps) {
   const [files, setFiles] = useState<FileWithProgress[]>([]);
 
@@ -43,7 +56,10 @@ export function MultiFileUploader({
       file,
       id: Math.random().toString(36).substring(7),
       progress: 0,
-      status: 'pending' as const
+      status: 'pending' as const,
+      description: '',
+      creationDate: undefined,
+      expirationDate: undefined
     }));
 
     setFiles(prev => [...prev, ...newFiles]);
@@ -70,32 +86,33 @@ export function MultiFileUploader({
     setFiles(prev => prev.filter(f => f.id !== id));
   };
 
-  const handleUpload = async () => {
-    if (files.length === 0) return;
-    
-    // Pass only files that are not already completed or uploading
-    const filesToUpload = files
-      .filter(f => f.status === 'pending' || f.status === 'error')
-      .map(f => f.file);
-    
-    if (filesToUpload.length === 0) return;
+  const updateFileMeta = (id: string, updates: Partial<FileWithProgress>) => {
+    setFiles(prev => prev.map(f => f.id === id ? { ...f, ...updates } : f));
+  };
 
+  const handleUpload = async () => {
+    const pendingFiles = files.filter(f => f.status === 'pending' || f.status === 'error');
+    if (pendingFiles.length === 0) return;
+    
     try {
-      // We handle the status update here while the parent handles the actual upload logic
       setFiles(prev => prev.map(f => 
         (f.status === 'pending' || f.status === 'error') 
           ? { ...f, status: 'uploading' } 
           : f
       ));
 
-      await onUpload(filesToUpload);
+      await onUpload(pendingFiles.map(f => ({
+        file: f.file,
+        description: f.description,
+        creationDate: f.creationDate,
+        expirationDate: f.expirationDate
+      })));
       
-      // Update all to completed on success (simplified since we don't have per-file progress callback from parent yet)
       setFiles(prev => prev.map(f => 
         f.status === 'uploading' ? { ...f, status: 'completed', progress: 100 } : f
       ));
       
-      toast.success(`${filesToUpload.length} arquivo(s) enviados com sucesso!`);
+      toast.success(`${pendingFiles.length} arquivo(s) enviados com sucesso!`);
     } catch (error: any) {
       setFiles(prev => prev.map(f => 
         f.status === 'uploading' ? { ...f, status: 'error', error: error.message } : f
@@ -135,64 +152,127 @@ export function MultiFileUploader({
 
       {files.length > 0 && (
         <Card className="overflow-hidden border-muted-foreground/20">
-          <ScrollArea className="max-h-[300px]">
-            <div className="p-4 space-y-3">
+          <ScrollArea className="max-h-[450px]">
+            <div className="p-4 space-y-4">
               {files.map((fileData) => (
                 <div 
                   key={fileData.id} 
-                  className="flex items-center gap-3 p-3 rounded-lg border bg-card/50 hover:bg-card transition-colors group"
+                  className="flex flex-col gap-3 p-4 rounded-lg border bg-card/50 hover:bg-card transition-colors group"
                 >
-                  <div className="flex-shrink-0">
-                    {getFileIcon(fileData.file.type)}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between mb-1">
-                      <p className="text-sm font-medium truncate pr-4">
-                        {fileData.file.name}
-                      </p>
-                      <span className="text-[10px] text-muted-foreground">
-                        {(fileData.file.size / 1024 / 1024).toFixed(2)} MB
-                      </span>
+                  <div className="flex items-center gap-3">
+                    <div className="flex-shrink-0">
+                      {getFileIcon(fileData.file.type)}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between mb-1">
+                        <p className="text-sm font-medium truncate pr-4">
+                          {fileData.file.name}
+                        </p>
+                        <span className="text-[10px] text-muted-foreground">
+                          {(fileData.file.size / 1024 / 1024).toFixed(2)} MB
+                        </span>
+                      </div>
+                      
+                      {fileData.status === 'uploading' && (
+                        <div className="space-y-1">
+                          <Progress value={fileData.progress} className="h-1.5" />
+                          <p className="text-[10px] text-muted-foreground animate-pulse">Enviando...</p>
+                        </div>
+                      )}
+
+                      {fileData.status === 'completed' && (
+                        <div className="flex items-center gap-1 text-green-600">
+                          <CheckCircle2 className="h-3 w-3" />
+                          <span className="text-[10px] font-medium">Concluído</span>
+                        </div>
+                      )}
+
+                      {fileData.status === 'error' && (
+                        <div className="flex items-center gap-1 text-destructive">
+                          <AlertCircle className="h-3 w-3" />
+                          <span className="text-[10px] font-medium">Erro: {fileData.error || 'Falha no upload'}</span>
+                        </div>
+                      )}
+
+                      {fileData.status === 'pending' && (
+                        <span className="text-[10px] text-muted-foreground">Aguardando início...</span>
+                      )}
                     </div>
                     
+                    {fileData.status !== 'uploading' && (
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity"
+                        onClick={() => removeFile(fileData.id)}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    )}
                     {fileData.status === 'uploading' && (
-                      <div className="space-y-1">
-                        <Progress value={fileData.progress} className="h-1.5" />
-                        <p className="text-[10px] text-muted-foreground animate-pulse">Enviando...</p>
-                      </div>
-                    )}
-
-                    {fileData.status === 'completed' && (
-                      <div className="flex items-center gap-1 text-green-600">
-                        <CheckCircle2 className="h-3 w-3" />
-                        <span className="text-[10px] font-medium">Concluído</span>
-                      </div>
-                    )}
-
-                    {fileData.status === 'error' && (
-                      <div className="flex items-center gap-1 text-destructive">
-                        <AlertCircle className="h-3 w-3" />
-                        <span className="text-[10px] font-medium">Erro: {fileData.error || 'Falha no upload'}</span>
-                      </div>
-                    )}
-
-                    {fileData.status === 'pending' && (
-                      <span className="text-[10px] text-muted-foreground">Aguardando início...</span>
+                      <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
                     )}
                   </div>
-                  
-                  {fileData.status !== 'uploading' && (
-                    <Button 
-                      variant="ghost" 
-                      size="icon" 
-                      className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity"
-                      onClick={() => removeFile(fileData.id)}
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
-                  )}
-                  {fileData.status === 'uploading' && (
-                    <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+
+                  {(fileData.status === 'pending' || fileData.status === 'error') && (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
+                      <div className="grid gap-1.5">
+                        <Label htmlFor={`desc-${fileData.id}`} className="text-xs">Descrição</Label>
+                        <Input 
+                          id={`desc-${fileData.id}`}
+                          placeholder="Descrição breve..."
+                          className="h-8 text-xs"
+                          value={fileData.description}
+                          onChange={(e) => updateFileMeta(fileData.id, { description: e.target.value })}
+                        />
+                      </div>
+                      
+                      <div className="grid grid-cols-2 gap-2">
+                        {requiresCreationDate && (
+                          <div className="grid gap-1.5">
+                            <Label className="text-xs">Criação</Label>
+                            <Popover>
+                              <PopoverTrigger asChild>
+                                <Button variant="outline" size="sm" className="h-8 text-xs justify-start px-2 font-normal">
+                                  <CalendarIcon className="mr-1 h-3 w-3" />
+                                  {fileData.creationDate ? format(new Date(fileData.creationDate), "dd/MM/yy") : "Data"}
+                                </Button>
+                              </PopoverTrigger>
+                              <PopoverContent className="w-auto p-0">
+                                <Calendar
+                                  mode="single"
+                                  selected={fileData.creationDate ? new Date(fileData.creationDate) : undefined}
+                                  onSelect={(date) => updateFileMeta(fileData.id, { creationDate: date?.toISOString() })}
+                                  locale={ptBR}
+                                />
+                              </PopoverContent>
+                            </Popover>
+                          </div>
+                        )}
+
+                        {requiresExpirationDate && (
+                          <div className="grid gap-1.5">
+                            <Label className="text-xs">Vencimento</Label>
+                            <Popover>
+                              <PopoverTrigger asChild>
+                                <Button variant="outline" size="sm" className="h-8 text-xs justify-start px-2 font-normal">
+                                  <CalendarIcon className="mr-1 h-3 w-3" />
+                                  {fileData.expirationDate ? format(new Date(fileData.expirationDate), "dd/MM/yy") : "Data"}
+                                </Button>
+                              </PopoverTrigger>
+                              <PopoverContent className="w-auto p-0">
+                                <Calendar
+                                  mode="single"
+                                  selected={fileData.expirationDate ? new Date(fileData.expirationDate) : undefined}
+                                  onSelect={(date) => updateFileMeta(fileData.id, { expirationDate: date?.toISOString() })}
+                                  locale={ptBR}
+                                />
+                              </PopoverContent>
+                            </Popover>
+                          </div>
+                        )}
+                      </div>
+                    </div>
                   )}
                 </div>
               ))}
