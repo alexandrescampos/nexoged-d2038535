@@ -103,6 +103,7 @@ const menuGroups: MenuGroup[] = [
     label: "Configurações",
     items: [
       { title: "Configurações", url: "/dashboard/settings", icon: Settings, hideForUser: true },
+      { title: "Google Drive", url: "/dashboard/integrations/google-drive", icon: Cloud, adminOnly: true },
       { title: "Sobre", url: "/dashboard/about", icon: Info },
     ],
   },
