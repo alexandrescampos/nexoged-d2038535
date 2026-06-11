@@ -262,6 +262,17 @@ export default function DocumentsPage() {
 
   const { documentTypes } = useGEDSettings();
   const { organization, user, isSuperAdmin, isOrgAdmin } = useAuth();
+  
+  const { data: allOrganizationFolders = [] } = useQuery({
+    queryKey: ["ged-folders-all", organization?.id],
+    queryFn: () => organization?.id ? gedRepository.getAllFolders(organization.id) : Promise.resolve([]),
+    enabled: !!organization?.id,
+  });
+
+  const sortedOrgFolders = [...allOrganizationFolders].sort((a, b) => 
+    a.past_nm_pasta.localeCompare(b.past_nm_pasta)
+  );
+
   const { moveItem } = useOrganizationStructure();
   const { canUserDownload, canUserDelete, canUserEdit } = useDocumentPermissions();
 
