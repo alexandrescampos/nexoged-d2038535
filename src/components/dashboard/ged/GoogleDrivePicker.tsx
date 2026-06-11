@@ -39,11 +39,14 @@ export function GoogleDrivePicker({ isOpen, onOpenChange, onFileSelect }: Google
   const fetchFiles = async (folderId: string = 'root', searchQuery: string = '') => {
     setLoading(true);
     try {
-      const { data, error } = await supabase.functions.invoke('google-drive-integration', {
-        method: 'GET',
-        query: searchQuery 
+      const queryParams = new URLSearchParams(
+        searchQuery 
           ? { action: 'search', query: searchQuery }
           : { action: 'list', folderId }
+      ).toString();
+
+      const { data, error } = await supabase.functions.invoke(`google-drive-integration?${queryParams}`, {
+        method: 'GET'
       });
 
       if (error) throw error;
