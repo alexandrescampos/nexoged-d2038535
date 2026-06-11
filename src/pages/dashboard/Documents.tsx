@@ -187,16 +187,8 @@ const SIGILO_DESCRIPTIONS: Record<string, string> = {
 export default function DocumentsPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const searchInputRef = useRef<HTMLInputElement>(null);
-  const { organization, user, isSuperAdmin, isOrgAdmin } = useAuth();
-  
-  // Get initial folder from search params or localStorage
-  const storageKey = organization?.id ? `ged_last_folder_${organization.id}` : "ged_last_folder";
-  const initialFolderId = searchParams.get("folder") || localStorage.getItem(storageKey);
-  
-  const [currentFolder, setCurrentFolder] = useState<string | null>(initialFolderId);
+  const [currentFolder, setCurrentFolder] = useState<string | null>(null);
   const [folderPath, setFolderPath] = useState<{ id: string; name: string }[]>([]);
-
-
   const [viewMode, setViewMode] = useState<"grid" | "list">("list");
   const [isUploadOpen, setIsUploadOpen] = useState(false);
   const [documentToDelete, setDocumentToDelete] = useState<string | null>(null);
@@ -255,10 +247,9 @@ export default function DocumentsPage() {
   const folders = isFiltering ? [] : allFolders;
 
   const { documentTypes } = useGEDSettings();
-  const { moveItem, folders: allStructureFolders } = useOrganizationStructure();
+  const { organization, user, isSuperAdmin, isOrgAdmin } = useAuth();
+  const { moveItem } = useOrganizationStructure();
   const { canUserDownload, canUserDelete, canUserEdit } = useDocumentPermissions();
-
-
 
 
 
@@ -319,61 +310,6 @@ export default function DocumentsPage() {
       setSearchParams(searchParams);
     }
   }, [searchParams, setSearchParams]);
-  
-  // Persist current folder to URL and localStorage
-  useEffect(() => {
-    const newParams = new URLSearchParams(searchParams);
-    if (currentFolder) {
-      newParams.set("folder", currentFolder);
-      localStorage.setItem(storageKey, currentFolder);
-    } else {
-      newParams.delete("folder");
-      localStorage.removeItem(storageKey);
-    }
-    
-    // Only update if changed to avoid loops
-    if (newParams.get("folder") !== searchParams.get("folder")) {
-      setSearchParams(newParams, { replace: true });
-    }
-  }, [currentFolder, storageKey]);
-
-
-  // Handle URL changes (like back button)
-  useEffect(() => {
-    const urlFolder = searchParams.get("folder");
-    if (urlFolder !== currentFolder) {
-      setCurrentFolder(urlFolder);
-      // We reset the path here, it will be reconstructed by the other effect
-      setFolderPath([]);
-    }
-  }, [searchParams, currentFolder]);
-
-
-  // Reconstruct folder path if we have a currentFolder but no path (e.g., initial load or refresh)
-  useEffect(() => {
-    if (currentFolder && folderPath.length === 0 && allStructureFolders && allStructureFolders.length > 0) {
-      const path: { id: string; name: string }[] = [];
-      const foldersList = allStructureFolders as any[];
-      const folderMap = new Map(foldersList.map(f => [f.past_id, f]));
-      
-      let curId: string | null | undefined = currentFolder;
-      while (curId) {
-        const folder = folderMap.get(curId);
-        if (folder) {
-          path.unshift({ id: folder.past_id, name: folder.past_nm_pasta });
-          curId = folder.past_id_pai;
-        } else {
-          curId = null;
-        }
-      }
-      
-      if (path.length > 0) {
-        setFolderPath(path);
-      }
-    }
-  }, [currentFolder, folderPath.length, allStructureFolders]);
-
-
 
   const getFileIcon = (mime: string) => {
     if (mime?.includes("pdf")) return <FileText className="h-6 w-6 text-red-500" />;
