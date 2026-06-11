@@ -848,6 +848,11 @@ export default function DocumentsPage() {
                                       tags: Array.isArray(doc.tags) ? doc.tags : [],
                                       sigilo: doc.sigilo || "PUBLICO",
                                     });
+                                    const cfMap: Record<string, any> = {};
+                                    (doc.custom_field_values || []).forEach((cv: any) => {
+                                      if (cv.custom_field_id) cfMap[cv.custom_field_id] = cv.value;
+                                    });
+                                    setEditCustomFields(cfMap);
                                   }}
                                 >
                                   <FileCode className="h-4 w-4" /> Editar Dados
@@ -997,6 +1002,11 @@ export default function DocumentsPage() {
                                 tags: Array.isArray(doc.tags) ? doc.tags : [],
                                 sigilo: doc.sigilo || "PUBLICO",
                               });
+                              const cfMap: Record<string, any> = {};
+                              (doc.custom_field_values || []).forEach((cv: any) => {
+                                if (cv.custom_field_id) cfMap[cv.custom_field_id] = cv.value;
+                              });
+                              setEditCustomFields(cfMap);
                             }}
                           >
                             <FileCode className="h-4 w-4" /> Editar Dados
@@ -1250,7 +1260,7 @@ export default function DocumentsPage() {
       </Dialog>
 
       {/* Modal de Edição */}
-      <Dialog open={!!documentToEdit} onOpenChange={(open) => !open && setDocumentToEdit(null)}>
+      <Dialog open={!!documentToEdit} onOpenChange={(open) => { if (!open) { setDocumentToEdit(null); setEditCustomFields({}); } }}>
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
             <DialogTitle>Editar Dados do Documento</DialogTitle>
