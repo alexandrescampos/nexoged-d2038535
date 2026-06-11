@@ -1,8 +1,8 @@
-import { invokeEdgeFunction } from "@/lib/invokeEdge";
+import { PDFDocument } from 'pdf-lib';
 
 /**
  * Utilitário para otimização de documentos antes do upload.
- * Suporta compressão de imagens no cliente para reduzir tráfego de rede e custo de storage.
+ * Suporta compressão de imagens e PDFs no cliente para reduzir tráfego de rede e custo de storage.
  */
 export const documentProcessor = {
   /**
@@ -55,26 +55,59 @@ export const documentProcessor = {
   },
 
   /**
-   * Envia o documento para processamento via Edge Function (ZIP/Optimization no servidor).
-   * No futuro, esta função chamará uma Edge Function para compressão GZIP ou Brotli
-   * de documentos PDF e textos antes do armazenamento final.
+   * Comprime um arquivo PDF usando pdf-lib.
+   * Tenta otimizar o documento sem remover metadados essenciais ou prejudicar texto.
+   */
+  async compressPdf(file: File): Promise<Blob> {
+    try {
+      const arrayBuffer = await file.arrayBuffer();
+      const pdfDoc = await PDFDocument.load(arrayBuffer);
+      
+      // A otimização básica do pdf-lib ao salvar com object streams
+      // já pode reduzir significativamente o tamanho de alguns PDFs
+      const pdfBytes = await pdfDoc.save({
+        useObjectStreams: true,
+        addDefaultPage: false,
+      });
+      
+      return new Blob([pdfBytes], { type: 'application/pdf' });
+    } catch (error) {
+      console.error("Erro ao comprimir PDF:", error);
+      return file;
+    }
+  },
+
+  /**
+   * Envia o documento para processamento (ZIP/Optimization no cliente).
    */
   async optimizeDocument(file: File): Promise<Blob | File> {
     // Se for imagem, faz compressão local imediata
     if (file.type.startsWith('image/')) {
       try {
         const compressed = await this.compressImage(file);
-        // Retorna o blob como um novo arquivo mantendo o nome
         return new File([compressed], file.name, { type: 'image/jpeg' });
       } catch (e) {
-        console.warn("Falha na compressão local, seguindo com arquivo original", e);
+        console.warn("Falha na compressão local da imagem, seguindo com arquivo original", e);
         return file;
       }
     }
 
-    // Para PDFs e outros, retornamos o original por enquanto.
-    // Em produção, aqui integraríamos com uma Edge Function que usa bibliotecas de PDF
-    // para reduzir o tamanho (removendo metadados redundantes, etc).
+    // Se for PDF, tenta compressão estrutural
+    if (file.type === 'application/pdf') {
+      try {
+        const compressed = await this.compressPdf(file);
+        // Só substitui se for realmente menor
+        if (compressed.size < file.size) {
+          console.log(`PDF comprimido: ${(file.size / 1024 / 1024).toFixed(2)}MB -> ${(compressed.size / 1024 / 1024).toFixed(2)}MB`);
+          return new File([compressed], file.name, { type: 'application/pdf' });
+        }
+        return file;
+      } catch (e) {
+        console.warn("Falha na compressão do PDF, seguindo com arquivo original", e);
+        return file;
+      }
+    }
+
     return file;
   }
 };
