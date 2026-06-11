@@ -23,6 +23,21 @@ export default function SuperAdminSettings() {
   const [systemName, setSystemName] = useState("");
   const [systemVersion, setSystemVersion] = useState("");
   const [supportPhone, setSupportPhone] = useState("");
+  const [ocrMimes, setOcrMimes] = useState<string[]>([]);
+  const [isSavingOcr, setIsSavingOcr] = useState(false);
+
+  const OCR_MIME_OPTIONS = [
+    { value: "application/pdf", label: "PDF (.pdf)" },
+    { value: "application/vnd.openxmlformats-officedocument.wordprocessingml.document", label: "Word (.docx)" },
+    { value: "image/png", label: "PNG (.png)" },
+    { value: "image/jpeg", label: "JPEG (.jpg, .jpeg)" },
+    { value: "image/webp", label: "WebP (.webp)" },
+    { value: "image/gif", label: "GIF (.gif)" },
+    { value: "image/bmp", label: "BMP (.bmp)" },
+    { value: "image/tiff", label: "TIFF (.tif, .tiff)" },
+    { value: "image/heic", label: "HEIC (.heic)" },
+    { value: "image/heif", label: "HEIF (.heif)" },
+  ];
 
   const { data: systemSettings, isLoading: isLoadingSettings } = useQuery({
     queryKey: ["system-settings"],
