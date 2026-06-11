@@ -119,7 +119,7 @@ export default function SearchPage() {
                   <SelectItem value="all">Todas</SelectItem>
                   <SelectItem value="PUBLICO">Público</SelectItem>
                   <SelectItem value="INTERNO">Interno</SelectItem>
-                  <SelectItem value="CONFIDENCIAL">Confidencial</SelectItem>
+                  <SelectItem value="SIGILOSO">Sigiloso</SelectItem>
                   <SelectItem value="RESTRITO">Restrito</SelectItem>
                 </SelectContent>
               </Select>
