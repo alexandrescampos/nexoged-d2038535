@@ -37,6 +37,7 @@ export default function ExpirationReportPage() {
           document_type_data:ged_document_types(name)
         `)
         .eq("organization_id", organization!.id)
+        .neq("status", "deleted")
         .not("expiration_date", "is", null)
         .order("expiration_date", { ascending: true });
 
