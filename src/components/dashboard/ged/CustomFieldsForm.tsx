@@ -13,6 +13,8 @@ import {
 import { CustomField } from "@/types/ged";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { formatBrazilianNumber } from "@/utils/formatters";
+
 
 interface CustomFieldsFormProps {
   fields: CustomField[];
@@ -86,15 +88,25 @@ function FieldInput({ field, value, onChange }: { field: CustomField, value: any
       return (
         <Input 
           id={`field-${field.id}`}
-          type="number"
-          step="0.01"
+          type="text"
           placeholder="0,00"
           className="h-8 text-xs"
           value={value || ""}
-          onChange={(e) => onChange(e.target.value)}
+          onChange={(e) => {
+            // Permite apenas números, vírgula e ponto enquanto digita
+            const val = e.target.value.replace(/[^0-9.,]/g, "");
+            onChange(val);
+          }}
+          onBlur={(e) => {
+            // Ao sair do campo, tenta formatar se for um número válido
+            if (e.target.value) {
+              onChange(formatBrazilianNumber(e.target.value));
+            }
+          }}
           required={field.is_required}
         />
       );
+
     case 'date':
       return (
         <Input 

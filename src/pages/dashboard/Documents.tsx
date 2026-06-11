@@ -6,8 +6,10 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
 import { ptBR } from "date-fns/locale";
+import { formatBrazilianNumber } from "@/utils/formatters";
 import {
   Select,
+
   SelectContent,
   SelectItem,
   SelectTrigger,
@@ -759,9 +761,14 @@ export default function DocumentsPage() {
                                     {doc.custom_field_values.map((cv: any) => (
                                       <div key={cv.id} className="text-[10px]">
                                         <span className="font-semibold">{cv.field_data?.name || 'Campo'}: </span>
-                                        <span className="text-muted-foreground">{cv.value || '—'}</span>
+                                        <span className="text-muted-foreground">
+                                          {cv.field_data?.field_type === 'decimal' 
+                                            ? formatBrazilianNumber(cv.value) 
+                                            : (cv.value || '—')}
+                                        </span>
                                       </div>
                                     ))}
+
                                   </div>
                                 </TooltipContent>
                               </Tooltip>
