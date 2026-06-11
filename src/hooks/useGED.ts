@@ -33,6 +33,7 @@ export function useGED(folderId: string | null = null, filterFavorites: boolean 
         tags: selectedTags,
         status: status || undefined,
         page,
+        pageSize,
         isFavorite: filterFavorites,
         userId: profile?.id
       });
