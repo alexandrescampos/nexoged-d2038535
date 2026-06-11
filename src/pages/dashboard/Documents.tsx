@@ -351,9 +351,10 @@ export default function DocumentsPage() {
 
   // Reconstruct folder path if we have a currentFolder but no path (e.g., initial load or refresh)
   useEffect(() => {
-    if (currentFolder && folderPath.length === 0 && allStructureFolders.length > 0) {
+    if (currentFolder && folderPath.length === 0 && allStructureFolders && allStructureFolders.length > 0) {
       const path: { id: string; name: string }[] = [];
-      const folderMap = new Map(allStructureFolders.map(f => [f.past_id, f]));
+      const foldersList = allStructureFolders as any[];
+      const folderMap = new Map(foldersList.map(f => [f.past_id, f]));
       
       let curId: string | null | undefined = currentFolder;
       while (curId) {
@@ -371,6 +372,7 @@ export default function DocumentsPage() {
       }
     }
   }, [currentFolder, folderPath.length, allStructureFolders]);
+
 
 
   const getFileIcon = (mime: string) => {
