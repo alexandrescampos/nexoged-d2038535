@@ -435,7 +435,7 @@ export default function DocumentsPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {(folderTotalCount ?? 0).toLocaleString()}
+              {(totalCount ?? 0).toLocaleString()}
               <span className="text-base font-normal text-muted-foreground"> / {totalDocuments.toLocaleString()}</span>
             </div>
             <p className="text-xs text-muted-foreground mt-2">
