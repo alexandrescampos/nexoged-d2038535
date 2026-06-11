@@ -405,6 +405,17 @@ export const gedRepository = {
     return data as unknown as Folder[];
   },
 
+  async getAllFolders(organizationId: string): Promise<Folder[]> {
+    const { data, error } = await supabase
+      .from("folders")
+      .select("*")
+      .eq("organization_id", organizationId)
+      .eq("past_in_ativa", true);
+    if (error) throw error;
+    return data as unknown as Folder[];
+  },
+
+
   // Auditoria
   async logAction(organizationId: string, action: string, documentId?: string, details?: any) {
     const { error } = await supabase.from("ged_audit_log").insert([{

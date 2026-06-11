@@ -17,7 +17,9 @@ import {
 } from "@/components/ui/select";
 import { useSearchParams } from "react-router-dom";
 import { useGED } from "@/hooks/useGED";
+import { gedRepository } from "@/repository/gedRepository";
 import { useAuth } from "@/hooks/useAuth";
+
 import { UsageIndicator } from "@/components/dashboard/UsageIndicator";
 import { GedTreeView } from "@/components/dashboard/ged/GedTreeView";
 import { useOrganizationStructure } from "@/hooks/useOrganizationStructure";
@@ -48,9 +50,20 @@ import {
   Loader2,
   X,
   Tag as TagIcon,
-  ChevronLeft
+  ChevronLeft,
+  Check,
+  ChevronsUpDown
 } from "lucide-react";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
 import { CustomFieldsForm } from "@/components/dashboard/ged/CustomFieldsForm";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -194,7 +207,10 @@ export default function DocumentsPage() {
   const [documentToDelete, setDocumentToDelete] = useState<string | null>(null);
   const [documentToEdit, setDocumentToEdit] = useState<any | null>(null);
   const [editCustomFields, setEditCustomFields] = useState<Record<string, any>>({});
+  const [selectedUploadFolderId, setSelectedUploadUploadFolderId] = useState<string | null>(null);
+  const [isFolderSelectOpen, setIsFolderSelectOpen] = useState(false);
   const [uploadData, setUploadData] = useState({
+
     title: "",
     document_type_id: "",
     page_count: 1,
@@ -248,6 +264,17 @@ export default function DocumentsPage() {
 
   const { documentTypes } = useGEDSettings();
   const { organization, user, isSuperAdmin, isOrgAdmin } = useAuth();
+  
+  const { data: allOrganizationFolders = [] } = useQuery({
+    queryKey: ["ged-folders-all", organization?.id],
+    queryFn: () => organization?.id ? gedRepository.getAllFolders(organization.id) : Promise.resolve([]),
+    enabled: !!organization?.id,
+  });
+
+  const sortedOrgFolders = [...allOrganizationFolders].sort((a, b) => 
+    a.past_nm_pasta.localeCompare(b.past_nm_pasta)
+  );
+
   const { moveItem } = useOrganizationStructure();
   const { canUserDownload, canUserDelete, canUserEdit } = useDocumentPermissions();
 
@@ -1164,13 +1191,18 @@ export default function DocumentsPage() {
       </AlertDialog>
 
       {/* Modal de Upload (Simplificado para o Protótipo) */}
-      <Dialog open={isUploadOpen} onOpenChange={setIsUploadOpen}>
+       <Dialog open={isUploadOpen} onOpenChange={(open) => {
+        setIsUploadOpen(open);
+        if (!open) setSelectedUploadUploadFolderId(null);
+      }}>
+
         <DialogContent className="sm:max-w-[700px] max-h-[90vh] flex flex-col p-0 gap-0">
           <DialogHeader className="p-6 pb-2">
             <DialogTitle>Upload de Documentos</DialogTitle>
             <DialogDescription>
-              Arraste múltiplos arquivos ou selecione do seu computador. {currentFolder ? "" : <span className="text-destructive font-bold">Aviso: Selecione uma pasta no menu lateral antes do upload.</span>}
+              Arraste múltiplos arquivos ou selecione do seu computador.
             </DialogDescription>
+
           </DialogHeader>
 
           <div className="flex-1 overflow-y-auto p-6 pt-2 space-y-6">
@@ -1180,6 +1212,55 @@ export default function DocumentsPage() {
                 Metadados Padrão (Opcional)
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-muted/30 p-4 rounded-lg border border-border/50">
+                {!currentFolder && (
+                  <div className="md:col-span-2 grid gap-2">
+                    <Label>Pasta de Destino <span className="text-destructive">*</span></Label>
+                    <Popover open={isFolderSelectOpen} onOpenChange={setIsFolderSelectOpen}>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          role="combobox"
+                          aria-expanded={isFolderSelectOpen}
+                          className="w-full justify-between bg-background"
+                        >
+                          {selectedUploadFolderId
+                            ? sortedOrgFolders.find((folder) => folder.past_id === selectedUploadFolderId)?.past_nm_pasta
+                            : "Selecione uma pasta..."}
+                          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
+                        <Command>
+                          <CommandInput placeholder="Buscar pasta..." />
+                          <CommandList>
+                            <CommandEmpty>Nenhuma pasta encontrada.</CommandEmpty>
+                            <CommandGroup>
+                              {sortedOrgFolders.map((folder) => (
+                                <CommandItem
+                                  key={folder.past_id}
+                                  value={folder.past_nm_pasta}
+                                  onSelect={() => {
+                                    setSelectedUploadUploadFolderId(folder.past_id);
+                                    setIsFolderSelectOpen(false);
+                                  }}
+                                >
+                                  <Check
+                                    className={cn(
+                                      "mr-2 h-4 w-4",
+                                      selectedUploadFolderId === folder.past_id ? "opacity-100" : "opacity-0"
+                                    )}
+                                  />
+                                  {folder.past_nm_pasta}
+                                </CommandItem>
+                              ))}
+                            </CommandGroup>
+                          </CommandList>
+                        </Command>
+                      </PopoverContent>
+                    </Popover>
+                  </div>
+                )}
+
                 <div className="grid gap-2">
                   <Label htmlFor="type">Tipo Documental</Label>
                   <Select 
@@ -1237,8 +1318,9 @@ export default function DocumentsPage() {
                 requiresExpirationDate={!!(uploadData.document_type_id && documentTypes.find(t => t.id === uploadData.document_type_id)?.requires_expiration_date)}
                 associatedFields={uploadData.document_type_id ? documentTypes.find(t => t.id === uploadData.document_type_id)?.associated_fields : []}
                 onUpload={async (items) => {
-                  if (!currentFolder || !organization?.id) {
-                    toast.error("Pasta ou organização não selecionada.");
+                  const targetFolder = currentFolder || selectedUploadFolderId;
+                  if (!targetFolder || !organization?.id) {
+                    toast.error("Por favor, selecione uma pasta de destino.");
                     return;
                   }
 
@@ -1251,8 +1333,9 @@ export default function DocumentsPage() {
                       page_count: 1, // Will be auto-calculated in useGED mutation
                       description: item.description || uploadData.description || null,
                       organization_id: organization.id,
-                      folder_id: currentFolder,
-                      past_id: currentFolder,
+                      folder_id: targetFolder,
+                      past_id: targetFolder,
+
                       status: 'active',
                       tags: uploadData.tags,
                       keywords: [],
