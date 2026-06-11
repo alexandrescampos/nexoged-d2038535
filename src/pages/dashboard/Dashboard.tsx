@@ -183,7 +183,7 @@ export default function OrgDashboard() {
 
   return (
     <div className="space-y-6 animate-fade-in p-4 bg-slate-50 min-h-screen">
-      {/* Header & Filters (Screen Only) */}
+      {/* Header & Filters (Always visible on screen, some parts hidden on export) */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 no-export">
         <div>
           <h1 className="text-2xl font-bold text-slate-800">
@@ -240,19 +240,15 @@ export default function OrgDashboard() {
             className="gap-2 bg-blue-600 hover:bg-blue-700 text-white"
           >
             <FileDown className="h-4 w-4" />
-            {exporting ? "Gerando..." : "Exportar Report"}
+            {exporting ? "Gerando..." : "Exportar PDF"}
           </Button>
         </div>
       </div>
 
-      {/* Main Report Container */}
-      <div 
-        ref={dashboardRef} 
-        className="space-y-6 bg-white p-6 rounded-xl shadow-sm border border-slate-200"
-        style={{ minWidth: "800px" }} // Ensure minimum width for PDF consistency
-      >
-        {/* Report Header (Visible in PDF) */}
-        <div className="flex justify-between items-center pb-6 border-b border-slate-100 mb-6">
+      {/* Main Container for PDF capture */}
+      <div ref={dashboardRef} className="space-y-6 bg-transparent">
+        {/* Report Header (Visible only in PDF/Export) */}
+        <div className="hidden pdf-only flex justify-between items-center pb-6 border-b border-slate-100 mb-6 bg-white p-6 rounded-t-xl">
           <div className="flex items-center gap-4">
             {data?.org_logo ? (
               <img src={data.org_logo} alt="Logo" className="h-12 object-contain" />
@@ -274,85 +270,83 @@ export default function OrgDashboard() {
           </div>
         </div>
 
-        {/* Alertas e Stat cards */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
-          <StatCard
-            title="Docs Vencidos"
-            value={loading ? <Skeleton className="h-8 w-16" /> : (data?.expired_docs_count ?? 0).toLocaleString("pt-BR")}
-            className="bg-red-50 text-red-700 border border-red-100"
-          />
-          <StatCard
-            title="Vencendo 30d"
-            value={loading ? <Skeleton className="h-8 w-16" /> : (data?.expiring_soon_docs_count ?? 0).toLocaleString("pt-BR")}
-            className="bg-amber-50 text-amber-700 border border-amber-100"
-          />
-          <StatCard
-            title="Docs no Período"
-            value={loading ? <Skeleton className="h-8 w-16" /> : (data?.total_docs ?? 0).toLocaleString("pt-BR")}
-            className="bg-blue-50 text-blue-700 border border-blue-100"
-          />
-          <StatCard
-            title="Repositórios"
-            value={loading ? <Skeleton className="h-8 w-16" /> : (data?.total_folders ?? 0).toLocaleString("pt-BR")}
-            className="bg-slate-50 text-slate-700 border border-slate-100"
-          />
-          <StatCard
-            title="Usuários Ativos"
-            value={
-              loading
-                ? <Skeleton className="h-8 w-16" />
-                : `${data?.total_users ?? 0}/${
-                    (data?.max_users ?? 0) >= 999999 ? "∞" : data?.max_users ?? 0
-                  }`
-            }
-            className="bg-emerald-50 text-emerald-700 border border-emerald-100"
-          />
-          <StatCard
-            title="Páginas (Período)"
-            value={loading ? <Skeleton className="h-8 w-16" /> : Number(data?.used_pages ?? 0).toLocaleString("pt-BR")}
-            className="bg-orange-50 text-orange-700 border border-orange-100"
-          />
-        </div>
-
-        {/* Monthly uploads - Full Width */}
-        <Card className="border border-slate-100 shadow-none mb-6">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-bold text-slate-600">Documentos enviados por mês no período</CardTitle>
+        {/* Monthly uploads - Full Width (Matches the screenshot layout) */}
+        <Card className="border-none shadow-sm overflow-hidden">
+          <CardHeader className="bg-white border-b border-slate-50 pb-2">
+            <CardTitle className="text-sm font-bold text-slate-800">Documentos enviados por mês</CardTitle>
           </CardHeader>
-          <CardContent className="h-[260px]">
+          <CardContent className="bg-white h-[300px] pt-4">
             {loading ? (
               <Skeleton className="h-full w-full" />
             ) : (
               <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={data?.monthly_uploads ?? []}>
+                <AreaChart data={data?.monthly_uploads ?? []} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
                   <defs>
-                    <linearGradient id="docs" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.2} />
-                      <stop offset="95%" stopColor="#3b82f6" stopOpacity={0.01} />
+                    <linearGradient id="colorDocs" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#82ca9d" stopOpacity={0.3} />
+                      <stop offset="95%" stopColor="#82ca9d" stopOpacity={0} />
                     </linearGradient>
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
                   <XAxis dataKey="label" fontSize={11} axisLine={false} tickLine={false} />
-                  <YAxis fontSize={11} axisLine={false} tickLine={false} />
-                  <Tooltip 
-                    contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
-                  />
-                  <Area type="monotone" dataKey="total" stroke="#3b82f6" strokeWidth={2} fill="url(#docs)" />
+                  <YAxis fontSize={11} axisLine={false} tickLine={false} label={{ value: 'Nº de documentos', angle: -90, position: 'insideLeft', fontSize: 10, fill: '#94a3b8' }} />
+                  <Tooltip />
+                  <Area type="monotone" dataKey="total" stroke="#82ca9d" strokeWidth={2} fillOpacity={1} fill="url(#colorDocs)" />
                 </AreaChart>
               </ResponsiveContainer>
             )}
           </CardContent>
         </Card>
 
+        {/* Stat cards (Grid layout from screenshot) */}
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2">
+          <div className="bg-[#d32f2f] text-white p-4 rounded-md shadow-sm">
+            <p className="text-[10px] uppercase font-bold opacity-90 leading-tight">Documentos Vencidos</p>
+            <p className="text-3xl font-bold mt-1">
+              {loading ? <Skeleton className="h-8 w-12 bg-white/20" /> : (data?.expired_docs_count ?? 0)}
+            </p>
+          </div>
+          <div className="bg-[#f59e0b] text-white p-4 rounded-md shadow-sm">
+            <p className="text-[10px] uppercase font-bold opacity-90 leading-tight">Vencendo em 30 dias</p>
+            <p className="text-3xl font-bold mt-1">
+              {loading ? <Skeleton className="h-8 w-12 bg-white/20" /> : (data?.expiring_soon_docs_count ?? 0)}
+            </p>
+          </div>
+          <div className="bg-[#0ea5e9] text-white p-4 rounded-md shadow-sm">
+            <p className="text-[10px] uppercase font-bold opacity-90 leading-tight">Documentos</p>
+            <p className="text-3xl font-bold mt-1">
+              {loading ? <Skeleton className="h-8 w-12 bg-white/20" /> : (data?.total_docs ?? 0)}
+            </p>
+          </div>
+          <div className="bg-[#334155] text-white p-4 rounded-md shadow-sm">
+            <p className="text-[10px] uppercase font-bold opacity-90 leading-tight">Repositórios</p>
+            <p className="text-3xl font-bold mt-1">
+              {loading ? <Skeleton className="h-8 w-12 bg-white/20" /> : (data?.total_folders ?? 0)}
+            </p>
+          </div>
+          <div className="bg-[#059669] text-white p-4 rounded-md shadow-sm">
+            <p className="text-[10px] uppercase font-bold opacity-90 leading-tight">Usuários</p>
+            <p className="text-3xl font-bold mt-1">
+              {loading ? <Skeleton className="h-8 w-12 bg-white/20" /> : `${data?.total_users ?? 0}/${(data?.max_users ?? 0) >= 999999 ? "∞" : data?.max_users ?? 0}`}
+            </p>
+          </div>
+          <div className="bg-[#f97316] text-white p-4 rounded-md shadow-sm">
+            <p className="text-[10px] uppercase font-bold opacity-90 leading-tight">Páginas</p>
+            <p className="text-3xl font-bold mt-1">
+              {loading ? <Skeleton className="h-8 w-12 bg-white/20" /> : (data?.used_pages ?? 0)}
+            </p>
+          </div>
+        </div>
+
         {/* Charts grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {/* GBs utilizados */}
-          <Card className="border border-slate-100 shadow-none">
-            <CardHeader className="pb-1">
-              <CardTitle className="text-sm font-bold text-slate-600">Capacidade de Armazenamento</CardTitle>
-              <p className="text-xs text-slate-400">Total contratado: {contractedGb} GB</p>
+          <Card className="border-none shadow-sm bg-white">
+            <CardHeader className="pb-1 pt-4">
+              <CardTitle className="text-xs font-bold text-slate-800">GBs utilizados</CardTitle>
+              <p className="text-[10px] text-slate-400">GBs utilizados segundo o contrato</p>
             </CardHeader>
-            <CardContent className="h-[260px]">
+            <CardContent className="h-[220px]">
               {loading ? (
                 <Skeleton className="h-full w-full" />
               ) : (
@@ -362,14 +356,15 @@ export default function OrgDashboard() {
                       data={storagePie} 
                       dataKey="value" 
                       nameKey="name" 
-                      outerRadius="70%" 
-                      label={({ name, value }) => `${name}: ${value}GB`}
+                      outerRadius="80%" 
+                      label={({ name, value }) => `${value}`}
+                      labelLine={false}
                     >
                       <Cell fill="#ef4444" />
                       <Cell fill="#3b82f6" />
                     </Pie>
-                    <Tooltip formatter={(v: number) => `${v} GB`} />
-                    <Legend verticalAlign="bottom" height={36}/>
+                    <Tooltip />
+                    <Legend verticalAlign="bottom" height={36} iconType="square" fontSize={10}/>
                   </PieChart>
                 </ResponsiveContainer>
               )}
@@ -377,16 +372,14 @@ export default function OrgDashboard() {
           </Card>
 
           {/* GBs por repositório */}
-          <Card className="border border-slate-100 shadow-none">
-            <CardHeader className="pb-1">
-              <CardTitle className="text-sm font-bold text-slate-600">Ocupação por Repositório</CardTitle>
-              <p className="text-xs text-slate-400">Distribuição do volume de arquivos</p>
+          <Card className="border-none shadow-sm bg-white">
+            <CardHeader className="pb-1 pt-4">
+              <CardTitle className="text-xs font-bold text-slate-800">GBs por repositório</CardTitle>
+              <p className="text-[10px] text-slate-400">Consumo agrupado por repositório</p>
             </CardHeader>
-            <CardContent className="h-[260px]">
+            <CardContent className="h-[220px]">
               {loading ? (
                 <Skeleton className="h-full w-full" />
-              ) : folderData.length === 0 ? (
-                <div className="flex items-center justify-center h-full text-slate-400 text-sm italic">Sem dados registrados</div>
               ) : (
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
@@ -394,16 +387,16 @@ export default function OrgDashboard() {
                       data={folderData}
                       dataKey="gb"
                       nameKey="name"
-                      innerRadius="50%"
+                      innerRadius="40%"
                       outerRadius="70%"
-                      paddingAngle={5}
+                      paddingAngle={2}
                     >
                       {folderData.map((_, i) => (
                         <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />
                       ))}
                     </Pie>
-                    <Tooltip formatter={(v: number) => `${v} GB`} />
-                    <Legend verticalAlign="bottom" height={36}/>
+                    <Tooltip />
+                    <Legend verticalAlign="bottom" layout="horizontal" align="center" iconType="square" wrapperStyle={{ fontSize: '10px' }} />
                   </PieChart>
                 </ResponsiveContainer>
               )}
@@ -411,24 +404,21 @@ export default function OrgDashboard() {
           </Card>
 
           {/* Usuários mais ativos */}
-          <Card className="border border-slate-100 shadow-none">
-            <CardHeader className="pb-1">
-              <CardTitle className="text-sm font-bold text-slate-600">Ranking de Atividade</CardTitle>
-              <p className="text-xs text-slate-400">Acessos e ações no período</p>
+          <Card className="border-none shadow-sm bg-white">
+            <CardHeader className="pb-1 pt-4">
+              <CardTitle className="text-xs font-bold text-slate-800">Usuários mais ativos</CardTitle>
+              <p className="text-[10px] text-slate-400">Usuários com mais acessos nos últimos 30 dias</p>
             </CardHeader>
-            <CardContent className="h-[260px]">
+            <CardContent className="h-[220px]">
               {loading ? (
                 <Skeleton className="h-full w-full" />
-              ) : (data?.top_users?.length ?? 0) === 0 ? (
-                <div className="flex items-center justify-center h-full text-slate-400 text-sm italic">Sem dados registrados</div>
               ) : (
                 <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={data?.top_users ?? []} layout="vertical" margin={{ left: 20, right: 20 }}>
-                    <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#f1f5f9" />
-                    <XAxis type="number" fontSize={11} axisLine={false} tickLine={false} />
-                    <YAxis type="category" dataKey="name" width={100} fontSize={11} axisLine={false} tickLine={false} />
-                    <Tooltip cursor={{ fill: '#f8fafc' }} />
-                    <Bar dataKey="total" fill="#3b82f6" radius={[0, 4, 4, 0]} barSize={20} />
+                  <BarChart data={data?.top_users ?? []} layout="vertical" margin={{ left: -20, right: 10 }}>
+                    <XAxis type="number" fontSize={9} axisLine={false} tickLine={false} />
+                    <YAxis type="category" dataKey="name" fontSize={9} axisLine={false} tickLine={false} />
+                    <Tooltip />
+                    <Bar dataKey="total" fill="#ec4899" radius={[0, 4, 4, 0]} barSize={30} />
                   </BarChart>
                 </ResponsiveContainer>
               )}
@@ -436,16 +426,14 @@ export default function OrgDashboard() {
           </Card>
 
           {/* Páginas indexadas */}
-          <Card className="border border-slate-100 shadow-none">
-            <CardHeader className="pb-1">
-              <CardTitle className="text-sm font-bold text-slate-600">Produtividade de Digitalização</CardTitle>
-              <p className="text-xs text-slate-400">Páginas indexadas por colaborador</p>
+          <Card className="border-none shadow-sm bg-white">
+            <CardHeader className="pb-1 pt-4">
+              <CardTitle className="text-xs font-bold text-slate-800">Páginas indexadas</CardTitle>
+              <p className="text-[10px] text-slate-400">Páginas indexadas por usuário (30 dias)</p>
             </CardHeader>
-            <CardContent className="h-[260px]">
+            <CardContent className="h-[220px]">
               {loading ? (
                 <Skeleton className="h-full w-full" />
-              ) : (data?.pages_by_user?.length ?? 0) === 0 ? (
-                <div className="flex items-center justify-center h-full text-slate-400 text-sm italic">Sem dados registrados</div>
               ) : (
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
@@ -453,15 +441,16 @@ export default function OrgDashboard() {
                       data={data?.pages_by_user ?? []}
                       dataKey="total"
                       nameKey="name"
-                      outerRadius="70%"
-                      label={({ name, value }) => `${name}: ${value}`}
+                      outerRadius="80%"
+                      label={({ value }) => `${value}`}
+                      labelLine={false}
                     >
                       {(data?.pages_by_user ?? []).map((_, i) => (
                         <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />
                       ))}
                     </Pie>
                     <Tooltip />
-                    <Legend verticalAlign="bottom" height={36}/>
+                    <Legend verticalAlign="bottom" height={36} iconType="square" fontSize={10}/>
                   </PieChart>
                 </ResponsiveContainer>
               )}
@@ -469,8 +458,8 @@ export default function OrgDashboard() {
           </Card>
         </div>
 
-        {/* Footer */}
-        <div className="pt-8 border-t border-slate-100 flex justify-between items-center mt-8">
+        {/* Footer (Visible only in PDF/Export) */}
+        <div className="hidden pdf-only pt-8 border-t border-slate-100 flex justify-between items-center bg-white p-6 rounded-b-xl">
           <p className="text-[10px] text-slate-400 uppercase tracking-widest font-bold">Nexo GED - Gestão Inteligente de Documentos</p>
           <div className="text-right">
             <p className="text-xs text-slate-500">
@@ -479,7 +468,18 @@ export default function OrgDashboard() {
           </div>
         </div>
       </div>
+
+      {/* Global CSS for PDF specific visibility */}
+      <style dangerouslySetInnerHTML={{ __html: `
+        @media screen {
+          .pdf-only { display: none !important; }
+        }
+        .jspdf-canvas .pdf-only { display: flex !important; }
+      `}} />
     </div>
+  );
+}
+
   );
 }
 
