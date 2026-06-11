@@ -857,9 +857,14 @@ export default function DocumentsPage() {
                                     });
                                     const cfMap: Record<string, any> = {};
                                     (doc.custom_field_values || []).forEach((cv: any) => {
-                                      if (cv.custom_field_id) cfMap[cv.custom_field_id] = cv.value;
+                                      if (cv.custom_field_id) {
+                                        cfMap[cv.custom_field_id] = cv.field_data?.field_type === 'decimal' 
+                                          ? formatBrazilianNumber(cv.value) 
+                                          : cv.value;
+                                      }
                                     });
                                     setEditCustomFields(cfMap);
+
                                   }}
                                 >
                                   <FileCode className="h-4 w-4" /> Editar Dados
@@ -1011,9 +1016,14 @@ export default function DocumentsPage() {
                               });
                               const cfMap: Record<string, any> = {};
                               (doc.custom_field_values || []).forEach((cv: any) => {
-                                if (cv.custom_field_id) cfMap[cv.custom_field_id] = cv.value;
+                                if (cv.custom_field_id) {
+                                  cfMap[cv.custom_field_id] = cv.field_data?.field_type === 'decimal' 
+                                    ? formatBrazilianNumber(cv.value) 
+                                    : cv.value;
+                                }
                               });
                               setEditCustomFields(cfMap);
+
                             }}
                           >
                             <FileCode className="h-4 w-4" /> Editar Dados
