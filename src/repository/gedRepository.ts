@@ -286,14 +286,7 @@ export const gedRepository = {
     
     const { error: uploadError } = await supabase.storage
       .from("ged_files")
-      .upload(filePath, file, {
-        onUploadProgress: (progress) => {
-          if (onProgress) {
-            const percent = (progress.loaded / progress.total) * 100;
-            onProgress(percent);
-          }
-        }
-      });
+      .upload(filePath, file);
 
     if (uploadError) throw uploadError;
 
