@@ -1005,11 +1005,34 @@ export default function DocumentsPage() {
 
       {/* Paginação */}
       {totalCount > 0 && (
-        <div className="flex items-center justify-between border-t p-4 bg-muted/20">
-          <div className="text-sm text-muted-foreground">
-            Mostrando <span className="font-medium">{Math.min(totalCount, page * pageSize + 1)}</span> a{" "}
-            <span className="font-medium">{Math.min(totalCount, (page + 1) * pageSize)}</span> de{" "}
-            <span className="font-medium">{totalCount}</span> documentos
+        <div className="flex flex-col sm:flex-row items-center justify-between border-t p-4 bg-muted/20 gap-4">
+          <div className="flex items-center gap-4">
+            <div className="text-sm text-muted-foreground whitespace-nowrap">
+              Mostrando <span className="font-medium">{Math.min(totalCount, page * pageSize + 1)}</span> a{" "}
+              <span className="font-medium">{Math.min(totalCount, (page + 1) * pageSize)}</span> de{" "}
+              <span className="font-medium">{totalCount}</span> documentos
+            </div>
+            
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-muted-foreground whitespace-nowrap">Itens por página:</span>
+              <Select 
+                value={pageSize.toString()} 
+                onValueChange={(val) => {
+                  setPageSize(parseInt(val));
+                  setPage(0); // Volta para a primeira página ao mudar o tamanho
+                }}
+              >
+                <SelectTrigger className="h-8 w-[70px]">
+                  <SelectValue placeholder={pageSize.toString()} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="10">10</SelectItem>
+                  <SelectItem value="20">20</SelectItem>
+                  <SelectItem value="50">50</SelectItem>
+                  <SelectItem value="100">100</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
           <div className="flex items-center gap-2">
             <Button
