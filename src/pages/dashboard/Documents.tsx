@@ -1096,20 +1096,22 @@ export default function DocumentsPage() {
               </h3>
               <MultiFileUploader 
                 isUploading={isUploading}
-                onUpload={async (files) => {
+                requiresCreationDate={!!(uploadData.document_type_id && documentTypes.find(t => t.id === uploadData.document_type_id)?.requires_creation_date)}
+                requiresExpirationDate={!!(uploadData.document_type_id && documentTypes.find(t => t.id === uploadData.document_type_id)?.requires_expiration_date)}
+                onUpload={async (items) => {
                   if (!currentFolder || !organization?.id) {
                     toast.error("Pasta ou organização não selecionada.");
                     return;
                   }
 
-                  const uploadItems = files.map(file => ({
+                  const uploadItems = items.map(item => ({
                     doc: {
-                      title: file.name.split('.').slice(0, -1).join('.') || file.name,
+                      title: item.file.name.split('.').slice(0, -1).join('.') || item.file.name,
                       document_type_id: uploadData.document_type_id || null,
-                      expiration_date: uploadData.expiration_date || null,
-                      document_creation_date: uploadData.document_creation_date || null,
+                      expiration_date: item.expirationDate || null,
+                      document_creation_date: item.creationDate || null,
                       page_count: 1,
-                      description: uploadData.description || null,
+                      description: item.description || uploadData.description || null,
                       organization_id: organization.id,
                       folder_id: currentFolder,
                       past_id: currentFolder,
@@ -1118,7 +1120,7 @@ export default function DocumentsPage() {
                       keywords: [],
                       sigilo: uploadData.sigilo,
                     },
-                    file
+                    file: item.file
                   }));
 
                   await uploadDocuments(uploadItems);
