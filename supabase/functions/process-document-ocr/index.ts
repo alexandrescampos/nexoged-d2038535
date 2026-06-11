@@ -68,27 +68,35 @@ async function processDocument(documentId: string, versionId: string | null) {
   const supa = admin();
   const start = Date.now();
 
-  // Marca como processando
-  await supa.from("documento_ocr").upsert({
+  // Resolve organização e versão real ANTES de criar o registro de OCR
+  const { data: docRow } = await supa.from("ged_documents").select("organization_id").eq("id", documentId).maybeSingle();
+  const orgId = docRow?.organization_id;
+
+  let version: any;
+  if (versionId) {
+    const { data } = await supa.from("ged_document_versions").select("*").eq("id", versionId).maybeSingle();
+    version = data;
+  } else {
+    const { data } = await supa.from("ged_document_versions").select("*")
+      .eq("document_id", documentId).order("version_number", { ascending: false }).limit(1).maybeSingle();
+    version = data;
+  }
+  if (!version) throw new Error("Versão do documento não encontrada");
+
+  const resolvedVersionId = version.id;
+
+  // Limpa quaisquer OCRs antigos para este documento (mantém apenas um registro por documento — sempre o mais recente)
+  await supa.from("documento_ocr").delete().eq("documento_id", documentId);
+
+  // Cria registro inicial como "processando"
+  await supa.from("documento_ocr").insert({
     documento_id: documentId,
-    versao_id: versionId,
-    organization_id: (await supa.from("ged_documents").select("organization_id").eq("id", documentId).maybeSingle()).data?.organization_id,
+    versao_id: resolvedVersionId,
+    organization_id: orgId,
     status: "processando",
-  }, { onConflict: "documento_id,versao_id" });
+  });
 
   try {
-    // Pega versão mais recente se versionId não foi passado
-    let version: any;
-    if (versionId) {
-      const { data } = await supa.from("ged_document_versions").select("*").eq("id", versionId).maybeSingle();
-      version = data;
-    } else {
-      const { data } = await supa.from("ged_document_versions").select("*")
-        .eq("document_id", documentId).order("version_number", { ascending: false }).limit(1).maybeSingle();
-      version = data;
-    }
-    if (!version) throw new Error("Versão do documento não encontrada");
-
     const { data: file, error: dlErr } = await supa.storage.from("ged_files").download(version.file_path);
     if (dlErr || !file) throw new Error("Falha ao baixar arquivo: " + (dlErr?.message || "desconhecido"));
 
@@ -101,7 +109,6 @@ async function processDocument(documentId: string, versionId: string | null) {
       try {
         pages = await extractPdfPages(buffer);
         const totalChars = pages.reduce((s, p) => s + (p?.length || 0), 0);
-        // PDF escaneado: pouquíssimo texto extraído => marca para reprocessamento futuro com OCR
         if (totalChars < 30) {
           pages = pages.map((p, i) => p || `[Página ${i + 1}: PDF escaneado — OCR pendente]`);
         }
@@ -118,25 +125,19 @@ async function processDocument(documentId: string, versionId: string | null) {
     }
 
     const fullText = pages.join("\n\n");
-    const { data: orgRow } = await supa.from("ged_documents").select("organization_id").eq("id", documentId).maybeSingle();
-    const orgId = orgRow?.organization_id;
 
-    // Salva resultado
-    const { data: ocrRow, error: ocrErr } = await supa.from("documento_ocr").upsert({
-      documento_id: documentId,
-      versao_id: versionId,
-      organization_id: orgId,
+    // Atualiza o registro de OCR com o resultado final
+    const { data: ocrRow, error: ocrErr } = await supa.from("documento_ocr").update({
       texto_extraido: fullText,
       total_paginas: pages.length,
       status: "processado",
       data_processamento: new Date().toISOString(),
       tempo_processamento_ms: Date.now() - start,
       erro_processamento: null,
-    }, { onConflict: "documento_id,versao_id" }).select("ocr_id").single();
+    }).eq("documento_id", documentId).eq("versao_id", resolvedVersionId).select("ocr_id").single();
     if (ocrErr) throw ocrErr;
 
-    // Limpa páginas anteriores e insere novas
-    await supa.from("documento_ocr_pagina").delete().eq("ocr_id", ocrRow.ocr_id);
+    // Insere as páginas (a tabela já estava limpa pela cascade do delete inicial)
     if (pages.length) {
       const rows = pages.map((texto, idx) => ({
         ocr_id: ocrRow.ocr_id,
@@ -151,7 +152,7 @@ async function processDocument(documentId: string, versionId: string | null) {
     // Atualiza fila
     await supa.from("documento_ocr_fila")
       .update({ status: "processado", finalizado_em: new Date().toISOString() })
-      .eq("documento_id", documentId).eq("status", "processando");
+      .eq("documento_id", documentId).in("status", ["pendente", "processando"]);
 
     await supa.from("documento_ocr_auditoria").insert({
       organization_id: orgId,
@@ -161,6 +162,7 @@ async function processDocument(documentId: string, versionId: string | null) {
     });
 
     return { ok: true, pages: pages.length };
+
   } catch (e: any) {
     console.error("OCR erro:", e);
     const { data: orgRow } = await supa.from("ged_documents").select("organization_id").eq("id", documentId).maybeSingle();
