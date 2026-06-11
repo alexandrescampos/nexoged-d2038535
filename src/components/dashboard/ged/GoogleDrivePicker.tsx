@@ -10,9 +10,10 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Loader2, Search, Folder, File, ChevronRight, ChevronLeft, Download } from 'lucide-react';
+import { Loader2, Search, Folder, File, ChevronRight, ChevronLeft, Download, Settings } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { Link } from 'react-router-dom';
 
 interface GoogleDriveFile {
   id: string;
@@ -36,8 +37,11 @@ export function GoogleDrivePicker({ isOpen, onOpenChange, onFileSelect }: Google
   const [history, setHistory] = useState<string[]>([]);
   const [downloadingIds, setDownloadingIds] = useState<Set<string>>(new Set());
 
+  const [notConfigured, setNotConfigured] = useState(false);
+
   const fetchFiles = async (folderId: string = 'root', searchQuery: string = '') => {
     setLoading(true);
+    setNotConfigured(false);
     try {
       const queryParams = new URLSearchParams(
         searchQuery 
@@ -49,11 +53,24 @@ export function GoogleDrivePicker({ isOpen, onOpenChange, onFileSelect }: Google
         method: 'GET'
       });
 
-      if (error) throw error;
+      if (error) {
+        // Check if it's a configuration error
+        const errorMsg = (error.message || '') + ' ' + JSON.stringify(error);
+        if (errorMsg.includes('não configurado') || errorMsg.includes('400')) {
+          setNotConfigured(true);
+          return;
+        }
+        throw error;
+      }
       setFiles(data.files || []);
     } catch (error: any) {
       console.error('Error fetching files:', error);
-      toast.error('Erro ao buscar arquivos do Google Drive');
+      const msg = error?.message || '';
+      if (msg.includes('não configurado')) {
+        setNotConfigured(true);
+      } else {
+        toast.error('Erro ao buscar arquivos do Google Drive');
+      }
     } finally {
       setLoading(false);
     }
@@ -158,6 +175,22 @@ export function GoogleDrivePicker({ isOpen, onOpenChange, onFileSelect }: Google
             <div className="flex flex-col items-center justify-center h-[300px] gap-2">
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
               <p className="text-sm text-muted-foreground">Carregando arquivos...</p>
+            </div>
+          ) : notConfigured ? (
+            <div className="flex flex-col items-center justify-center h-[300px] gap-3 px-6 text-center">
+              <Settings className="h-10 w-10 text-muted-foreground" />
+              <div>
+                <p className="text-sm font-semibold">Google Drive não configurado</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Sua organização ainda não conectou uma conta do Google Drive. Configure as credenciais para começar a importar arquivos.
+                </p>
+              </div>
+              <Button asChild size="sm" onClick={() => onOpenChange(false)}>
+                <Link to="/dashboard/settings">
+                  <Settings className="h-4 w-4 mr-2" />
+                  Ir para Configurações
+                </Link>
+              </Button>
             </div>
           ) : files.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-[300px] text-muted-foreground">
