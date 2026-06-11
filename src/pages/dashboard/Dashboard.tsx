@@ -1,9 +1,14 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
 import { formatBytes } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
+import { FileDown } from "lucide-react";
+import { toast } from "sonner";
+import jsPDF from "jspdf";
+import html2canvas from "html2canvas";
 import {
   AreaChart,
   Area,
@@ -76,6 +81,42 @@ export default function OrgDashboard() {
   const { organization, profile } = useAuth();
   const [data, setData] = useState<Indicators | null>(null);
   const [loading, setLoading] = useState(true);
+  const [exporting, setExporting] = useState(false);
+  const dashboardRef = useRef<HTMLDivElement>(null);
+
+  const handleExportPDF = async () => {
+    if (!dashboardRef.current) return;
+    setExporting(true);
+    toast.info("Gerando PDF dos indicadores...");
+
+    try {
+      // Small delay to ensure all charts are rendered
+      await new Promise((resolve) => setTimeout(resolve, 500));
+
+      const canvas = await html2canvas(dashboardRef.current, {
+        scale: 2,
+        useCORS: true,
+        logging: false,
+        windowWidth: dashboardRef.current.scrollWidth,
+        windowHeight: dashboardRef.current.scrollHeight,
+      });
+
+      const imgData = canvas.toDataURL("image/png");
+      const pdf = new jsPDF("p", "mm", "a4");
+      const imgProps = pdf.getImageProperties(imgData);
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+
+      pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
+      pdf.save(`dashboard-indicadores-${new Date().toISOString().split("T")[0]}.pdf`);
+      toast.success("PDF exportado com sucesso!");
+    } catch (error) {
+      console.error("Erro ao exportar PDF:", error);
+      toast.error("Erro ao gerar o PDF.");
+    } finally {
+      setExporting(false);
+    }
+  };
 
   useEffect(() => {
     const load = async () => {
@@ -109,12 +150,25 @@ export default function OrgDashboard() {
   }));
 
   return (
-    <div className="space-y-6 animate-fade-in p-2 md:p-0">
-      <div>
-        <h1 className="text-3xl font-bold text-foreground">
-          Olá, {profile?.full_name?.split(" ")[0] || "Usuário"}
-        </h1>
-        <p className="text-muted-foreground">Indicadores do Nexo GED</p>
+    <div className="space-y-6 animate-fade-in p-2 md:p-0" ref={dashboardRef}>
+      <div className="flex justify-between items-start">
+        <div>
+          <h1 className="text-3xl font-bold text-foreground">
+            Olá, {profile?.full_name?.split(" ")[0] || "Usuário"}
+          </h1>
+          <p className="text-muted-foreground">Indicadores do Nexo GED</p>
+        </div>
+        {!loading && (
+          <Button 
+            onClick={handleExportPDF} 
+            disabled={exporting}
+            variant="outline"
+            className="hidden md:flex gap-2"
+          >
+            <FileDown className="h-4 w-4" />
+            {exporting ? "Gerando..." : "Exportar PDF"}
+          </Button>
+        )}
       </div>
 
       {/* Monthly uploads */}
