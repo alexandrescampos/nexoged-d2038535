@@ -1203,51 +1203,6 @@ export type Database = {
           },
         ]
       }
-      organization_integrations: {
-        Row: {
-          created_at: string
-          credentials: Json
-          id: string
-          is_active: boolean
-          organization_id: string
-          provider: string
-          updated_at: string
-        }
-        Insert: {
-          created_at?: string
-          credentials?: Json
-          id?: string
-          is_active?: boolean
-          organization_id: string
-          provider: string
-          updated_at?: string
-        }
-        Update: {
-          created_at?: string
-          credentials?: Json
-          id?: string
-          is_active?: boolean
-          organization_id?: string
-          provider?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "organization_integrations_organization_id_fkey"
-            columns: ["organization_id"]
-            isOneToOne: false
-            referencedRelation: "organization_usage"
-            referencedColumns: ["organization_id"]
-          },
-          {
-            foreignKeyName: "organization_integrations_organization_id_fkey"
-            columns: ["organization_id"]
-            isOneToOne: false
-            referencedRelation: "organizations"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       organizations: {
         Row: {
           address: string | null

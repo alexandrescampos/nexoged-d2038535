@@ -1,13 +1,12 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2"
-
-const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY')
-const GATEWAY_URL = "https://connector-gateway.lovable.dev/google_drive"
-
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
+
+const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY')
+const GOOGLE_DRIVE_API_KEY = Deno.env.get('GOOGLE_DRIVE_API_KEY')
+const GATEWAY_URL = "https://connector-gateway.lovable.dev/google_drive"
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -15,50 +14,12 @@ serve(async (req) => {
   }
 
   try {
-    const authHeader = req.headers.get('Authorization')
-    if (!authHeader) throw new Error('No authorization header')
-
-    const supabaseClient = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
-      { global: { headers: { Authorization: authHeader } } }
-    )
-
-    // Get user identity
-    const { data: { user }, error: userError } = await supabaseClient.auth.getUser()
-    if (userError || !user) throw new Error('Não autorizado')
-
-    // Get user profile for organization_id
-    const { data: profile, error: profileError } = await supabaseClient
-      .from('profiles')
-      .select('organization_id')
-      .eq('id', user.id)
-      .single()
-
-    if (profileError || !profile) throw new Error('Perfil do usuário não encontrado')
-    const organizationId = profile.organization_id
-
-    // Get organization's Google Drive credentials from database
-    const { data: integration, error: integrationError } = await supabaseClient
-      .from('organization_integrations')
-      .select('credentials')
-      .eq('organization_id', organizationId)
-      .eq('provider', 'google_drive')
-      .eq('is_active', true)
-      .single()
-
-    if (integrationError || !integration) {
-      throw new Error('Google Drive não configurado para esta empresa. Por favor, conecte sua conta nas configurações.')
-    }
-
-    const { apiKey: GOOGLE_DRIVE_API_KEY } = integration.credentials
-
-    if (!LOVABLE_API_KEY || !GOOGLE_DRIVE_API_KEY) {
-      throw new Error('Chaves de API ausentes ou inválidas')
-    }
-
     const url = new URL(req.url)
     const action = url.searchParams.get('action')
+
+    if (!LOVABLE_API_KEY || !GOOGLE_DRIVE_API_KEY) {
+      throw new Error('Missing API keys')
+    }
 
     if (action === 'list') {
       const folderId = url.searchParams.get('folderId') || 'root'
@@ -94,9 +55,10 @@ serve(async (req) => {
       if (!response.ok) {
         const errorText = await response.text()
         console.error('Download error:', errorText)
-        throw new Error(`Falha ao baixar arquivo do Google Drive: ${response.statusText}`)
+        throw new Error(`Failed to download file: ${response.statusText}`)
       }
 
+      // We forward the content type and the body
       const contentType = response.headers.get('Content-Type') || 'application/octet-stream'
       
       return new Response(response.body, {
@@ -128,7 +90,7 @@ serve(async (req) => {
       })
     }
 
-    throw new Error('Ação inválida')
+    throw new Error('Invalid action')
   } catch (error) {
     console.error('Error:', error)
     return new Response(JSON.stringify({ error: error.message }), {
