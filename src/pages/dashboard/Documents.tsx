@@ -1002,6 +1002,11 @@ export default function DocumentsPage() {
                                 tags: Array.isArray(doc.tags) ? doc.tags : [],
                                 sigilo: doc.sigilo || "PUBLICO",
                               });
+                              const cfMap: Record<string, any> = {};
+                              (doc.custom_field_values || []).forEach((cv: any) => {
+                                if (cv.custom_field_id) cfMap[cv.custom_field_id] = cv.value;
+                              });
+                              setEditCustomFields(cfMap);
                             }}
                           >
                             <FileCode className="h-4 w-4" /> Editar Dados
