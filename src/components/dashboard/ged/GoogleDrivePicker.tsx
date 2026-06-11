@@ -20,6 +20,7 @@ interface GoogleDriveFile {
   mimeType: string;
   size?: string;
   iconLink?: string;
+  path?: string;
 }
 
 interface GoogleDrivePickerProps {
