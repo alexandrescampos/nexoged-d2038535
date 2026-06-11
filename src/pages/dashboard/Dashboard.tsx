@@ -480,6 +480,4 @@ export default function OrgDashboard() {
   );
 }
 
-  );
-}
 
