@@ -42,9 +42,17 @@ export function MultiFileUploader({
     'application/pdf': ['.pdf'],
     'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['.docx'],
     'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': ['.xlsx'],
+    'application/vnd.ms-excel': ['.xls'],
     'image/jpeg': ['.jpg', '.jpeg'],
     'image/png': ['.png'],
-    'text/plain': ['.txt']
+    'image/webp': ['.webp'],
+    'image/gif': ['.gif'],
+    'image/bmp': ['.bmp'],
+    'image/tiff': ['.tif', '.tiff'],
+    'text/plain': ['.txt', '.log'],
+    'text/csv': ['.csv'],
+    'application/xml': ['.xml', '.xsd', '.xsl', '.xslt'],
+    'text/xml': ['.xml']
   },
   requiresCreationDate = false,
   requiresExpirationDate = false
@@ -146,7 +154,7 @@ export function MultiFileUploader({
           {isDragActive ? "Solte os arquivos aqui" : "Arraste e solte ou clique para selecionar arquivos"}
         </p>
         <p className="text-xs text-muted-foreground mt-2 text-center">
-          PDF, DOCX, XLSX, JPG, PNG (Máx {maxSize}MB por arquivo)
+          PDF, DOCX, XLSX/XLS, CSV, TXT, XML, JPG, PNG, WEBP, GIF, BMP, TIFF (Máx {maxSize}MB por arquivo)
         </p>
       </div>
 
