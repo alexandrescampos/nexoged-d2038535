@@ -225,13 +225,13 @@ export default function OrgDashboard() {
                     <p className="text-xs text-red-600/80">Você possui {stats.expiredDocs} documentos com data de validade expirada.</p>
                   </div>
                   <Button size="sm" variant="outline" className="border-red-500/30 text-red-700 hover:bg-red-500/10" onClick={() => {
-                    const item = { title: "Documentos", url: "/dashboard/documents", icon: FileText };
+                    const item = { title: "Relatório de Vencimentos", url: "/dashboard/expiration-report", icon: Calendar };
                     openTab({
                       id: item.url,
                       title: item.title,
                       icon: item.icon,
                     });
-                    navigate("/dashboard/documents?status=expired");
+                    navigate(item.url);
                   }}>
                     Ver Todos
                   </Button>
@@ -248,13 +248,13 @@ export default function OrgDashboard() {
                     <p className="text-xs text-amber-600/80">Você possui {stats.nearExpiryDocs} documentos que vencerão nos próximos 30 dias.</p>
                   </div>
                   <Button size="sm" variant="outline" className="border-amber-500/30 text-amber-700 hover:bg-amber-500/10" onClick={() => {
-                    const item = { title: "Documentos", url: "/dashboard/documents", icon: FileText };
+                    const item = { title: "Relatório de Vencimentos", url: "/dashboard/expiration-report", icon: Calendar };
                     openTab({
                       id: item.url,
                       title: item.title,
                       icon: item.icon,
                     });
-                    navigate("/dashboard/documents?status=near_expiry");
+                    navigate(item.url);
                   }}>
                     Ver Todos
                   </Button>
