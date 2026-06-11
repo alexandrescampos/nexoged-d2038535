@@ -20,6 +20,7 @@ interface GoogleDriveFile {
   mimeType: string;
   size?: string;
   iconLink?: string;
+  path?: string;
 }
 
 interface GoogleDrivePickerProps {
@@ -35,15 +36,18 @@ export function GoogleDrivePicker({ isOpen, onOpenChange, onFileSelect }: Google
   const [currentFolder, setCurrentFolder] = useState<string>('root');
   const [history, setHistory] = useState<string[]>([]);
   const [downloadingIds, setDownloadingIds] = useState<Set<string>>(new Set());
+  const [recursive, setRecursive] = useState(false);
+  const [truncated, setTruncated] = useState(false);
 
-  const fetchFiles = async (folderId: string = 'root', searchQuery: string = '') => {
+  const fetchFiles = async (folderId: string = 'root', searchQuery: string = '', recursiveMode = recursive) => {
     setLoading(true);
+    setTruncated(false);
     try {
-      const queryParams = new URLSearchParams(
-        searchQuery 
-          ? { action: 'search', query: searchQuery }
-          : { action: 'list', folderId }
-      ).toString();
+      const params: Record<string, string> = searchQuery
+        ? { action: 'search', query: searchQuery }
+        : { action: 'list', folderId };
+      if (!searchQuery && recursiveMode) params.recursive = 'true';
+      const queryParams = new URLSearchParams(params).toString();
 
       const { data, error } = await supabase.functions.invoke(`google-drive-integration?${queryParams}`, {
         method: 'GET'
@@ -52,7 +56,6 @@ export function GoogleDrivePicker({ isOpen, onOpenChange, onFileSelect }: Google
       if (error) {
         const msg = (error as any).message || '';
         const ctx = (error as any).context;
-        // 409 NOT_CONNECTED handling
         if (msg.includes('NOT_CONNECTED') || ctx?.status === 409) {
           toast.error('Google Drive não conectado. Peça a um administrador para conectar em Configurações → Google Drive.', { duration: 7000 });
           onOpenChange(false);
@@ -66,6 +69,10 @@ export function GoogleDrivePicker({ isOpen, onOpenChange, onFileSelect }: Google
         throw error;
       }
       setFiles(data.files || []);
+      if (data.truncated) {
+        setTruncated(true);
+        toast.warning('Listagem truncada — há muitos itens. Refine usando a pesquisa ou navegue pelas subpastas.', { duration: 6000 });
+      }
     } catch (error: any) {
       console.error('Error fetching files:', error);
       toast.error('Erro ao buscar arquivos do Google Drive');
@@ -76,15 +83,24 @@ export function GoogleDrivePicker({ isOpen, onOpenChange, onFileSelect }: Google
 
   useEffect(() => {
     if (isOpen) {
-      fetchFiles(currentFolder);
+      fetchFiles(currentFolder, '', recursive);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen]);
 
   const handleFolderClick = (folderId: string) => {
+    if (recursive) return; // navigation disabled when listing recursively
     setHistory(prev => [...prev, currentFolder]);
     setCurrentFolder(folderId);
-    fetchFiles(folderId);
+    fetchFiles(folderId, '', false);
   };
+
+  const toggleRecursive = () => {
+    const next = !recursive;
+    setRecursive(next);
+    fetchFiles(currentFolder, '', next);
+  };
+
 
   const handleBack = () => {
     if (history.length === 0) return;
@@ -156,17 +172,31 @@ export function GoogleDrivePicker({ isOpen, onOpenChange, onFileSelect }: Google
           </Button>
         </form>
 
-        <div className="flex items-center gap-2 mb-2">
-          {history.length > 0 && (
-            <Button variant="ghost" size="sm" onClick={handleBack} className="h-8 px-2">
-              <ChevronLeft className="h-4 w-4 mr-1" />
-              Voltar
-            </Button>
-          )}
-          <span className="text-xs text-muted-foreground">
-            {currentFolder === 'root' ? 'Meu Drive' : 'Pasta atual'}
-          </span>
+        <div className="flex items-center justify-between gap-2 mb-2">
+          <div className="flex items-center gap-2">
+            {history.length > 0 && !recursive && (
+              <Button variant="ghost" size="sm" onClick={handleBack} className="h-8 px-2">
+                <ChevronLeft className="h-4 w-4 mr-1" />
+                Voltar
+              </Button>
+            )}
+            <span className="text-xs text-muted-foreground">
+              {recursive
+                ? `Listagem recursiva${truncated ? ' (truncada)' : ''}`
+                : currentFolder === 'root' ? 'Meu Drive' : 'Pasta atual'}
+            </span>
+          </div>
+          <label className="flex items-center gap-2 text-xs text-muted-foreground cursor-pointer select-none">
+            <input
+              type="checkbox"
+              checked={recursive}
+              onChange={toggleRecursive}
+              className="h-3.5 w-3.5 rounded border-input"
+            />
+            Incluir subpastas
+          </label>
         </div>
+
 
         <ScrollArea className="flex-1 min-h-[300px] border rounded-md">
           {loading ? (
@@ -194,12 +224,16 @@ export function GoogleDrivePicker({ isOpen, onOpenChange, onFileSelect }: Google
                     )}
                     <div className="flex flex-col min-w-0">
                       <span className="text-sm font-medium truncate">{file.name}</span>
+                      {recursive && file.path && file.path !== file.name && (
+                        <span className="text-[10px] text-muted-foreground truncate">{file.path}</span>
+                      )}
                       {file.size && (
                         <span className="text-[10px] text-muted-foreground">
                           {(parseInt(file.size) / 1024 / 1024).toFixed(2)} MB
                         </span>
                       )}
                     </div>
+
                   </div>
                   
                   <div className="flex items-center gap-2">
