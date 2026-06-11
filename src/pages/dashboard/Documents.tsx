@@ -637,7 +637,7 @@ export default function DocumentsPage() {
             </span>
           ))}
           <Badge variant="secondary" className="ml-2 font-normal">
-            {(currentFolder ? (folderTotalCount ?? 0) : totalDocuments).toLocaleString()} {(currentFolder ? (folderTotalCount ?? 0) : totalDocuments) === 1 ? "documento" : "documentos"}
+            {(currentFolder ? (totalCount ?? 0) : totalDocuments).toLocaleString()} {(currentFolder ? (totalCount ?? 0) : totalDocuments) === 1 ? "documento" : "documentos"}
           </Badge>
         </div>
         {folderPath.length > 0 && (
