@@ -325,17 +325,18 @@ export default function DocumentsPage() {
     const newParams = new URLSearchParams(searchParams);
     if (currentFolder) {
       newParams.set("folder", currentFolder);
-      localStorage.setItem("ged_last_folder", currentFolder);
+      localStorage.setItem(storageKey, currentFolder);
     } else {
       newParams.delete("folder");
-      localStorage.removeItem("ged_last_folder");
+      localStorage.removeItem(storageKey);
     }
     
     // Only update if changed to avoid loops
     if (newParams.get("folder") !== searchParams.get("folder")) {
       setSearchParams(newParams, { replace: true });
     }
-  }, [currentFolder]);
+  }, [currentFolder, storageKey]);
+
 
   // Handle URL changes (like back button)
   useEffect(() => {
