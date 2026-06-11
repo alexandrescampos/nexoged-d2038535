@@ -101,6 +101,22 @@ async function extractDocx(buffer: ArrayBuffer): Promise<string[]> {
   return [result.value || ""];
 }
 
+async function extractXlsx(buffer: ArrayBuffer): Promise<string[]> {
+  const XLSX: any = await import("https://esm.sh/xlsx@0.18.5");
+  const wb = XLSX.read(new Uint8Array(buffer), { type: "array" });
+  const pages: string[] = [];
+  for (const name of wb.SheetNames) {
+    const ws = wb.Sheets[name];
+    const csv = XLSX.utils.sheet_to_csv(ws, { blankrows: false });
+    pages.push(`# ${name}\n${csv}`.trim());
+  }
+  return pages.length ? pages : [""];
+}
+
+async function extractText(buffer: ArrayBuffer): Promise<string[]> {
+  return [new TextDecoder("utf-8").decode(buffer)];
+}
+
 async function extractImageWithOCR(buffer: ArrayBuffer, mime: string): Promise<string[]> {
   if (!LOVABLE_API_KEY) {
     return ["[OCR de imagem indisponível: LOVABLE_API_KEY não configurada]"];
