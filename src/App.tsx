@@ -56,6 +56,7 @@ import TermsPage from "./pages/dashboard/Terms";
 import PrivacyPage from "./pages/dashboard/Privacy";
 import LegalPage from "./pages/super-admin/Legal";
 import AboutPage from "./pages/dashboard/About";
+import SearchPage from "./pages/dashboard/Search";
 import SuperAdminAboutPage from "./pages/super-admin/About";
 
 
