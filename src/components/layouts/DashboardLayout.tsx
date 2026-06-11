@@ -92,6 +92,7 @@ const menuGroups: MenuGroup[] = [
       { title: "Documentos", url: "/dashboard/documents", icon: FileText, userAllowed: true },
       { title: "Tipos de Documento", url: "/dashboard/document-types", icon: Settings2, adminOnly: true },
       { title: "Listas de Cadastro", url: "/dashboard/lists", icon: ListIcon, adminOnly: true },
+      { title: "Campos Adicionais", url: "/dashboard/custom-fields", icon: Settings2, adminOnly: true },
       
       { title: "Usuários", url: "/dashboard/users", icon: Users, adminOnly: true },
       { title: "Controle de Acesso", url: "/dashboard/access-control", icon: Shield, adminOnly: true },
