@@ -51,7 +51,7 @@ function FieldInput({ field, value, onChange }: { field: CustomField, value: any
         .from("list_items")
         .select("*")
         .eq("list_id", field.list_id)
-        .order("item_value", { ascending: true });
+        .order("value", { ascending: true });
       if (error) throw error;
       return data;
     },
