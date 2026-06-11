@@ -150,12 +150,25 @@ export default function OrgDashboard() {
   }));
 
   return (
-    <div className="space-y-6 animate-fade-in p-2 md:p-0">
-      <div>
-        <h1 className="text-3xl font-bold text-foreground">
-          Olá, {profile?.full_name?.split(" ")[0] || "Usuário"}
-        </h1>
-        <p className="text-muted-foreground">Indicadores do Nexo GED</p>
+    <div className="space-y-6 animate-fade-in p-2 md:p-0" ref={dashboardRef}>
+      <div className="flex justify-between items-start">
+        <div>
+          <h1 className="text-3xl font-bold text-foreground">
+            Olá, {profile?.full_name?.split(" ")[0] || "Usuário"}
+          </h1>
+          <p className="text-muted-foreground">Indicadores do Nexo GED</p>
+        </div>
+        {!loading && (
+          <Button 
+            onClick={handleExportPDF} 
+            disabled={exporting}
+            variant="outline"
+            className="hidden md:flex gap-2"
+          >
+            <FileDown className="h-4 w-4" />
+            {exporting ? "Gerando..." : "Exportar PDF"}
+          </Button>
+        )}
       </div>
 
       {/* Monthly uploads */}
