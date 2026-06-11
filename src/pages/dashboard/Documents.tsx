@@ -1268,8 +1268,9 @@ export default function DocumentsPage() {
                     type="number" 
                     min={1} 
                     value={editData.page_count}
-                    onChange={(e) => setEditData({ ...editData, page_count: parseInt(e.target.value) || 1 })}
-                    disabled // Auto-calculated during upload, edited only if strictly necessary (kept disabled for control)
+                    readOnly
+                    disabled 
+
                   />
                   <TooltipProvider>
                     <Tooltip>
