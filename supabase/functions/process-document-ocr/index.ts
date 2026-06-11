@@ -94,12 +94,56 @@ async function extractDocx(buffer: ArrayBuffer): Promise<string[]> {
 }
 
 async function extractImageWithOCR(buffer: ArrayBuffer, mime: string): Promise<string[]> {
-  // Como as Edge Functions do Supabase (Deno Deploy) não suportam Web Workers nem multithreading,
-  // e o Tesseract.js depende fortemente disso para não travar a thread principal,
-  // a indexação de imagens JPG/PNG requer uma abordagem alternativa (API externa ou worker dedicado).
-  
-  // No momento, registramos o limite técnico mas garantimos que o sistema não trave.
-  return ["[Indexação de imagem (JPG/PNG/TIFF) requer OCR via API externa ou Worker dedicado - Limitação do ambiente Edge]"];
+  if (!LOVABLE_API_KEY) {
+    return ["[OCR de imagem indisponível: LOVABLE_API_KEY não configurada]"];
+  }
+  try {
+    // Convert to base64
+    const bytes = new Uint8Array(buffer);
+    let binary = "";
+    const chunkSize = 0x8000;
+    for (let i = 0; i < bytes.length; i += chunkSize) {
+      binary += String.fromCharCode(...bytes.subarray(i, i + chunkSize));
+    }
+    const base64 = btoa(binary);
+    const dataUrl = `data:${mime};base64,${base64}`;
+
+    const resp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${LOVABLE_API_KEY}`,
+      },
+      body: JSON.stringify({
+        model: "google/gemini-2.5-flash",
+        messages: [
+          {
+            role: "system",
+            content: "Você é um OCR. Extraia TODO o texto visível na imagem fornecida, preservando quebras de linha. Responda apenas com o texto bruto, sem comentários.",
+          },
+          {
+            role: "user",
+            content: [
+              { type: "text", text: "Extraia todo o texto visível desta imagem." },
+              { type: "image_url", image_url: { url: dataUrl } },
+            ],
+          },
+        ],
+      }),
+    });
+
+    if (!resp.ok) {
+      const errText = await resp.text();
+      console.error("Lovable AI OCR falhou:", resp.status, errText);
+      return [`[Falha OCR imagem: HTTP ${resp.status}]`];
+    }
+    const json = await resp.json();
+    const text = json?.choices?.[0]?.message?.content || "";
+    return [String(text).trim() || "[Imagem sem texto detectado]"];
+  } catch (e) {
+    console.error("Erro OCR imagem:", e);
+    return [`[Erro OCR imagem: ${String((e as any)?.message || e)}]`];
+  }
 }
 
 async function processDocument(documentId: string, versionId: string | null) {
