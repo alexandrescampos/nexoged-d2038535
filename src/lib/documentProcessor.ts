@@ -111,5 +111,51 @@ export const documentProcessor = {
     }
 
     return file;
+  },
+
+  /**
+   * Calcula o número de páginas ou abas de um arquivo.
+   * Suporta PDF (páginas), Imagens (1 página), Planilhas (número de abas), Word/Outros (mínimo 1).
+   */
+  async countPages(file: File): Promise<number> {
+    const type = file.type.toLowerCase();
+    const ext = file.name.split('.').pop()?.toLowerCase();
+
+    // PDF: Conta páginas reais
+    if (type === 'application/pdf' || ext === 'pdf') {
+      try {
+        const arrayBuffer = await file.arrayBuffer();
+        const pdfDoc = await PDFDocument.load(arrayBuffer, { ignoreEncryption: true });
+        return pdfDoc.getPageCount();
+      } catch (e) {
+        console.warn("Falha ao contar páginas do PDF:", e);
+        return 1;
+      }
+    }
+
+    // Imagens: Sempre 1 página
+    if (type.startsWith('image/')) {
+      return 1;
+    }
+
+    // Planilhas: Conta número de planilhas (sheets)
+    const spreadsheetTypes = [
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      'application/vnd.ms-excel',
+      'text/csv'
+    ];
+    if (spreadsheetTypes.includes(type) || ['xlsx', 'xls', 'csv'].includes(ext || '')) {
+      try {
+        const arrayBuffer = await file.arrayBuffer();
+        const workbook = XLSX.read(arrayBuffer, { type: 'array', bookSheets: true });
+        return workbook.SheetNames.length || 1;
+      } catch (e) {
+        console.warn("Falha ao contar abas da planilha:", e);
+        return 1;
+      }
+    }
+
+    // Outros tipos (Word, XML, TXT, etc): Mínimo 1
+    return 1;
   }
 };
