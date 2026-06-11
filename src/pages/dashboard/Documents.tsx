@@ -23,7 +23,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useDocumentPermissions } from "@/hooks/useDocumentPermissions";
 import { supabase } from "@/integrations/supabase/client";
 import { MultiFileUploader } from "@/components/dashboard/ged/MultiFileUploader";
-import { Files } from "lucide-react";
+import { Files, AlertCircle } from "lucide-react";
 import { 
   FileText, 
   Upload, 
