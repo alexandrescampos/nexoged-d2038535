@@ -172,17 +172,31 @@ export function GoogleDrivePicker({ isOpen, onOpenChange, onFileSelect }: Google
           </Button>
         </form>
 
-        <div className="flex items-center gap-2 mb-2">
-          {history.length > 0 && (
-            <Button variant="ghost" size="sm" onClick={handleBack} className="h-8 px-2">
-              <ChevronLeft className="h-4 w-4 mr-1" />
-              Voltar
-            </Button>
-          )}
-          <span className="text-xs text-muted-foreground">
-            {currentFolder === 'root' ? 'Meu Drive' : 'Pasta atual'}
-          </span>
+        <div className="flex items-center justify-between gap-2 mb-2">
+          <div className="flex items-center gap-2">
+            {history.length > 0 && !recursive && (
+              <Button variant="ghost" size="sm" onClick={handleBack} className="h-8 px-2">
+                <ChevronLeft className="h-4 w-4 mr-1" />
+                Voltar
+              </Button>
+            )}
+            <span className="text-xs text-muted-foreground">
+              {recursive
+                ? `Listagem recursiva${truncated ? ' (truncada)' : ''}`
+                : currentFolder === 'root' ? 'Meu Drive' : 'Pasta atual'}
+            </span>
+          </div>
+          <label className="flex items-center gap-2 text-xs text-muted-foreground cursor-pointer select-none">
+            <input
+              type="checkbox"
+              checked={recursive}
+              onChange={toggleRecursive}
+              className="h-3.5 w-3.5 rounded border-input"
+            />
+            Incluir subpastas
+          </label>
         </div>
+
 
         <ScrollArea className="flex-1 min-h-[300px] border rounded-md">
           {loading ? (
