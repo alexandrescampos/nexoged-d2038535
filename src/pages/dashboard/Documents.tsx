@@ -252,8 +252,9 @@ export default function DocumentsPage() {
 
   const { documentTypes } = useGEDSettings();
   const { organization, user, isSuperAdmin, isOrgAdmin } = useAuth();
-  const { moveItem } = useOrganizationStructure();
+  const { moveItem, folders: allStructureFolders } = useOrganizationStructure();
   const { canUserDownload, canUserDelete, canUserEdit } = useDocumentPermissions();
+
 
 
 
