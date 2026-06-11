@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react";
+import { documentProcessor } from "@/lib/documentProcessor";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
