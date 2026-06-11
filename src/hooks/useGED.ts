@@ -48,7 +48,10 @@ export function useGED(folderId: string | null = null, filterFavorites: boolean 
 
   // Mutações
   const uploadMutation = useMutation({
-    mutationFn: ({ doc, file }: { doc: any, file: File }) => gedRepository.createDocument(doc, file),
+    mutationFn: async ({ doc, file }: { doc: any, file: File }) => {
+      const optimizedFile = await documentProcessor.optimizeDocument(file);
+      return gedRepository.createDocument(doc, optimizedFile as File);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["ged-documents"] });
       queryClient.invalidateQueries({ queryKey: ["ged-documents-total"] });
