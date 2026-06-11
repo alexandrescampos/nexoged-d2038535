@@ -15,6 +15,7 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { CustomFieldsForm } from './CustomFieldsForm';
 import { CustomField } from '@/types/ged';
+import { GoogleDrivePicker } from './GoogleDrivePicker';
 
 interface FileWithProgress {
   file: File;
@@ -63,10 +64,10 @@ export function MultiFileUploader({
   associatedFields = []
 }: MultiFileUploaderProps) {
   const [files, setFiles] = useState<FileWithProgress[]>([]);
+  const [isDrivePickerOpen, setIsDrivePickerOpen] = useState(false);
 
-  const onDrop = useCallback((acceptedFiles: File[], fileRejections: FileRejection[]) => {
-    // Extra validation before state update to ensure we don't even add non-allowed files to the list
-    const validatedFiles = acceptedFiles.filter(file => {
+  const addFilesToQueue = useCallback((newFilesList: File[]) => {
+    const validatedFiles = newFilesList.filter(file => {
       const mimeType = file.type;
       const extension = `.${file.name.split('.').pop()?.toLowerCase()}`;
       
@@ -76,7 +77,7 @@ export function MultiFileUploader({
       return isMimeAllowed || isExtAllowed;
     });
 
-    const newFiles = validatedFiles.map(file => ({
+    const formattedFiles = validatedFiles.map(file => ({
       file,
       id: Math.random().toString(36).substring(7),
       progress: 0,
@@ -87,7 +88,11 @@ export function MultiFileUploader({
       customFields: {}
     }));
 
-    setFiles(prev => [...prev, ...newFiles]);
+    setFiles(prev => [...prev, ...formattedFiles]);
+  }, [acceptedFileTypes]);
+
+  const onDrop = useCallback((acceptedFiles: File[], fileRejections: FileRejection[]) => {
+    addFilesToQueue(acceptedFiles);
 
     if (fileRejections.length > 0) {
       const acceptedExts = Array.from(
@@ -208,6 +213,28 @@ export function MultiFileUploader({
           PDF, DOCX, XLSX/XLS, CSV, TXT, XML, JPG, PNG, WEBP, GIF, BMP, TIFF (Máx {maxSize}MB por arquivo)
         </p>
       </div>
+
+      <div className="flex justify-center">
+        <Button 
+          variant="outline" 
+          type="button"
+          onClick={() => setIsDrivePickerOpen(true)}
+          className="gap-2"
+          disabled={isUploading}
+        >
+          <img src="https://upload.wikimedia.org/wikipedia/commons/1/12/Google_Drive_icon_%282020%29.svg" className="h-4 w-4" alt="Drive" />
+          Importar do Google Drive
+        </Button>
+      </div>
+
+      <GoogleDrivePicker 
+        isOpen={isDrivePickerOpen} 
+        onOpenChange={setIsDrivePickerOpen} 
+        onFileSelect={(selectedFiles) => {
+          addFilesToQueue(selectedFiles);
+          setIsDrivePickerOpen(false);
+        }}
+      />
 
       {files.length > 0 && (
         <Card className="overflow-hidden border-muted-foreground/20">
