@@ -18,19 +18,6 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import {
-  HoverCard,
-  HoverCardContent,
-  HoverCardTrigger,
-} from "@/components/ui/hover-card";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { DocumentPreview } from "@/components/dashboard/ged/DocumentPreview";
-
 
 
 const SEARCH_STORAGE_KEY = "ged_advanced_search_state";
@@ -78,7 +65,6 @@ function expandQuery(q: string): string {
 export default function SearchPage() {
   const { organization } = useAuth();
   const navigate = useNavigate();
-  const [previewDoc, setPreviewDoc] = useState<{ id: string, name: string } | null>(null);
 
   const [state, setState] = useState<SearchState>(() => {
     const saved = localStorage.getItem(SEARCH_STORAGE_KEY);
@@ -90,7 +76,6 @@ export default function SearchPage() {
       page: 0,
     };
   });
-
 
   useEffect(() => {
     localStorage.setItem(SEARCH_STORAGE_KEY, JSON.stringify(state));
@@ -288,23 +273,11 @@ export default function SearchPage() {
                         }}
                       >
                         <TableCell className="font-medium">
-                          <HoverCard openDelay={500}>
-                            <HoverCardTrigger asChild>
-                              <div className="flex items-center gap-2 hover:underline decoration-primary decoration-2 underline-offset-4">
-                                <FileText className="w-4 h-4 text-muted-foreground" />
-                                {h.documento_nome}
-                              </div>
-                            </HoverCardTrigger>
-                            <HoverCardContent className="w-[450px] p-0 shadow-2xl border-primary/20" side="right" align="start">
-                               <DocumentPreview 
-                                 documentId={h.documento_id} 
-                                 documentName={h.documento_nome} 
-                                 className="border-none shadow-none"
-                               />
-                            </HoverCardContent>
-                          </HoverCard>
+                          <div className="flex items-center gap-2">
+                            <FileText className="w-4 h-4 text-muted-foreground" />
+                            {h.documento_nome}
+                          </div>
                         </TableCell>
-
                         <TableCell>{h.numero_pagina}</TableCell>
                         <TableCell>
                           <span
@@ -325,12 +298,11 @@ export default function SearchPage() {
                                   className="h-8 w-8 text-muted-foreground hover:text-primary"
                                   onClick={(e) => {
                                     e.stopPropagation();
-                                    setPreviewDoc({ id: h.documento_id, name: h.documento_nome });
+                                    handleViewFile(h.documento_id);
                                   }}
                                 >
                                   <Eye className="h-4 w-4" />
                                 </Button>
-
                               </TooltipTrigger>
                               <TooltipContent>
                                 <p>Visualizar documento</p>
@@ -361,28 +333,6 @@ export default function SearchPage() {
           </CardContent>
         </Card>
       )}
-
-      <Dialog open={!!previewDoc} onOpenChange={(open) => !open && setPreviewDoc(null)}>
-        <DialogContent className="max-w-4xl w-[90vw] h-[85vh] p-0 flex flex-col overflow-hidden border-primary/20 shadow-2xl">
-          <DialogHeader className="p-4 border-b bg-muted/30">
-            <DialogTitle className="flex items-center gap-2 text-lg truncate pr-8">
-              <FileText className="h-5 w-5 text-primary" />
-              {previewDoc?.name}
-            </DialogTitle>
-          </DialogHeader>
-          <div className="flex-1 overflow-hidden">
-            {previewDoc && (
-              <DocumentPreview 
-                documentId={previewDoc.id} 
-                documentName={previewDoc.name} 
-                className="w-full h-full border-none rounded-none shadow-none"
-                showDetails={true}
-              />
-            )}
-          </div>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }
-
