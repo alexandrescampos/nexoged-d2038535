@@ -133,6 +133,8 @@ export type Database = {
           tempo_processamento_ms: number | null
           tentativas: number
           texto_extraido: string | null
+          texto_normalizado: string | null
+          texto_original: string | null
           texto_tsv: unknown
           total_paginas: number | null
           updated_at: string
@@ -151,6 +153,8 @@ export type Database = {
           tempo_processamento_ms?: number | null
           tentativas?: number
           texto_extraido?: string | null
+          texto_normalizado?: string | null
+          texto_original?: string | null
           texto_tsv?: unknown
           total_paginas?: number | null
           updated_at?: string
@@ -169,6 +173,8 @@ export type Database = {
           tempo_processamento_ms?: number | null
           tentativas?: number
           texto_extraido?: string | null
+          texto_normalizado?: string | null
+          texto_original?: string | null
           texto_tsv?: unknown
           total_paginas?: number | null
           updated_at?: string
@@ -295,6 +301,8 @@ export type Database = {
           ocr_id: string
           ocr_pagina_id: string
           organization_id: string
+          texto_normalizado: string | null
+          texto_original: string | null
           texto_pagina: string | null
           texto_tsv: unknown
         }
@@ -305,6 +313,8 @@ export type Database = {
           ocr_id: string
           ocr_pagina_id?: string
           organization_id: string
+          texto_normalizado?: string | null
+          texto_original?: string | null
           texto_pagina?: string | null
           texto_tsv?: unknown
         }
@@ -315,6 +325,8 @@ export type Database = {
           ocr_id?: string
           ocr_pagina_id?: string
           organization_id?: string
+          texto_normalizado?: string | null
+          texto_original?: string | null
           texto_pagina?: string | null
           texto_tsv?: unknown
         }
@@ -2222,6 +2234,7 @@ export type Database = {
         Returns: boolean
       }
       normalize_name: { Args: { input: string }; Returns: string }
+      normalize_text: { Args: { input_text: string }; Returns: string }
       ocr_dashboard_stats: { Args: { p_org_id: string }; Returns: Json }
       record_password_change: {
         Args: { p_new_password: string; p_user_id: string }
@@ -2250,6 +2263,7 @@ export type Database = {
       }
       sum_org_document_size: { Args: { p_org_id: string }; Returns: number }
       trigger_ocr_queue: { Args: never; Returns: undefined }
+      unaccent: { Args: { "": string }; Returns: string }
     }
     Enums: {
       app_role: "super_admin" | "org_admin" | "manager" | "user"
