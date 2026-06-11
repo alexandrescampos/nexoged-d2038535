@@ -10,9 +10,10 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Loader2, Search, Folder, File, ChevronRight, ChevronLeft, Download } from 'lucide-react';
+import { Loader2, Search, Folder, File, ChevronRight, ChevronLeft, Download, Settings } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { Link } from 'react-router-dom';
 
 interface GoogleDriveFile {
   id: string;
