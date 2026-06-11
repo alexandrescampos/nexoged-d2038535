@@ -243,6 +243,41 @@ export default function SuperAdminSettings() {
           </CardContent>
         </Card>
 
+        {/* OCR Whitelist */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <FileSearch className="h-5 w-5" />
+              Tipos Aceitos para OCR e Indexação
+            </CardTitle>
+            <CardDescription>
+              Selecione os formatos de arquivo que serão processados pelo motor de OCR/indexação.
+              Arquivos enviados em formatos não selecionados não serão indexados.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {OCR_MIME_OPTIONS.map((opt) => (
+                <label key={opt.value} className="flex items-center gap-2 cursor-pointer">
+                  <Checkbox
+                    checked={ocrMimes.includes(opt.value)}
+                    onCheckedChange={() => toggleOcrMime(opt.value)}
+                    disabled={isLoadingSettings}
+                  />
+                  <span className="text-sm">{opt.label}</span>
+                </label>
+              ))}
+            </div>
+            <div className="flex justify-end">
+              <Button onClick={handleSaveOcrMimes} disabled={isSavingOcr || isLoadingSettings}>
+                {isSavingOcr ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
+                {isSavingOcr ? "Salvando..." : "Salvar Whitelist"}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+
+
         {/* Configurações Gerais */}
         <Card>
           <CardHeader>
