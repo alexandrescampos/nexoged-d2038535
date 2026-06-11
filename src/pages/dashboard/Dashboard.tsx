@@ -104,8 +104,9 @@ export default function OrgDashboard() {
     toast.info("Gerando relatório profissional...");
 
     try {
-      // Small delay to ensure all charts are rendered
-      await new Promise((resolve) => setTimeout(resolve, 800));
+      // Wait for the header (rendered conditionally on `exporting`) and charts to be in the DOM
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+
 
       const canvas = await html2canvas(dashboardRef.current, {
         scale: 2,
