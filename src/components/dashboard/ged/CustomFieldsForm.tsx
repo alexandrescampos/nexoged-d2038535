@@ -129,7 +129,7 @@ function FieldInput({ field, value, onChange }: { field: CustomField, value: any
           </SelectTrigger>
           <SelectContent>
             {listItems.map((item: any) => (
-              <SelectItem key={item.id} value={item.item_value}>{item.item_value}</SelectItem>
+              <SelectItem key={item.id} value={item.value}>{item.value}</SelectItem>
             ))}
           </SelectContent>
         </Select>
