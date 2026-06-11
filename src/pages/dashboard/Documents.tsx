@@ -223,6 +223,7 @@ export default function DocumentsPage() {
     status,
     setStatus,
     uploadDocument,
+    uploadDocuments,
     isUploading,
     deleteDocument,
     toggleFavorite,
