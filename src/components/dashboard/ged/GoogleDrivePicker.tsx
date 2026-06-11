@@ -36,17 +36,13 @@ export function GoogleDrivePicker({ isOpen, onOpenChange, onFileSelect }: Google
   const [currentFolder, setCurrentFolder] = useState<string>('root');
   const [history, setHistory] = useState<string[]>([]);
   const [downloadingIds, setDownloadingIds] = useState<Set<string>>(new Set());
-  // Removed recursive state as requested
-
 
   const fetchFiles = async (folderId: string = 'root', searchQuery: string = '') => {
     setLoading(true);
-
     try {
       const params: Record<string, string> = searchQuery
         ? { action: 'search', query: searchQuery }
         : { action: 'list', folderId };
-
       const queryParams = new URLSearchParams(params).toString();
 
       const { data, error } = await supabase.functions.invoke(`google-drive-integration?${queryParams}`, {
@@ -69,7 +65,6 @@ export function GoogleDrivePicker({ isOpen, onOpenChange, onFileSelect }: Google
         throw error;
       }
       setFiles(data.files || []);
-
     } catch (error: any) {
       console.error('Error fetching files:', error);
       toast.error('Erro ao buscar arquivos do Google Drive');
@@ -90,9 +85,6 @@ export function GoogleDrivePicker({ isOpen, onOpenChange, onFileSelect }: Google
     setCurrentFolder(folderId);
     fetchFiles(folderId, '');
   };
-
-
-
 
   const handleBack = () => {
     if (history.length === 0) return;
@@ -141,8 +133,7 @@ export function GoogleDrivePicker({ isOpen, onOpenChange, onFileSelect }: Google
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="w-[95vw] sm:max-w-[850px] h-[90vh] flex flex-col p-0 gap-0 overflow-hidden">
-
+      <DialogContent className="w-[95vw] sm:max-w-[800px] h-[90vh] flex flex-col p-0 gap-0 overflow-hidden">
         <DialogHeader className="p-6 pb-2">
           <DialogTitle className="flex items-center gap-2 text-xl">
             <img src="https://upload.wikimedia.org/wikipedia/commons/1/12/Google_Drive_icon_%282020%29.svg" className="h-6 w-6" alt="Drive" />
@@ -152,7 +143,6 @@ export function GoogleDrivePicker({ isOpen, onOpenChange, onFileSelect }: Google
             Selecione arquivos do seu Google Drive para importar para o GED.
           </DialogDescription>
         </DialogHeader>
-
 
         <div className="px-6 pb-4">
           <form onSubmit={handleSearch} className="flex gap-2">
@@ -182,54 +172,56 @@ export function GoogleDrivePicker({ isOpen, onOpenChange, onFileSelect }: Google
           </div>
         </div>
 
-
-
-        <ScrollArea className="flex-1 border-y bg-slate-50/50">
+        <ScrollArea className="flex-1 border-y bg-slate-50/50 overflow-y-auto">
           {loading ? (
-            <div className="flex flex-col items-center justify-center h-[300px] gap-2">
+            <div className="flex flex-col items-center justify-center h-full min-h-[400px] gap-2">
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
               <p className="text-sm text-muted-foreground">Carregando arquivos...</p>
             </div>
           ) : files.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-[300px] text-muted-foreground">
+            <div className="flex flex-col items-center justify-center h-full min-h-[400px] text-muted-foreground">
               <p className="text-sm">Nenhum arquivo encontrado.</p>
             </div>
           ) : (
-            <div className="p-2 space-y-1">
+            <div className="p-4 space-y-2">
               {files.map((file) => (
                 <div 
                   key={file.id}
-                  className="flex items-center justify-between p-2 rounded-md hover:bg-accent cursor-pointer transition-colors group"
+                  className="flex items-center justify-between p-3 rounded-lg border bg-background hover:bg-accent hover:border-accent cursor-pointer transition-all group shadow-sm"
                   onClick={() => isFolder(file.mimeType) ? handleFolderClick(file.id) : null}
                 >
-                  <div className="flex items-center gap-3 flex-1 min-w-0">
-                    {isFolder(file.mimeType) ? (
-                      <Folder className="h-5 w-5 text-blue-500 fill-blue-500/20" />
-                    ) : (
-                      <File className="h-5 w-5 text-muted-foreground" />
-                    )}
-                    <div className="flex flex-col min-w-0">
-                      <span className="text-sm font-medium truncate">{file.name}</span>
-                      {recursive && file.path && file.path !== file.name && (
-                        <span className="text-[10px] text-muted-foreground truncate">{file.path}</span>
-                      )}
-                      {file.size && (
-                        <span className="text-[10px] text-muted-foreground">
-                          {(parseInt(file.size) / 1024 / 1024).toFixed(2)} MB
-                        </span>
+                  <div className="flex items-center gap-4 flex-1 min-w-0">
+                    <div className="flex-shrink-0">
+                      {isFolder(file.mimeType) ? (
+                        <Folder className="h-6 w-6 text-blue-500 fill-blue-500/20" />
+                      ) : (
+                        <File className="h-6 w-6 text-muted-foreground" />
                       )}
                     </div>
-
+                    <div className="flex flex-col min-w-0">
+                      <span className="text-sm font-semibold truncate leading-none mb-1">{file.name}</span>
+                      <div className="flex items-center gap-2">
+                        {file.size && (
+                          <span className="text-[11px] text-muted-foreground">
+                            {(parseInt(file.size) / 1024 / 1024).toFixed(2)} MB
+                          </span>
+                        )}
+                        {file.size && <span className="text-muted-foreground/30 text-[10px]">•</span>}
+                        <span className="text-[11px] text-muted-foreground truncate max-w-[200px]">
+                          {isFolder(file.mimeType) ? 'Pasta' : file.mimeType.split('/').pop()?.toUpperCase()}
+                        </span>
+                      </div>
+                    </div>
                   </div>
                   
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 ml-4">
                     {isFolder(file.mimeType) ? (
-                      <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                      <ChevronRight className="h-5 w-5 text-muted-foreground/50 group-hover:text-muted-foreground transition-colors" />
                     ) : (
                       <Button 
                         size="icon" 
                         variant="ghost" 
-                        className="h-8 w-8"
+                        className="h-9 w-9 bg-slate-100 hover:bg-primary hover:text-white transition-colors"
                         onClick={(e) => {
                           e.stopPropagation();
                           downloadFile(file);
@@ -255,7 +247,6 @@ export function GoogleDrivePicker({ isOpen, onOpenChange, onFileSelect }: Google
             Fechar
           </Button>
         </DialogFooter>
-
       </DialogContent>
     </Dialog>
   );
