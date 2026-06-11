@@ -213,7 +213,7 @@ Deno.serve(async (req) => {
 
       const fetchUrl = exportInfo
         ? `${DRIVE_API}/files/${fileId}/export?mimeType=${encodeURIComponent(exportInfo.mime)}`
-        : `${DRIVE_API}/files/${fileId}?alt=media`;
+        : `${DRIVE_API}/files/${fileId}?alt=media&supportsAllDrives=true`;
 
       const r = await fetch(fetchUrl, { headers });
       if (!r.ok) {
