@@ -214,6 +214,28 @@ export function MultiFileUploader({
         </p>
       </div>
 
+      <div className="flex justify-center">
+        <Button 
+          variant="outline" 
+          type="button"
+          onClick={() => setIsDrivePickerOpen(true)}
+          className="gap-2"
+          disabled={isUploading}
+        >
+          <img src="https://upload.wikimedia.org/wikipedia/commons/1/12/Google_Drive_icon_%282020%29.svg" className="h-4 w-4" alt="Drive" />
+          Importar do Google Drive
+        </Button>
+      </div>
+
+      <GoogleDrivePicker 
+        isOpen={isDrivePickerOpen} 
+        onOpenChange={setIsDrivePickerOpen} 
+        onFileSelect={(selectedFiles) => {
+          addFilesToQueue(selectedFiles);
+          setIsDrivePickerOpen(false);
+        }}
+      />
+
       {files.length > 0 && (
         <Card className="overflow-hidden border-muted-foreground/20">
           <ScrollArea className="max-h-[450px]">
