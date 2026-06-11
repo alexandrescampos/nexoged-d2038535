@@ -72,8 +72,10 @@ async function extractPdfPages(buffer: ArrayBuffer): Promise<string[]> {
 
 
 async function extractDocx(buffer: ArrayBuffer): Promise<string[]> {
-  const mammoth = await import("https://esm.sh/mammoth@1.8.0");
-  const result = await mammoth.extractRawText({ arrayBuffer: buffer });
+  const mammoth: any = await import("https://esm.sh/mammoth@1.8.0");
+  const fn = mammoth.extractRawText || mammoth.default?.extractRawText;
+  // mammoth no Deno espera { buffer: Uint8Array } (Node Buffer-like); arrayBuffer não é aceito
+  const result = await fn({ buffer: new Uint8Array(buffer) });
   return [result.value || ""];
 }
 
