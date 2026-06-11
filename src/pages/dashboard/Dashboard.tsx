@@ -126,12 +126,9 @@ export default function OrgDashboard() {
       const contentWidth = pdfWidth - 20; // Margin
       const contentHeight = (imgProps.height * contentWidth) / imgProps.width;
 
-      // Add simple professional header
-      pdf.setFillColor(245, 245, 245);
-      pdf.rect(0, 0, pdfWidth, 15, "F");
-      pdf.setFontSize(8);
-      pdf.setTextColor(100);
-      pdf.text(`Relatório Nexo GED - ${data?.org_name || ""} - Gerado em ${format(new Date(), "dd/MM/yyyy HH:mm")}`, 10, 10);
+      // Simple professional watermark or header if needed, but since we have a dedicated header in the capture, we don't need much here.
+      // Removing the rect to keep it clean as requested.
+
 
       pdf.addImage(imgData, "PNG", 10, 20, contentWidth, contentHeight);
       
@@ -248,27 +245,28 @@ export default function OrgDashboard() {
       {/* Main Container for PDF capture */}
       <div ref={dashboardRef} className="space-y-6 bg-transparent">
         {/* Report Header (Visible only in PDF/Export) */}
-        <div className="hidden pdf-only flex justify-between items-center pb-6 border-b border-slate-100 mb-6 bg-white p-6 rounded-t-xl">
-          <div className="flex items-center gap-4">
+        <div className="hidden pdf-only flex justify-between items-center pb-6 border-b border-slate-200 mb-6 bg-white p-6 rounded-t-xl">
+          <div className="flex items-center gap-6">
             {data?.org_logo ? (
-              <img src={data.org_logo} alt="Logo" className="h-12 object-contain" />
+              <img src={data.org_logo} alt="Logo" className="h-14 object-contain" />
             ) : (
-              <div className="h-12 w-12 bg-blue-600 flex items-center justify-center rounded text-white font-bold text-xl">
+              <div className="h-14 w-14 bg-blue-600 flex items-center justify-center rounded text-white font-bold text-2xl">
                 N
               </div>
             )}
             <div>
-              <h2 className="text-xl font-bold text-slate-900 uppercase">Relatório de Indicadores</h2>
-              <p className="text-sm text-slate-500 font-medium">{data?.org_name || "Organização"}</p>
+              <h2 className="text-2xl font-bold text-[#1e293b] leading-tight">RELATÓRIO DE INDICADORES</h2>
+              <p className="text-base text-slate-500 font-medium">{data?.org_name || "Nexo GED"}</p>
             </div>
           </div>
           <div className="text-right">
-            <p className="text-xs text-slate-400 uppercase font-semibold">Período Selecionado</p>
-            <p className="text-sm font-bold text-slate-700">
+            <p className="text-xs text-slate-400 uppercase font-bold tracking-wider mb-1">PERÍODO SELECIONADO</p>
+            <p className="text-base font-bold text-slate-700">
               {format(startDate, "dd/MM/yyyy")} a {format(endDate, "dd/MM/yyyy")}
             </p>
           </div>
         </div>
+
 
         {/* Monthly uploads - Full Width (Matches the screenshot layout) */}
         <Card className="border-none shadow-sm overflow-hidden">
