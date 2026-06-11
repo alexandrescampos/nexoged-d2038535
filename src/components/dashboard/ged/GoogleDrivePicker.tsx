@@ -133,7 +133,7 @@ export function GoogleDrivePicker({ isOpen, onOpenChange, onFileSelect }: Google
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="w-[95vw] sm:max-w-[800px] h-[90vh] flex flex-col p-0 gap-0 overflow-hidden">
+      <DialogContent className="w-[95vw] sm:max-w-[850px] h-[90vh] flex flex-col p-0 gap-0">
         <DialogHeader className="p-6 pb-2">
           <DialogTitle className="flex items-center gap-2 text-xl">
             <img src="https://upload.wikimedia.org/wikipedia/commons/1/12/Google_Drive_icon_%282020%29.svg" className="h-6 w-6" alt="Drive" />
@@ -172,7 +172,7 @@ export function GoogleDrivePicker({ isOpen, onOpenChange, onFileSelect }: Google
           </div>
         </div>
 
-        <ScrollArea className="flex-1 border-y bg-slate-50/50 overflow-y-auto">
+        <ScrollArea className="flex-1 border-y bg-slate-50/50">
           {loading ? (
             <div className="flex flex-col items-center justify-center h-full min-h-[400px] gap-2">
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
