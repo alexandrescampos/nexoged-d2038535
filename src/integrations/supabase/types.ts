@@ -75,6 +75,215 @@ export type Database = {
           },
         ]
       }
+      documento_ocr: {
+        Row: {
+          created_at: string
+          data_processamento: string | null
+          documento_id: string
+          erro_processamento: string | null
+          idioma: string
+          metadata: Json
+          ocr_id: string
+          organization_id: string
+          status: Database["public"]["Enums"]["ocr_status"]
+          tempo_processamento_ms: number | null
+          tentativas: number
+          texto_extraido: string | null
+          texto_tsv: unknown
+          total_paginas: number | null
+          updated_at: string
+          versao_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          data_processamento?: string | null
+          documento_id: string
+          erro_processamento?: string | null
+          idioma?: string
+          metadata?: Json
+          ocr_id?: string
+          organization_id: string
+          status?: Database["public"]["Enums"]["ocr_status"]
+          tempo_processamento_ms?: number | null
+          tentativas?: number
+          texto_extraido?: string | null
+          texto_tsv?: unknown
+          total_paginas?: number | null
+          updated_at?: string
+          versao_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          data_processamento?: string | null
+          documento_id?: string
+          erro_processamento?: string | null
+          idioma?: string
+          metadata?: Json
+          ocr_id?: string
+          organization_id?: string
+          status?: Database["public"]["Enums"]["ocr_status"]
+          tempo_processamento_ms?: number | null
+          tentativas?: number
+          texto_extraido?: string | null
+          texto_tsv?: unknown
+          total_paginas?: number | null
+          updated_at?: string
+          versao_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "documento_ocr_documento_id_fkey"
+            columns: ["documento_id"]
+            isOneToOne: false
+            referencedRelation: "ged_documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "documento_ocr_versao_id_fkey"
+            columns: ["versao_id"]
+            isOneToOne: false
+            referencedRelation: "ged_document_versions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      documento_ocr_auditoria: {
+        Row: {
+          acao: Database["public"]["Enums"]["ocr_audit_action"]
+          created_at: string
+          documento_id: string | null
+          id: string
+          organization_id: string
+          payload: Json
+          user_id: string | null
+        }
+        Insert: {
+          acao: Database["public"]["Enums"]["ocr_audit_action"]
+          created_at?: string
+          documento_id?: string | null
+          id?: string
+          organization_id: string
+          payload?: Json
+          user_id?: string | null
+        }
+        Update: {
+          acao?: Database["public"]["Enums"]["ocr_audit_action"]
+          created_at?: string
+          documento_id?: string | null
+          id?: string
+          organization_id?: string
+          payload?: Json
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      documento_ocr_fila: {
+        Row: {
+          agendado_para: string
+          created_at: string
+          documento_id: string
+          finalizado_em: string | null
+          id: string
+          iniciado_em: string | null
+          organization_id: string
+          prioridade: number
+          status: Database["public"]["Enums"]["ocr_status"]
+          tentativas: number
+          ultimo_erro: string | null
+          updated_at: string
+          versao_id: string | null
+          worker_id: string | null
+        }
+        Insert: {
+          agendado_para?: string
+          created_at?: string
+          documento_id: string
+          finalizado_em?: string | null
+          id?: string
+          iniciado_em?: string | null
+          organization_id: string
+          prioridade?: number
+          status?: Database["public"]["Enums"]["ocr_status"]
+          tentativas?: number
+          ultimo_erro?: string | null
+          updated_at?: string
+          versao_id?: string | null
+          worker_id?: string | null
+        }
+        Update: {
+          agendado_para?: string
+          created_at?: string
+          documento_id?: string
+          finalizado_em?: string | null
+          id?: string
+          iniciado_em?: string | null
+          organization_id?: string
+          prioridade?: number
+          status?: Database["public"]["Enums"]["ocr_status"]
+          tentativas?: number
+          ultimo_erro?: string | null
+          updated_at?: string
+          versao_id?: string | null
+          worker_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "documento_ocr_fila_documento_id_fkey"
+            columns: ["documento_id"]
+            isOneToOne: false
+            referencedRelation: "ged_documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "documento_ocr_fila_versao_id_fkey"
+            columns: ["versao_id"]
+            isOneToOne: false
+            referencedRelation: "ged_document_versions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      documento_ocr_pagina: {
+        Row: {
+          created_at: string
+          documento_id: string
+          numero_pagina: number
+          ocr_id: string
+          ocr_pagina_id: string
+          organization_id: string
+          texto_pagina: string | null
+          texto_tsv: unknown
+        }
+        Insert: {
+          created_at?: string
+          documento_id: string
+          numero_pagina: number
+          ocr_id: string
+          ocr_pagina_id?: string
+          organization_id: string
+          texto_pagina?: string | null
+          texto_tsv?: unknown
+        }
+        Update: {
+          created_at?: string
+          documento_id?: string
+          numero_pagina?: number
+          ocr_id?: string
+          ocr_pagina_id?: string
+          organization_id?: string
+          texto_pagina?: string | null
+          texto_tsv?: unknown
+        }
+        Relationships: [
+          {
+            foreignKeyName: "documento_ocr_pagina_ocr_id_fkey"
+            columns: ["ocr_id"]
+            isOneToOne: false
+            referencedRelation: "documento_ocr"
+            referencedColumns: ["ocr_id"]
+          },
+        ]
+      }
       documento_usuario_autorizado: {
         Row: {
           created_at: string | null
@@ -1795,6 +2004,14 @@ export type Database = {
       check_user_has_history: { Args: { p_user_id: string }; Returns: boolean }
       check_user_is_admin: { Args: { user_id: string }; Returns: boolean }
       cleanup_api_usage_log: { Args: never; Returns: undefined }
+      enqueue_document_ocr: {
+        Args: {
+          p_documento_id: string
+          p_prioridade?: number
+          p_versao_id?: string
+        }
+        Returns: string
+      }
       get_org_max_users: { Args: { _org_id: string }; Returns: number }
       get_org_user_count: { Args: { _org_id: string }; Returns: number }
       get_super_admin_ids: { Args: never; Returns: string[] }
@@ -1826,9 +2043,31 @@ export type Database = {
         Returns: boolean
       }
       normalize_name: { Args: { input: string }; Returns: string }
+      ocr_dashboard_stats: { Args: { p_org_id: string }; Returns: Json }
       record_password_change: {
         Args: { p_new_password: string; p_user_id: string }
         Returns: undefined
+      }
+      search_documents_fts: {
+        Args: {
+          p_filters?: Json
+          p_limit?: number
+          p_offset?: number
+          p_query: string
+        }
+        Returns: {
+          classificacao: string
+          created_at: string
+          documento_id: string
+          documento_nome: string
+          folder_id: string
+          numero_pagina: number
+          rank: number
+          tipo_documento_id: string
+          total_count: number
+          trecho: string
+          versao_id: string
+        }[]
       }
       sum_org_document_size: { Args: { p_org_id: string }; Returns: number }
     }
@@ -1842,6 +2081,14 @@ export type Database = {
         | "restaurar_documento"
         | "assinar_documento"
         | "administrar_sistema"
+      ocr_audit_action:
+        | "ocr_executado"
+        | "ocr_erro"
+        | "pesquisa"
+        | "resultado_aberto"
+        | "pagina_visualizada"
+        | "reprocessar"
+      ocr_status: "pendente" | "processando" | "processado" | "erro"
       org_status: "active" | "suspended" | "trial"
       sigilo_nivel:
         | "PUBLICO"
@@ -1987,6 +2234,15 @@ export const Constants = {
         "assinar_documento",
         "administrar_sistema",
       ],
+      ocr_audit_action: [
+        "ocr_executado",
+        "ocr_erro",
+        "pesquisa",
+        "resultado_aberto",
+        "pagina_visualizada",
+        "reprocessar",
+      ],
+      ocr_status: ["pendente", "processando", "processado", "erro"],
       org_status: ["active", "suspended", "trial"],
       sigilo_nivel: [
         "PUBLICO",
