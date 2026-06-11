@@ -2070,6 +2070,7 @@ export type Database = {
         }[]
       }
       sum_org_document_size: { Args: { p_org_id: string }; Returns: number }
+      trigger_ocr_queue: { Args: never; Returns: undefined }
     }
     Enums: {
       app_role: "super_admin" | "org_admin" | "manager" | "user"
