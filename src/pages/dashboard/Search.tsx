@@ -288,6 +288,29 @@ export default function SearchPage() {
                         <TableCell className="text-sm text-muted-foreground">
                           {formatDate(h.created_at)}
                         </TableCell>
+                        <TableCell className="text-right">
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-8 w-8 text-muted-foreground hover:text-primary"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleViewFile(h.documento_id);
+                                  }}
+                                >
+                                  <Eye className="h-4 w-4" />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>Visualizar documento</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        </TableCell>
+
                       </TableRow>
                     ))}
                   </TableBody>
