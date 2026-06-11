@@ -145,20 +145,30 @@ export default function OrgDashboard() {
         </CardContent>
       </Card>
 
-      {/* Stat cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      {/* Alertas e Stat cards */}
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
         <StatCard
-          title="Documentos cadastrados"
+          title="Documentos vencidos"
+          value={loading ? "..." : (data?.expired_docs_count ?? 0).toLocaleString("pt-BR")}
+          className="bg-red-600 text-white"
+        />
+        <StatCard
+          title="Vencendo em 30 dias"
+          value={loading ? "..." : (data?.expiring_soon_docs_count ?? 0).toLocaleString("pt-BR")}
+          className="bg-amber-500 text-white"
+        />
+        <StatCard
+          title="Documentos"
           value={loading ? "..." : (data?.total_docs ?? 0).toLocaleString("pt-BR")}
           className="bg-sky-500 text-white"
         />
         <StatCard
-          title="Repositórios e pastas"
+          title="Repositórios"
           value={loading ? "..." : (data?.total_folders ?? 0).toLocaleString("pt-BR")}
           className="bg-slate-600 text-white"
         />
         <StatCard
-          title="Usuários cadastrados"
+          title="Usuários"
           value={
             loading
               ? "..."
@@ -169,7 +179,7 @@ export default function OrgDashboard() {
           className="bg-emerald-500 text-white"
         />
         <StatCard
-          title="Páginas cadastradas"
+          title="Páginas"
           value={loading ? "..." : Number(data?.used_pages ?? 0).toLocaleString("pt-BR")}
           className="bg-orange-500 text-white"
         />
