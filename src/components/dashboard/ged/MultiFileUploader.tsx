@@ -15,6 +15,7 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { CustomFieldsForm } from './CustomFieldsForm';
 import { CustomField } from '@/types/ged';
+import { GoogleDrivePicker } from './GoogleDrivePicker';
 
 interface FileWithProgress {
   file: File;
