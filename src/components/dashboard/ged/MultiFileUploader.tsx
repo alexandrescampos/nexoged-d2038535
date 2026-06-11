@@ -154,7 +154,7 @@ export function MultiFileUploader({
           {isDragActive ? "Solte os arquivos aqui" : "Arraste e solte ou clique para selecionar arquivos"}
         </p>
         <p className="text-xs text-muted-foreground mt-2 text-center">
-          PDF, DOCX, XLSX, JPG, PNG (Máx {maxSize}MB por arquivo)
+          PDF, DOCX, XLSX/XLS, CSV, TXT, XML, JPG, PNG, WEBP, GIF, BMP, TIFF (Máx {maxSize}MB por arquivo)
         </p>
       </div>
 
