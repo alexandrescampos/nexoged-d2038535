@@ -1133,7 +1133,6 @@ export default function DocumentsPage() {
             </Button>
           </DialogFooter>
         </DialogContent>
-        </DialogContent>
       </Dialog>
 
       {/* Modal de Edição */}
