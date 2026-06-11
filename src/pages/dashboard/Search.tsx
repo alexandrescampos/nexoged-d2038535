@@ -9,7 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Search as SearchIcon, FileText, Loader2 } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useNavigate } from "react-router-dom";
-import { formatDate } from "@/lib/timezone";
+import { formatBrasiliaDate as formatDate } from "@/lib/timezone";
 
 type Hit = {
   documento_id: string;
