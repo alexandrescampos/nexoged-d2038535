@@ -112,12 +112,13 @@ export default function OrganizationCnpjs() {
 
     setIsUploading(true);
     try {
-      const fileExt = file.name.split(".").pop();
+      const optimizedFile = await documentProcessor.optimizeDocument(file);
+      const fileExt = (optimizedFile as File).name.split(".").pop();
       const filePath = `cnpj-logos/${editing.id}.${fileExt}`;
 
       const { error: uploadError } = await supabase.storage
         .from("organization-logos")
-        .upload(filePath, file, { upsert: true });
+        .upload(filePath, optimizedFile, { upsert: true });
       if (uploadError) throw uploadError;
 
       const { data: { publicUrl } } = supabase.storage
