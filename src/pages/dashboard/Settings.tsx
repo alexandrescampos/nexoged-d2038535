@@ -372,6 +372,11 @@ export default function OrgSettingsPage() {
 
 
 
+        {/* Google Drive Integration - Apenas para Org Admin */}
+        {isOrgAdmin && organization?.id && (
+          <GoogleDriveIntegrationSettings organizationId={organization.id} />
+        )}
+
         {/* Audit Log - Apenas para Org Admin */}
         {isOrgAdmin && (
           <div className="md:col-span-2">
