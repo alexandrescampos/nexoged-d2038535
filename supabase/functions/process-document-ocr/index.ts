@@ -51,16 +51,21 @@ async function extractDocx(buffer: ArrayBuffer): Promise<string[]> {
 
 async function extractImageWithTesseract(buffer: ArrayBuffer, mime: string): Promise<string[]> {
   // Lazy import - tesseract.js is heavy
-  const { createWorker } = await import("https://esm.sh/tesseract.js@5.1.1");
-  const worker = await createWorker("por");
+  // We use the 'worker-less' or single-threaded approach suitable for Edge Functions
+  const { recognize } = await import("https://esm.sh/tesseract.js@5.1.1");
   const blob = new Blob([buffer], { type: mime });
   const dataUrl = await new Promise<string>((resolve) => {
     const reader = new FileReader();
     reader.onloadend = () => resolve(reader.result as string);
     reader.readAsDataURL(blob);
   });
-  const { data } = await worker.recognize(dataUrl);
-  await worker.terminate();
+  
+  // Directly calling recognize without manual worker creation/termination
+  // which is more compatible with environments lacking full Web Worker support
+  const { data } = await recognize(dataUrl, "por", {
+    logger: m => console.log(m)
+  });
+  
   return [data.text || ""];
 }
 
