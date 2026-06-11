@@ -123,7 +123,7 @@ async function processDocument(documentId: string, versionId: string | null) {
     } else if (mime.includes("word") || fname.endsWith(".docx")) {
       pages = await extractDocx(buffer);
     } else if (mime.startsWith("image/") || /\.(png|jpe?g|tiff?)$/i.test(fname)) {
-      pages = await extractImageWithTesseract(buffer, mime || "image/png");
+      pages = await extractImageWithOCR(buffer, mime || "image/png");
     } else {
       pages = ["[Tipo de arquivo não suportado para OCR]"];
     }
