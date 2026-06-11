@@ -1002,6 +1002,66 @@ export default function DocumentsPage() {
           </div>
         )}
       </ScrollArea>
+
+      {/* Paginação */}
+      {totalCount > 0 && (
+        <div className="flex items-center justify-between border-t p-4 bg-muted/20">
+          <div className="text-sm text-muted-foreground">
+            Mostrando <span className="font-medium">{Math.min(totalCount, page * pageSize + 1)}</span> a{" "}
+            <span className="font-medium">{Math.min(totalCount, (page + 1) * pageSize)}</span> de{" "}
+            <span className="font-medium">{totalCount}</span> documentos
+          </div>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setPage(Math.max(0, page - 1))}
+              disabled={page === 0}
+              className="h-8 gap-1"
+            >
+              <ChevronLeft className="h-4 w-4" /> Anterior
+            </Button>
+            <div className="flex items-center gap-1">
+              {Array.from({ length: Math.ceil(totalCount / pageSize) }).map((_, i) => {
+                // Lógica simples para não mostrar muitas páginas se houver centenas
+                const totalPages = Math.ceil(totalCount / pageSize);
+                if (
+                  i === 0 || 
+                  i === totalPages - 1 || 
+                  (i >= page - 1 && i <= page + 1)
+                ) {
+                  return (
+                    <Button
+                      key={i}
+                      variant={page === i ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setPage(i)}
+                      className="h-8 w-8 p-0"
+                    >
+                      {i + 1}
+                    </Button>
+                  );
+                } else if (
+                  (i === 1 && page > 2) || 
+                  (i === totalPages - 2 && page < totalPages - 3)
+                ) {
+                  return <span key={i} className="px-1 text-muted-foreground">...</span>;
+                }
+                return null;
+              })}
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setPage(page + 1)}
+              disabled={(page + 1) * pageSize >= totalCount}
+              className="h-8 gap-1"
+            >
+              Próximo <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   </div>
 
