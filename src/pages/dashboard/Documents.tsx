@@ -747,6 +747,26 @@ export default function DocumentsPage() {
                         <div className="flex items-center gap-2 min-w-0">
                           <span className="truncate">{doc.title}</span>
                           {doc.is_favorite && <Star className="h-3 w-3 fill-yellow-400 text-yellow-400 flex-shrink-0" />}
+                          {doc.custom_field_values?.length > 0 && (
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <AlertCircle className="h-3 w-3 text-primary flex-shrink-0 cursor-help" />
+                                </TooltipTrigger>
+                                <TooltipContent className="p-3">
+                                  <p className="text-xs font-bold mb-2 uppercase border-b pb-1">Campos Adicionais</p>
+                                  <div className="space-y-1.5">
+                                    {doc.custom_field_values.map((cv: any) => (
+                                      <div key={cv.id} className="text-[10px]">
+                                        <span className="font-semibold">{cv.field_data?.name || 'Campo'}: </span>
+                                        <span className="text-muted-foreground">{cv.value || '—'}</span>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+                          )}
                         </div>
                       </TableCell>
                       <TableCell>
