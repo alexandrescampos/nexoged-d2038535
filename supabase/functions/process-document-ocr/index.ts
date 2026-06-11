@@ -185,35 +185,60 @@ async function processDocument(documentId: string, versionId: string | null) {
     const buffer = await file.arrayBuffer();
     const rawMime = (version.mime_type || "").toLowerCase();
     const fname = (version.file_name || "").toLowerCase();
-    const mime = inferMime(fname, rawMime);
+
+    const resolved = resolveFileType(fname, rawMime, buffer);
+    console.log("Resolved file type:", JSON.stringify(resolved));
 
     const allowed = await getAllowedMimes(supa);
-    if (mime && !allowed.includes(mime)) {
-      throw new Error(`Tipo de arquivo "${mime}" não permitido pela whitelist de OCR`);
+    if (!isAllowedByWhitelist(resolved.canonicalMime, allowed)) {
+      const diag = {
+        mime_raw: resolved.mimeRaw,
+        mime_canonical: resolved.canonicalMime,
+        ext: resolved.ext,
+        resolved_by: resolved.source,
+        family: resolved.family,
+        allowed: false,
+      };
+      throw new Error(
+        `Tipo de arquivo não permitido pela whitelist de OCR. ${JSON.stringify(diag)}`,
+      );
     }
 
     let pages: string[] = [];
-    if (mime === "application/pdf" || fname.endsWith(".pdf")) {
-      try {
-        pages = await extractPdfPages(buffer);
-        const totalChars = pages.reduce((s, p) => s + (p?.length || 0), 0);
-        if (totalChars < 30) {
-          pages = pages.map((p, i) => p || `[Página ${i + 1}: PDF escaneado — OCR pendente]`);
+    switch (resolved.family) {
+      case "pdf":
+        try {
+          pages = await extractPdfPages(buffer);
+          const totalChars = pages.reduce((s, p) => s + (p?.length || 0), 0);
+          if (totalChars < 30) {
+            pages = pages.map((p, i) => p || `[Página ${i + 1}: PDF escaneado — OCR pendente]`);
+          }
+        } catch (e) {
+          console.error("Erro pdf:", e);
+          pages = ["[Falha ao extrair texto do PDF]"];
         }
-      } catch (e) {
-        console.error("Erro pdf:", e);
-        pages = ["[Falha ao extrair texto do PDF]"];
-      }
-    } else if (mime.includes("word") || fname.endsWith(".docx")) {
-      pages = await extractDocx(buffer);
-    } else if (mime.includes("spreadsheet") || mime === "application/vnd.ms-excel" || fname.endsWith(".xlsx") || fname.endsWith(".xls")) {
-      pages = await extractXlsx(buffer);
-    } else if (mime === "text/csv" || mime === "text/plain" || fname.endsWith(".csv") || fname.endsWith(".txt")) {
-      pages = await extractText(buffer);
-    } else if (mime.startsWith("image/")) {
-      pages = await extractImageWithOCR(buffer, mime);
-    } else {
-      pages = ["[Tipo de arquivo não suportado para OCR]"];
+        break;
+      case "docx":
+        pages = await extractDocx(buffer);
+        break;
+      case "spreadsheet":
+        pages = await extractXlsx(buffer);
+        break;
+      case "csv":
+      case "text":
+        pages = await extractText(buffer);
+        break;
+      case "image":
+        pages = await extractImageWithOCR(buffer, resolved.canonicalMime);
+        break;
+      default:
+        throw new Error(
+          `Tipo de arquivo não suportado para OCR. ${JSON.stringify({
+            mime_raw: resolved.mimeRaw,
+            ext: resolved.ext,
+            resolved_by: resolved.source,
+          })}`,
+        );
     }
 
 
