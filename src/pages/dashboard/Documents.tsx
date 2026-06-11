@@ -1198,7 +1198,7 @@ export default function DocumentsPage() {
                       document_type_id: uploadData.document_type_id || null,
                       expiration_date: item.expirationDate || null,
                       document_creation_date: item.creationDate || null,
-                      page_count: 1,
+                      page_count: 1, // Will be auto-calculated in useGED mutation
                       description: item.description || uploadData.description || null,
                       organization_id: organization.id,
                       folder_id: currentFolder,
