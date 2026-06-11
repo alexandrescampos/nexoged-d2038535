@@ -36,15 +36,18 @@ export function GoogleDrivePicker({ isOpen, onOpenChange, onFileSelect }: Google
   const [currentFolder, setCurrentFolder] = useState<string>('root');
   const [history, setHistory] = useState<string[]>([]);
   const [downloadingIds, setDownloadingIds] = useState<Set<string>>(new Set());
+  const [recursive, setRecursive] = useState(false);
+  const [truncated, setTruncated] = useState(false);
 
-  const fetchFiles = async (folderId: string = 'root', searchQuery: string = '') => {
+  const fetchFiles = async (folderId: string = 'root', searchQuery: string = '', recursiveMode = recursive) => {
     setLoading(true);
+    setTruncated(false);
     try {
-      const queryParams = new URLSearchParams(
-        searchQuery 
-          ? { action: 'search', query: searchQuery }
-          : { action: 'list', folderId }
-      ).toString();
+      const params: Record<string, string> = searchQuery
+        ? { action: 'search', query: searchQuery }
+        : { action: 'list', folderId };
+      if (!searchQuery && recursiveMode) params.recursive = 'true';
+      const queryParams = new URLSearchParams(params).toString();
 
       const { data, error } = await supabase.functions.invoke(`google-drive-integration?${queryParams}`, {
         method: 'GET'
@@ -53,7 +56,6 @@ export function GoogleDrivePicker({ isOpen, onOpenChange, onFileSelect }: Google
       if (error) {
         const msg = (error as any).message || '';
         const ctx = (error as any).context;
-        // 409 NOT_CONNECTED handling
         if (msg.includes('NOT_CONNECTED') || ctx?.status === 409) {
           toast.error('Google Drive não conectado. Peça a um administrador para conectar em Configurações → Google Drive.', { duration: 7000 });
           onOpenChange(false);
@@ -67,6 +69,10 @@ export function GoogleDrivePicker({ isOpen, onOpenChange, onFileSelect }: Google
         throw error;
       }
       setFiles(data.files || []);
+      if (data.truncated) {
+        setTruncated(true);
+        toast.warning('Listagem truncada — há muitos itens. Refine usando a pesquisa ou navegue pelas subpastas.', { duration: 6000 });
+      }
     } catch (error: any) {
       console.error('Error fetching files:', error);
       toast.error('Erro ao buscar arquivos do Google Drive');
@@ -77,15 +83,24 @@ export function GoogleDrivePicker({ isOpen, onOpenChange, onFileSelect }: Google
 
   useEffect(() => {
     if (isOpen) {
-      fetchFiles(currentFolder);
+      fetchFiles(currentFolder, '', recursive);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen]);
 
   const handleFolderClick = (folderId: string) => {
+    if (recursive) return; // navigation disabled when listing recursively
     setHistory(prev => [...prev, currentFolder]);
     setCurrentFolder(folderId);
-    fetchFiles(folderId);
+    fetchFiles(folderId, '', false);
   };
+
+  const toggleRecursive = () => {
+    const next = !recursive;
+    setRecursive(next);
+    fetchFiles(currentFolder, '', next);
+  };
+
 
   const handleBack = () => {
     if (history.length === 0) return;
