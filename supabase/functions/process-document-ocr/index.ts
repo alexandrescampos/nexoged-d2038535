@@ -50,21 +50,30 @@ async function extractDocx(buffer: ArrayBuffer): Promise<string[]> {
 }
 
 async function extractImageWithOCR(buffer: ArrayBuffer, mime: string): Promise<string[]> {
-  // Como Tesseract.js depende de Web Workers (não suportados nativamente no Deno Deploy/Supabase Edge Functions),
-  // em um ambiente real usaríamos uma API externa ou um container específico.
-  // Para manter a funcionalidade dentro do limite do Edge Function, vamos tentar usar o tesseract-wasm
-  // ou similar se disponível, ou uma alternativa.
-  // Por agora, vamos registrar que imagens requerem processamento assíncrono via worker dedicado.
-  
   try {
-    // Tentativa com tesseract.js-core diretamente (experimental para Deno)
-    const Tesseract = await import("https://esm.sh/tesseract.js@5.1.1");
-    // Se ainda falhar, capturamos o erro e retornamos uma mensagem clara.
-    const { data } = await Tesseract.recognize(buffer, "por");
+    // Para ambientes como Deno Deploy / Supabase Edge Functions que não permitem Web Workers (utilizados pelo Tesseract.js),
+    // precisamos de uma solução que rode na thread principal ou via API.
+    // Usaremos o tesseract.js de forma a evitar workers se possível ou uma abordagem WASM direta.
+    
+    const { createWorker } = await import("https://esm.sh/tesseract.js@5.1.1");
+    
+    // Tenta inicializar o worker com parâmetros que forçam o uso de recursos locais sem threads se possível
+    const worker = await createWorker("por", 1, {
+      workerPath: "https://esm.sh/tesseract.js@5.1.1/dist/worker.min.js",
+      corePath: "https://esm.sh/tesseract.js-core@5.1.0/tesseract-core-simd.wasm.js",
+      logger: m => console.log(m),
+    });
+    
+    const { data } = await worker.recognize(buffer);
+    await worker.terminate();
     return [data.text || ""];
-  } catch (e) {
-    console.error("Erro OCR Imagem:", e);
-    throw new Error("OCR de imagem não disponível neste ambiente (Web Workers ausentes). Requer worker dedicado.");
+  } catch (e: any) {
+    console.error("Erro OCR:", e);
+    // Fallback: se falhar por falta de Worker, retornamos uma mensagem explicativa
+    if (e?.message?.includes("Worker")) {
+      return ["[OCR de imagem indisponível: ambiente não suporta Web Workers. Use PDF nativo ou DOCX.]"];
+    }
+    throw e;
   }
 }
 
