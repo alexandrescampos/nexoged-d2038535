@@ -1314,8 +1314,9 @@ export default function DocumentsPage() {
                 requiresExpirationDate={!!(uploadData.document_type_id && documentTypes.find(t => t.id === uploadData.document_type_id)?.requires_expiration_date)}
                 associatedFields={uploadData.document_type_id ? documentTypes.find(t => t.id === uploadData.document_type_id)?.associated_fields : []}
                 onUpload={async (items) => {
-                  if (!currentFolder || !organization?.id) {
-                    toast.error("Pasta ou organização não selecionada.");
+                  const targetFolder = currentFolder || selectedUploadFolderId;
+                  if (!targetFolder || !organization?.id) {
+                    toast.error("Por favor, selecione uma pasta de destino.");
                     return;
                   }
 
@@ -1328,8 +1329,9 @@ export default function DocumentsPage() {
                       page_count: 1, // Will be auto-calculated in useGED mutation
                       description: item.description || uploadData.description || null,
                       organization_id: organization.id,
-                      folder_id: currentFolder,
-                      past_id: currentFolder,
+                      folder_id: targetFolder,
+                      past_id: targetFolder,
+
                       status: 'active',
                       tags: uploadData.tags,
                       keywords: [],
