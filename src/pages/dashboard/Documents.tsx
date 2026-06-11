@@ -1196,8 +1196,9 @@ export default function DocumentsPage() {
           <DialogHeader className="p-6 pb-2">
             <DialogTitle>Upload de Documentos</DialogTitle>
             <DialogDescription>
-              Arraste múltiplos arquivos ou selecione do seu computador. {currentFolder ? "" : <span className="text-destructive font-bold">Aviso: Selecione uma pasta no menu lateral antes do upload.</span>}
+              Arraste múltiplos arquivos ou selecione do seu computador.
             </DialogDescription>
+
           </DialogHeader>
 
           <div className="flex-1 overflow-y-auto p-6 pt-2 space-y-6">
