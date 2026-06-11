@@ -36,17 +36,17 @@ export function GoogleDrivePicker({ isOpen, onOpenChange, onFileSelect }: Google
   const [currentFolder, setCurrentFolder] = useState<string>('root');
   const [history, setHistory] = useState<string[]>([]);
   const [downloadingIds, setDownloadingIds] = useState<Set<string>>(new Set());
-  const [recursive, setRecursive] = useState(false);
-  const [truncated, setTruncated] = useState(false);
+  // Removed recursive state as requested
 
-  const fetchFiles = async (folderId: string = 'root', searchQuery: string = '', recursiveMode = recursive) => {
+
+  const fetchFiles = async (folderId: string = 'root', searchQuery: string = '') => {
     setLoading(true);
-    setTruncated(false);
+
     try {
       const params: Record<string, string> = searchQuery
         ? { action: 'search', query: searchQuery }
         : { action: 'list', folderId };
-      if (!searchQuery && recursiveMode) params.recursive = 'true';
+
       const queryParams = new URLSearchParams(params).toString();
 
       const { data, error } = await supabase.functions.invoke(`google-drive-integration?${queryParams}`, {
@@ -69,10 +69,7 @@ export function GoogleDrivePicker({ isOpen, onOpenChange, onFileSelect }: Google
         throw error;
       }
       setFiles(data.files || []);
-      if (data.truncated) {
-        setTruncated(true);
-        toast.warning('Listagem truncada — há muitos itens. Refine usando a pesquisa ou navegue pelas subpastas.', { duration: 6000 });
-      }
+
     } catch (error: any) {
       console.error('Error fetching files:', error);
       toast.error('Erro ao buscar arquivos do Google Drive');
@@ -83,23 +80,18 @@ export function GoogleDrivePicker({ isOpen, onOpenChange, onFileSelect }: Google
 
   useEffect(() => {
     if (isOpen) {
-      fetchFiles(currentFolder, '', recursive);
+      fetchFiles(currentFolder, '');
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen]);
 
   const handleFolderClick = (folderId: string) => {
-    if (recursive) return; // navigation disabled when listing recursively
     setHistory(prev => [...prev, currentFolder]);
     setCurrentFolder(folderId);
-    fetchFiles(folderId, '', false);
+    fetchFiles(folderId, '');
   };
 
-  const toggleRecursive = () => {
-    const next = !recursive;
-    setRecursive(next);
-    fetchFiles(currentFolder, '', next);
-  };
+
 
 
   const handleBack = () => {
@@ -149,10 +141,11 @@ export function GoogleDrivePicker({ isOpen, onOpenChange, onFileSelect }: Google
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px] max-h-[80vh] flex flex-col">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <img src="https://upload.wikimedia.org/wikipedia/commons/1/12/Google_Drive_icon_%282020%29.svg" className="h-5 w-5" alt="Drive" />
+      <DialogContent className="w-[95vw] sm:max-w-[850px] h-[90vh] flex flex-col p-0 gap-0 overflow-hidden">
+
+        <DialogHeader className="p-6 pb-2">
+          <DialogTitle className="flex items-center gap-2 text-xl">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/1/12/Google_Drive_icon_%282020%29.svg" className="h-6 w-6" alt="Drive" />
             Google Drive
           </DialogTitle>
           <DialogDescription>
@@ -160,45 +153,38 @@ export function GoogleDrivePicker({ isOpen, onOpenChange, onFileSelect }: Google
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSearch} className="flex gap-2 mb-4">
-          <Input 
-            placeholder="Pesquisar arquivos..." 
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="flex-1"
-          />
-          <Button type="submit" size="icon" variant="secondary">
-            <Search className="h-4 w-4" />
-          </Button>
-        </form>
 
-        <div className="flex items-center justify-between gap-2 mb-2">
-          <div className="flex items-center gap-2">
-            {history.length > 0 && !recursive && (
-              <Button variant="ghost" size="sm" onClick={handleBack} className="h-8 px-2">
-                <ChevronLeft className="h-4 w-4 mr-1" />
-                Voltar
-              </Button>
-            )}
-            <span className="text-xs text-muted-foreground">
-              {recursive
-                ? `Listagem recursiva${truncated ? ' (truncada)' : ''}`
-                : currentFolder === 'root' ? 'Meu Drive' : 'Pasta atual'}
-            </span>
-          </div>
-          <label className="flex items-center gap-2 text-xs text-muted-foreground cursor-pointer select-none">
-            <input
-              type="checkbox"
-              checked={recursive}
-              onChange={toggleRecursive}
-              className="h-3.5 w-3.5 rounded border-input"
+        <div className="px-6 pb-4">
+          <form onSubmit={handleSearch} className="flex gap-2">
+            <Input 
+              placeholder="Pesquisar arquivos..." 
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="flex-1"
             />
-            Incluir subpastas
-          </label>
+            <Button type="submit" size="icon" variant="secondary">
+              <Search className="h-4 w-4" />
+            </Button>
+          </form>
+
+          <div className="flex items-center justify-between mt-4">
+            <div className="flex items-center gap-2">
+              {history.length > 0 && (
+                <Button variant="ghost" size="sm" onClick={handleBack} className="h-8 px-2">
+                  <ChevronLeft className="h-4 w-4 mr-1" />
+                  Voltar
+                </Button>
+              )}
+              <span className="text-sm font-medium text-muted-foreground">
+                {currentFolder === 'root' ? 'Meu Drive' : 'Pasta atual'}
+              </span>
+            </div>
+          </div>
         </div>
 
 
-        <ScrollArea className="flex-1 min-h-[300px] border rounded-md">
+
+        <ScrollArea className="flex-1 border-y bg-slate-50/50">
           {loading ? (
             <div className="flex flex-col items-center justify-center h-[300px] gap-2">
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -264,11 +250,12 @@ export function GoogleDrivePicker({ isOpen, onOpenChange, onFileSelect }: Google
           )}
         </ScrollArea>
 
-        <DialogFooter>
+        <DialogFooter className="p-6 pt-4 border-t">
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             Fechar
           </Button>
         </DialogFooter>
+
       </DialogContent>
     </Dialog>
   );

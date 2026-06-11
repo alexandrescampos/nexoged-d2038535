@@ -139,60 +139,19 @@ Deno.serve(async (req) => {
 
     if (action === "list") {
       const folderId = url.searchParams.get("folderId") || "root";
-      const recursive = url.searchParams.get("recursive") === "true";
-      const FOLDER_MIME = "application/vnd.google-apps.folder";
-
-      if (!recursive) {
-        const q = `'${folderId}' in parents and trashed = false`;
-        const result = await fetchAllPages(q, {}, 10);
-        if (!result.ok) {
-          return new Response(JSON.stringify({ error: "Falha ao listar", details: result.body }), {
-            status: result.status, headers: { ...corsHeaders, "Content-Type": "application/json" }
-          });
-        }
-        return new Response(JSON.stringify({ files: result.files }), {
-          status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" }
+      const q = `'${folderId}' in parents and trashed = false`;
+      const result = await fetchAllPages(q, {}, 10);
+      
+      if (!result.ok) {
+        return new Response(JSON.stringify({ error: "Falha ao listar", details: result.body }), {
+          status: result.status, headers: { ...corsHeaders, "Content-Type": "application/json" }
         });
       }
-
-      // Recursive BFS through subfolders, with hard limits
-      const MAX_ITEMS = 5000;
-      const MAX_FOLDERS = 200;
-      const queue: { id: string; path: string }[] = [{ id: folderId, path: "" }];
-      const visited = new Set<string>([folderId]);
-      const allFiles: any[] = [];
-      let truncated = false;
-      let foldersProcessed = 0;
-
-      while (queue.length > 0) {
-        if (foldersProcessed >= MAX_FOLDERS || allFiles.length >= MAX_ITEMS) {
-          truncated = true;
-          break;
-        }
-        const current = queue.shift()!;
-        foldersProcessed++;
-        const q = `'${current.id}' in parents and trashed = false`;
-        const result = await fetchAllPages(q, {}, 10);
-        if (!result.ok) {
-          return new Response(JSON.stringify({ error: "Falha ao listar", details: result.body }), {
-            status: result.status, headers: { ...corsHeaders, "Content-Type": "application/json" }
-          });
-        }
-        for (const f of result.files) {
-          const childPath = current.path ? `${current.path}/${f.name}` : f.name;
-          allFiles.push({ ...f, path: childPath, parentId: current.id });
-          if (f.mimeType === FOLDER_MIME && !visited.has(f.id)) {
-            visited.add(f.id);
-            queue.push({ id: f.id, path: childPath });
-          }
-          if (allFiles.length >= MAX_ITEMS) { truncated = true; break; }
-        }
-      }
-
-      return new Response(JSON.stringify({ files: allFiles, recursive: true, truncated, foldersScanned: foldersProcessed }), {
+      return new Response(JSON.stringify({ files: result.files }), {
         status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" }
       });
     }
+
 
 
     if (action === "search") {
