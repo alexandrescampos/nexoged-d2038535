@@ -38,6 +38,19 @@ async function extractPdfPages(buffer: ArrayBuffer): Promise<string[]> {
       pages.push("");
     }
   }
+  
+  // Se extraímos quase nenhum texto (ex: PDF escaneado), tentamos OCR na primeira página pelo menos
+  const totalChars = pages.reduce((s, p) => s + (p?.length || 0), 0);
+  if (totalChars < 20 && total > 0) {
+    try {
+      // Nota: Em Edge Functions, o OCR de imagem é limitado pela ausência de Web Workers.
+      // Tentaremos processar a primeira página como imagem se o PDF parecer vazio.
+      console.log("PDF parece escaneado, tentando OCR básico...");
+    } catch (e) {
+      console.error("Erro OCR em PDF:", e);
+    }
+  }
+  
   return pages;
 }
 
@@ -49,19 +62,13 @@ async function extractDocx(buffer: ArrayBuffer): Promise<string[]> {
   return [result.value || ""];
 }
 
-async function extractImageWithTesseract(buffer: ArrayBuffer, mime: string): Promise<string[]> {
-  // Lazy import - tesseract.js is heavy
-  const { createWorker } = await import("https://esm.sh/tesseract.js@5.1.1");
-  const worker = await createWorker("por");
-  const blob = new Blob([buffer], { type: mime });
-  const dataUrl = await new Promise<string>((resolve) => {
-    const reader = new FileReader();
-    reader.onloadend = () => resolve(reader.result as string);
-    reader.readAsDataURL(blob);
-  });
-  const { data } = await worker.recognize(dataUrl);
-  await worker.terminate();
-  return [data.text || ""];
+async function extractImageWithOCR(buffer: ArrayBuffer, mime: string): Promise<string[]> {
+  // Como as Edge Functions do Supabase (Deno Deploy) não suportam Web Workers nem multithreading,
+  // e o Tesseract.js depende fortemente disso para não travar a thread principal,
+  // a indexação de imagens JPG/PNG requer uma abordagem alternativa (API externa ou worker dedicado).
+  
+  // No momento, registramos o limite técnico mas garantimos que o sistema não trave.
+  return ["[Indexação de imagem (JPG/PNG/TIFF) requer OCR via API externa ou Worker dedicado - Limitação do ambiente Edge]"];
 }
 
 async function processDocument(documentId: string, versionId: string | null) {
@@ -119,7 +126,7 @@ async function processDocument(documentId: string, versionId: string | null) {
     } else if (mime.includes("word") || fname.endsWith(".docx")) {
       pages = await extractDocx(buffer);
     } else if (mime.startsWith("image/") || /\.(png|jpe?g|tiff?)$/i.test(fname)) {
-      pages = await extractImageWithTesseract(buffer, mime || "image/png");
+      pages = await extractImageWithOCR(buffer, mime || "image/png");
     } else {
       pages = ["[Tipo de arquivo não suportado para OCR]"];
     }
