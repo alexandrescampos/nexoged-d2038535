@@ -42,9 +42,17 @@ export function MultiFileUploader({
     'application/pdf': ['.pdf'],
     'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['.docx'],
     'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': ['.xlsx'],
+    'application/vnd.ms-excel': ['.xls'],
     'image/jpeg': ['.jpg', '.jpeg'],
     'image/png': ['.png'],
-    'text/plain': ['.txt']
+    'image/webp': ['.webp'],
+    'image/gif': ['.gif'],
+    'image/bmp': ['.bmp'],
+    'image/tiff': ['.tif', '.tiff'],
+    'text/plain': ['.txt', '.log'],
+    'text/csv': ['.csv'],
+    'application/xml': ['.xml', '.xsd', '.xsl', '.xslt'],
+    'text/xml': ['.xml']
   },
   requiresCreationDate = false,
   requiresExpirationDate = false
