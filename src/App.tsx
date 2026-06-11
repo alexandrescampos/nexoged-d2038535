@@ -56,6 +56,7 @@ import TermsPage from "./pages/dashboard/Terms";
 import PrivacyPage from "./pages/dashboard/Privacy";
 import LegalPage from "./pages/super-admin/Legal";
 import AboutPage from "./pages/dashboard/About";
+import ListsPage from "./pages/dashboard/Lists";
 import SearchPage from "./pages/dashboard/Search";
 import SuperAdminAboutPage from "./pages/super-admin/About";
 
@@ -170,6 +171,7 @@ const App = () => {
               <Route path="permissions" element={<AdminOnlyRoute><PermissionsPage /></AdminOnlyRoute>} />
               <Route path="access-control" element={<AdminOnlyRoute><AccessControlPage /></AdminOnlyRoute>} />
               <Route path="document-types" element={<AdminOnlyRoute><DocumentTypesPage /></AdminOnlyRoute>} />
+              <Route path="lists" element={<AdminOnlyRoute><ListsPage /></AdminOnlyRoute>} />
               <Route path="billing" element={<AdminOnlyRoute><BillingPage /></AdminOnlyRoute>} />
               <Route path="payment-success" element={<AdminOnlyRoute><PaymentSuccessPage /></AdminOnlyRoute>} />
               <Route path="payment-canceled" element={<AdminOnlyRoute><PaymentCanceledPage /></AdminOnlyRoute>} />

@@ -50,6 +50,7 @@ import {
   Copy,
   Share2,
   FolderTree,
+  List as ListIcon,
 } from "lucide-react";
 import { TabsProvider, useTabs } from "@/contexts/TabsContext";
 import { TabsBar } from "@/components/TabsBar";
@@ -90,6 +91,7 @@ const menuGroups: MenuGroup[] = [
     items: [
       { title: "Documentos", url: "/dashboard/documents", icon: FileText, userAllowed: true },
       { title: "Tipos de Documento", url: "/dashboard/document-types", icon: Settings2, adminOnly: true },
+      { title: "Listas de Cadastro", url: "/dashboard/lists", icon: ListIcon, adminOnly: true },
       
       { title: "Usuários", url: "/dashboard/users", icon: Users, adminOnly: true },
       { title: "Controle de Acesso", url: "/dashboard/access-control", icon: Shield, adminOnly: true },
