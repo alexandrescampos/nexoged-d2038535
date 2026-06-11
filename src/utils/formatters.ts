@@ -4,10 +4,19 @@ export const formatBrazilianNumber = (value: number | string | null | undefined)
   
   let num: number;
   if (typeof value === "string") {
-    // Se já tiver vírgula e ponto, assume formato brasileiro e tenta normalizar para o JS (dot decimal)
-    // Se tiver apenas vírgula, assume que é o separador decimal
-    const normalized = value.replace(/\./g, "").replace(",", ".");
-    num = parseFloat(normalized);
+    // Remove todos os espaços
+    const cleanValue = value.trim();
+    
+    // Se tiver vírgula, assume formato brasileiro: ponto é milhar, vírgula é decimal
+    if (cleanValue.includes(",")) {
+      const normalized = cleanValue.replace(/\./g, "").replace(",", ".");
+      num = parseFloat(normalized);
+    } else {
+      // Se não tiver vírgula, mas tiver ponto, pode ser o decimal (padrão JS) 
+      // ou milhar (se for ex: 1.000)
+      // Para simplificar: se não tem vírgula, assume que o ponto é o decimal se houver apenas um.
+      num = parseFloat(cleanValue);
+    }
   } else {
     num = value;
   }
@@ -19,3 +28,4 @@ export const formatBrazilianNumber = (value: number | string | null | undefined)
     maximumFractionDigits: 2,
   }).format(num);
 };
+
