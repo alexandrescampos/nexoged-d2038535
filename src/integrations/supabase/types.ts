@@ -14,6 +14,50 @@ export type Database = {
   }
   public: {
     Tables: {
+      custom_fields: {
+        Row: {
+          created_at: string
+          description: string | null
+          field_type: string
+          id: string
+          is_required: boolean | null
+          list_id: string | null
+          name: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          field_type: string
+          id?: string
+          is_required?: boolean | null
+          list_id?: string | null
+          name: string
+          updated_at?: string
+          user_id?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          field_type?: string
+          id?: string
+          is_required?: boolean | null
+          list_id?: string | null
+          name?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "custom_fields_list_id_fkey"
+            columns: ["list_id"]
+            isOneToOne: false
+            referencedRelation: "lists"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       departments: {
         Row: {
           dept_cd_departamento: string | null
