@@ -1260,7 +1260,7 @@ export default function DocumentsPage() {
       </Dialog>
 
       {/* Modal de Edição */}
-      <Dialog open={!!documentToEdit} onOpenChange={(open) => !open && setDocumentToEdit(null)}>
+      <Dialog open={!!documentToEdit} onOpenChange={(open) => { if (!open) { setDocumentToEdit(null); setEditCustomFields({}); } }}>
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
             <DialogTitle>Editar Dados do Documento</DialogTitle>
