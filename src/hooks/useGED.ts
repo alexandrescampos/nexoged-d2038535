@@ -12,6 +12,7 @@ export function useGED(folderId: string | null = null, filterFavorites: boolean 
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [status, setStatus] = useState<string | null>(initialStatus);
   const [page, setPage] = useState(0);
+  const [pageSize, setPageSize] = useState(20);
   const { profile } = useAuth();
 
   // Documentos
