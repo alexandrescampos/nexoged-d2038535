@@ -73,11 +73,38 @@ async function extractPdfPages(buffer: ArrayBuffer): Promise<string[]> {
 
 async function extractDocx(buffer: ArrayBuffer): Promise<string[]> {
   const mammoth: any = await import("https://esm.sh/mammoth@1.8.0");
+  const jszipModule: any = await import("https://esm.sh/jszip@3.10.1");
+  const JSZip = jszipModule.default;
+  
   const fn = mammoth.extractRawText || mammoth.default?.extractRawText;
-  // mammoth no Deno espera { buffer: Uint8Array } (Node Buffer-like); arrayBuffer não é aceito
   const result = await fn({ buffer: new Uint8Array(buffer) });
-  return [result.value || ""];
+  const text = result.value || "";
+  
+  let pageCount = 1;
+  try {
+    const zip = await JSZip.loadAsync(buffer);
+    const appXml = await zip.file("docProps/app.xml")?.async("string");
+    if (appXml) {
+      const match = appXml.match(/<Pages>(\d+)<\/Pages>/);
+      if (match && match[1]) {
+        pageCount = parseInt(match[1], 10) || 1;
+      }
+    }
+  } catch (e) {
+    console.warn("Erro ao ler metadados do DOCX:", e);
+  }
+
+  if (pageCount > 1) {
+    const pages = [text];
+    for (let i = 1; i < pageCount; i++) {
+      pages.push(`[Página ${i + 1}: Texto extraído do Word]`);
+    }
+    return pages;
+  }
+  
+  return [text];
 }
+
 
 async function extractXlsx(buffer: ArrayBuffer): Promise<string[]> {
   const XLSX: any = await import("https://esm.sh/xlsx@0.18.5");

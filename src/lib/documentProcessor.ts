@@ -1,5 +1,7 @@
 import { PDFDocument } from 'pdf-lib';
 import * as XLSX from 'xlsx';
+import JSZip from 'jszip';
+
 
 
 /**
@@ -155,7 +157,26 @@ export const documentProcessor = {
       }
     }
 
-    // Outros tipos (Word, XML, TXT, etc): Mínimo 1
+    // Word: Tenta extrair contagem de páginas do docProps/app.xml
+    if (type.includes('word') || ['docx', 'docm'].includes(ext || '')) {
+      try {
+        const arrayBuffer = await file.arrayBuffer();
+        const zip = await JSZip.loadAsync(arrayBuffer);
+        const appXml = await zip.file("docProps/app.xml")?.async("string");
+        
+        if (appXml) {
+          const match = appXml.match(/<Pages>(\d+)<\/Pages>/);
+          if (match && match[1]) {
+            return parseInt(match[1], 10) || 1;
+          }
+        }
+      } catch (e) {
+        console.warn("Falha ao contar páginas do Word:", e);
+      }
+    }
+
+    // Outros tipos (XML, TXT, etc): Mínimo 1
     return 1;
+
   }
 };
