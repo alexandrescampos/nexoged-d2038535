@@ -29,6 +29,10 @@ export default function SuperAdminSettings() {
   const OCR_MIME_OPTIONS = [
     { value: "application/pdf", label: "PDF (.pdf)" },
     { value: "application/vnd.openxmlformats-officedocument.wordprocessingml.document", label: "Word (.docx)" },
+    { value: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", label: "Excel (.xlsx)" },
+    { value: "application/vnd.ms-excel", label: "Excel legado (.xls)" },
+    { value: "text/csv", label: "CSV (.csv)" },
+    { value: "text/plain", label: "Texto (.txt)" },
     { value: "image/png", label: "PNG (.png)" },
     { value: "image/jpeg", label: "JPEG (.jpg, .jpeg)" },
     { value: "image/webp", label: "WebP (.webp)" },
