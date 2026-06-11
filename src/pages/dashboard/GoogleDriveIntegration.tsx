@@ -1,56 +1,102 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
+import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Loader2, CheckCircle2, XCircle, RefreshCw, Info, Cloud } from "lucide-react";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle
+} from "@/components/ui/alert-dialog";
+import { Loader2, CheckCircle2, XCircle, RefreshCw, Cloud, Link2, Info } from "lucide-react";
 import { toast } from "sonner";
+import { useAuth } from "@/contexts/AuthContext";
 
-interface DriveAbout {
-  ok: boolean;
-  user?: { displayName?: string; emailAddress?: string; photoLink?: string };
-  storageQuota?: { limit?: string; usage?: string };
-  error?: { message?: string };
+interface Status {
+  connected: boolean;
+  status?: string;
+  email?: string;
+  display_name?: string;
+  photo_url?: string;
+  scope?: string;
+  connected_by_name?: string;
+  connected_at?: string;
+  last_used_at?: string;
+  last_error?: string;
 }
 
-const formatBytes = (bytes?: string) => {
-  if (!bytes) return "—";
-  const n = Number(bytes);
-  if (!isFinite(n)) return "—";
-  const units = ["B", "KB", "MB", "GB", "TB"];
-  let i = 0; let v = n;
-  while (v >= 1024 && i < units.length - 1) { v /= 1024; i++; }
-  return `${v.toFixed(2)} ${units[i]}`;
-};
-
 export default function GoogleDriveIntegrationPage() {
+  const { profile } = useAuth();
+  const [status, setStatus] = useState<Status | null>(null);
   const [loading, setLoading] = useState(true);
-  const [info, setInfo] = useState<DriveAbout | null>(null);
+  const [connecting, setConnecting] = useState(false);
+  const [confirmDisconnect, setConfirmDisconnect] = useState(false);
+  const [disconnecting, setDisconnecting] = useState(false);
+  const [searchParams, setSearchParams] = useSearchParams();
 
-  const fetchAbout = async () => {
+  const orgId = profile?.organization_id;
+
+  const load = useCallback(async () => {
+    if (!orgId) { setLoading(false); return; }
     setLoading(true);
+    const { data, error } = await supabase.rpc("get_org_gdrive_status", { p_org_id: orgId });
+    if (error) {
+      toast.error("Falha ao consultar status: " + error.message);
+      setStatus(null);
+    } else {
+      setStatus(data as unknown as Status);
+    }
+    setLoading(false);
+  }, [orgId]);
+
+  useEffect(() => { load(); }, [load]);
+
+  // Handle OAuth callback redirect
+  useEffect(() => {
+    const r = searchParams.get("gdrive");
+    if (r === "connected") {
+      toast.success("Google Drive conectado com sucesso!");
+      searchParams.delete("gdrive");
+      setSearchParams(searchParams, { replace: true });
+      load();
+    } else if (r === "error") {
+      const reason = searchParams.get("reason") || "desconhecido";
+      toast.error("Falha ao conectar: " + reason);
+      searchParams.delete("gdrive");
+      searchParams.delete("reason");
+      setSearchParams(searchParams, { replace: true });
+    }
+  }, [searchParams, setSearchParams, load]);
+
+  const handleConnect = async () => {
+    setConnecting(true);
     try {
-      const projectUrl = import.meta.env.VITE_SUPABASE_URL as string;
-      const anon = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string;
-      const res = await fetch(`${projectUrl}/functions/v1/google-drive-integration?action=about`, {
-        headers: { Authorization: `Bearer ${anon}`, apikey: anon },
+      const { data, error } = await supabase.functions.invoke("google-oauth-start", {
+        body: { origin: window.location.origin },
       });
-      const json = await res.json();
-      setInfo(json);
+      if (error || !data?.url) throw new Error(error?.message || "Sem URL");
+      window.location.href = data.url;
     } catch (e: any) {
-      setInfo({ ok: false, error: { message: e.message } });
-    } finally {
-      setLoading(false);
+      toast.error("Não foi possível iniciar a conexão: " + e.message);
+      setConnecting(false);
     }
   };
 
-  useEffect(() => { fetchAbout(); }, []);
-
-  const connected = info?.ok && info.user?.emailAddress;
-  const usage = Number(info?.storageQuota?.usage ?? 0);
-  const limit = Number(info?.storageQuota?.limit ?? 0);
-  const pct = limit > 0 ? Math.min(100, (usage / limit) * 100) : 0;
+  const handleDisconnect = async () => {
+    setDisconnecting(true);
+    try {
+      const { error } = await supabase.functions.invoke("google-drive-disconnect");
+      if (error) throw error;
+      toast.success("Google Drive desconectado.");
+      setConfirmDisconnect(false);
+      load();
+    } catch (e: any) {
+      toast.error("Falha ao desconectar: " + e.message);
+    } finally {
+      setDisconnecting(false);
+    }
+  };
 
   return (
     <div className="p-6 max-w-3xl mx-auto space-y-6">
@@ -60,7 +106,7 @@ export default function GoogleDriveIntegrationPage() {
           Integração Google Drive
         </h1>
         <p className="text-muted-foreground mt-1">
-          Visualize a conta conectada e gerencie a integração com o Google Drive.
+          Conecte a conta Google da sua organização para importar arquivos diretamente do Drive.
         </p>
       </div>
 
@@ -70,80 +116,106 @@ export default function GoogleDriveIntegrationPage() {
             <span>Status da conexão</span>
             {loading ? (
               <Badge variant="secondary"><Loader2 className="h-3 w-3 mr-1 animate-spin" /> Verificando</Badge>
-            ) : connected ? (
+            ) : status?.connected ? (
               <Badge className="bg-green-600 hover:bg-green-700"><CheckCircle2 className="h-3 w-3 mr-1" /> Conectado</Badge>
+            ) : status?.status === "error" ? (
+              <Badge variant="destructive"><XCircle className="h-3 w-3 mr-1" /> Erro</Badge>
             ) : (
-              <Badge variant="destructive"><XCircle className="h-3 w-3 mr-1" /> Desconectado</Badge>
+              <Badge variant="secondary"><XCircle className="h-3 w-3 mr-1" /> Desconectado</Badge>
             )}
           </CardTitle>
-          <CardDescription>Conta Google atualmente vinculada ao sistema.</CardDescription>
+          <CardDescription>
+            Cada organização possui sua própria conexão. Apenas administradores podem conectar ou desconectar.
+          </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           {loading ? (
             <div className="flex items-center gap-2 text-muted-foreground">
-              <Loader2 className="h-4 w-4 animate-spin" /> Carregando informações...
+              <Loader2 className="h-4 w-4 animate-spin" /> Carregando...
             </div>
-          ) : connected ? (
+          ) : status?.connected ? (
             <>
               <div className="flex items-center gap-4">
-                {info?.user?.photoLink && (
-                  <img src={info.user.photoLink} alt="" className="h-12 w-12 rounded-full" referrerPolicy="no-referrer" />
+                {status.photo_url && (
+                  <img src={status.photo_url} alt="" className="h-12 w-12 rounded-full" referrerPolicy="no-referrer" />
                 )}
                 <div>
-                  <div className="font-medium">{info?.user?.displayName ?? "—"}</div>
-                  <div className="text-sm text-muted-foreground">{info?.user?.emailAddress}</div>
+                  <div className="font-medium">{status.display_name ?? "—"}</div>
+                  <div className="text-sm text-muted-foreground">{status.email}</div>
+                </div>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+                <div>
+                  <div className="text-muted-foreground">Conectado por</div>
+                  <div>{status.connected_by_name ?? "—"}</div>
+                </div>
+                <div>
+                  <div className="text-muted-foreground">Conectado em</div>
+                  <div>{status.connected_at ? new Date(status.connected_at).toLocaleString("pt-BR") : "—"}</div>
+                </div>
+                <div className="sm:col-span-2">
+                  <div className="text-muted-foreground">Escopo autorizado</div>
+                  <div className="text-xs break-all">{status.scope}</div>
                 </div>
               </div>
 
-              {limit > 0 && (
-                <div className="space-y-1">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Armazenamento</span>
-                    <span>{formatBytes(String(usage))} / {formatBytes(String(limit))}</span>
-                  </div>
-                  <div className="h-2 w-full bg-muted rounded-full overflow-hidden">
-                    <div className="h-full bg-primary" style={{ width: `${pct}%` }} />
-                  </div>
-                </div>
-              )}
+              <div className="flex flex-wrap gap-2 pt-2">
+                <Button variant="outline" onClick={load} disabled={loading}>
+                  <RefreshCw className="h-4 w-4 mr-2" /> Atualizar
+                </Button>
+                <Button variant="outline" onClick={handleConnect} disabled={connecting}>
+                  <Link2 className="h-4 w-4 mr-2" /> Reconectar (outra conta)
+                </Button>
+                <Button variant="destructive" onClick={() => setConfirmDisconnect(true)}>
+                  <XCircle className="h-4 w-4 mr-2" /> Desconectar
+                </Button>
+              </div>
             </>
           ) : (
-            <Alert variant="destructive">
-              <XCircle className="h-4 w-4" />
-              <AlertTitle>Não foi possível conectar</AlertTitle>
-              <AlertDescription>
-                {info?.error?.message ?? "Verifique a configuração do conector Google Drive."}
-              </AlertDescription>
-            </Alert>
+            <>
+              {status?.status === "error" && status.last_error && (
+                <Alert variant="destructive">
+                  <XCircle className="h-4 w-4" />
+                  <AlertTitle>A conexão apresentou erro</AlertTitle>
+                  <AlertDescription className="break-all">{status.last_error}</AlertDescription>
+                </Alert>
+              )}
+              <Alert>
+                <Info className="h-4 w-4" />
+                <AlertTitle>Nenhuma conta Google conectada</AlertTitle>
+                <AlertDescription>
+                  Ao clicar em "Conectar Google Drive", você será redirecionado para a tela oficial do Google para
+                  autorizar a aplicação a <strong>ler</strong> arquivos do Drive da organização. Sua senha nunca é
+                  enviada ao sistema.
+                </AlertDescription>
+              </Alert>
+              <Button onClick={handleConnect} disabled={connecting} size="lg">
+                {connecting ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Link2 className="h-4 w-4 mr-2" />}
+                Conectar Google Drive
+              </Button>
+            </>
           )}
-
-          <div className="flex flex-wrap gap-2 pt-2">
-            <Button variant="outline" onClick={fetchAbout} disabled={loading}>
-              <RefreshCw className={`h-4 w-4 mr-2 ${loading ? "animate-spin" : ""}`} />
-              Atualizar
-            </Button>
-            <Button
-              variant="destructive"
-              onClick={() => {
-                toast.info("Para desconectar, abra o painel de Conectores do Lovable Cloud e remova a conexão do Google Drive.", { duration: 8000 });
-              }}
-            >
-              <XCircle className="h-4 w-4 mr-2" />
-              Desconectar
-            </Button>
-          </div>
-
-          <Alert>
-            <Info className="h-4 w-4" />
-            <AlertTitle>Como desconectar</AlertTitle>
-            <AlertDescription>
-              A integração é gerenciada pelo Lovable Cloud. Para desconectar de forma definitiva,
-              acesse o menu de <strong>Conectores</strong> no painel do Lovable e remova a conexão
-              do <strong>Google Drive</strong>. Após a remoção, esta página exibirá o status como desconectado.
-            </AlertDescription>
-          </Alert>
         </CardContent>
       </Card>
+
+      <AlertDialog open={confirmDisconnect} onOpenChange={setConfirmDisconnect}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Desconectar Google Drive?</AlertDialogTitle>
+            <AlertDialogDescription>
+              O acesso será revogado e os usuários não conseguirão mais importar arquivos do Drive até que um
+              administrador conecte novamente.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={disconnecting}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDisconnect} disabled={disconnecting}>
+              {disconnecting && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+              Desconectar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
