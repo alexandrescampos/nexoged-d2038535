@@ -315,6 +315,47 @@ export default function DocumentsPage() {
       setSearchParams(searchParams);
     }
   }, [searchParams, setSearchParams]);
+  
+  // Persist current folder to URL and localStorage
+  useEffect(() => {
+    const newParams = new URLSearchParams(searchParams);
+    if (currentFolder) {
+      newParams.set("folder", currentFolder);
+      localStorage.setItem("ged_last_folder", currentFolder);
+    } else {
+      newParams.delete("folder");
+      localStorage.removeItem("ged_last_folder");
+    }
+    
+    // Only update if changed to avoid loops
+    if (newParams.get("folder") !== searchParams.get("folder")) {
+      setSearchParams(newParams, { replace: true });
+    }
+  }, [currentFolder, setSearchParams, searchParams]);
+
+  // Reconstruct folder path if we have a currentFolder but no path (e.g., initial load or refresh)
+  useEffect(() => {
+    if (currentFolder && folderPath.length === 0 && allStructureFolders.length > 0) {
+      const path: { id: string; name: string }[] = [];
+      const folderMap = new Map(allStructureFolders.map(f => [f.past_id, f]));
+      
+      let curId: string | null | undefined = currentFolder;
+      while (curId) {
+        const folder = folderMap.get(curId);
+        if (folder) {
+          path.unshift({ id: folder.past_id, name: folder.past_nm_pasta });
+          curId = folder.past_id_pai;
+        } else {
+          curId = null;
+        }
+      }
+      
+      if (path.length > 0) {
+        setFolderPath(path);
+      }
+    }
+  }, [currentFolder, folderPath.length, allStructureFolders]);
+
 
   const getFileIcon = (mime: string) => {
     if (mime?.includes("pdf")) return <FileText className="h-6 w-6 text-red-500" />;
