@@ -47,6 +47,8 @@ interface Indicators {
   storage_by_folder: FolderBytes[];
   top_users: NameTotal[];
   pages_by_user: NameTotal[];
+  expired_docs_count: number;
+  expiring_soon_docs_count: number;
 }
 
 const PIE_COLORS = ["#3b82f6", "#ef4444", "#10b981", "#f59e0b", "#8b5cf6", "#ec4899", "#14b8a6"];
