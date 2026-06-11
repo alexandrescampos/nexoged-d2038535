@@ -17,15 +17,30 @@ function admin() {
 }
 
 async function extractPdfPages(buffer: ArrayBuffer): Promise<string[]> {
-  const { extractText, getDocumentProxy } = await import("https://esm.sh/unpdf@0.12.1");
-  const pdf = await getDocumentProxy(new Uint8Array(buffer));
-  const { text } = await extractText(pdf, { mergePages: false });
-  // Quando mergePages:false, `text` é um array (uma string por página)
-  if (Array.isArray(text)) {
-    return text.map((p) => String(p || ""));
+  const { getDocumentProxy } = await import("https://esm.sh/unpdf@0.12.1");
+  const pdf: any = await getDocumentProxy(new Uint8Array(buffer));
+  const pages: string[] = [];
+  const total = pdf.numPages || 0;
+  for (let i = 1; i <= total; i++) {
+    try {
+      const page = await pdf.getPage(i);
+      const content = await page.getTextContent();
+      const items = (content.items || []) as Array<{ str?: string; hasEOL?: boolean }>;
+      let text = "";
+      for (const it of items) {
+        text += (it.str || "");
+        if (it.hasEOL) text += "\n";
+        else text += " ";
+      }
+      pages.push(text.trim());
+    } catch (err) {
+      console.error("Erro extraindo página", i, err);
+      pages.push("");
+    }
   }
-  return [String(text || "")];
+  return pages;
 }
+
 
 
 async function extractDocx(buffer: ArrayBuffer): Promise<string[]> {
