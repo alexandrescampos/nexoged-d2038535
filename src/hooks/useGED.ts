@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { gedRepository } from "@/repository/gedRepository";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
+import { documentProcessor } from "@/lib/documentProcessor";
 
 export function useGED(folderId: string | null = null, filterFavorites: boolean = false, filterRecent: boolean = false, initialStatus: string | null = null) {
   const { organization } = useAuth();
