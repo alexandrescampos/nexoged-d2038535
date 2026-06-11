@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react";
+import { documentProcessor } from "@/lib/documentProcessor";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
