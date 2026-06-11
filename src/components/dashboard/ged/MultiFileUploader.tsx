@@ -73,16 +73,33 @@ export function MultiFileUploader({
     setFiles(prev => [...prev, ...newFiles]);
 
     if (fileRejections.length > 0) {
+      const acceptedExts = Array.from(
+        new Set(Object.values(acceptedFileTypes).flat().map(e => e.replace(/^\./, '').toUpperCase()))
+      ).sort().join(', ');
+
       fileRejections.forEach(({ file, errors }) => {
+        const extMatch = file.name.match(/\.([^.]+)$/);
+        const detectedExt = extMatch ? extMatch[1].toUpperCase() : 'desconhecida';
+        const detectedMime = file.type || 'não identificado';
+
         const errorMsgs = errors.map(e => {
-          if (e.code === 'file-too-large') return `Arquivo muito grande (máx ${maxSize}MB)`;
-          if (e.code === 'file-invalid-type') return 'Tipo de arquivo não suportado';
+          if (e.code === 'file-too-large') {
+            const sizeMb = (file.size / 1024 / 1024).toFixed(2);
+            return `Arquivo muito grande (${sizeMb}MB). Limite: ${maxSize}MB`;
+          }
+          if (e.code === 'file-invalid-type') {
+            return `Tipo não permitido — detectado: "${detectedMime}" (.${detectedExt.toLowerCase()}). Formatos aceitos: ${acceptedExts}`;
+          }
           return e.message;
-        }).join(', ');
-        toast.error(`Erro no arquivo ${file.name}: ${errorMsgs}`);
+        }).join(' • ');
+
+        toast.error(`"${file.name}" rejeitado`, {
+          description: errorMsgs,
+          duration: 8000,
+        });
       });
     }
-  }, [maxSize]);
+  }, [maxSize, acceptedFileTypes]);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
