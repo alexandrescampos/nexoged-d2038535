@@ -70,7 +70,7 @@ export const documentProcessor = {
         addDefaultPage: false,
       });
       
-      return new Blob([pdfBytes], { type: 'application/pdf' });
+      return new Blob([pdfBytes as Uint8Array], { type: 'application/pdf' });
     } catch (error) {
       console.error("Erro ao comprimir PDF:", error);
       return file;
