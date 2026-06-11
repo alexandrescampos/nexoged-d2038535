@@ -313,6 +313,20 @@ export const gedRepository = {
       body: { documentId, versionNumber }
     }).catch(err => console.error("Erro no processamento backend:", err));
 
+    // Enfileira OCR e dispara o processamento assíncrono
+    try {
+      await supabase.rpc('enqueue_document_ocr', {
+        p_documento_id: documentId,
+        p_versao_id: version.id,
+        p_prioridade: 5,
+      });
+      supabase.functions.invoke('process-document-ocr', {
+        body: { documentId, versionId: version.id }
+      }).catch(err => console.error("Erro no OCR:", err));
+    } catch (e) {
+      console.error("Erro ao enfileirar OCR:", e);
+    }
+
     return version;
   },
 
