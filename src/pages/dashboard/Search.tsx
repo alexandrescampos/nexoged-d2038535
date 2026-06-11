@@ -87,6 +87,28 @@ export default function SearchPage() {
   const updateState = (updates: Partial<SearchState>) => {
     setState(prev => ({ ...prev, ...updates }));
   };
+  const handleViewFile = async (documentId: string) => {
+    try {
+      const { url } = await gedRepository.getDownloadUrl(documentId);
+      window.open(url, '_blank', 'noopener,noreferrer');
+    } catch (error: any) {
+      console.error("Erro ao visualizar arquivo:", error);
+      const isPermissionError = 
+        error?.message?.includes("JWT") || 
+        error?.code === "PGRST301" || 
+        error?.message?.includes("permission denied") ||
+        error?.status === 403;
+
+      if (isPermissionError) {
+        toast.error("Acesso Negado", {
+          description: "Você não tem permissão para visualizar este documento.",
+        });
+      } else {
+        toast.error(error?.message || "Erro ao visualizar arquivo.");
+      }
+    }
+  };
+
 
   const clearSearch = () => {
     setState({
