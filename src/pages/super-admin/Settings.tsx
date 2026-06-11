@@ -33,6 +33,7 @@ export default function SuperAdminSettings() {
     { value: "application/vnd.ms-excel", label: "Excel legado (.xls)" },
     { value: "text/csv", label: "CSV (.csv)" },
     { value: "text/plain", label: "Texto (.txt)" },
+    { value: "application/xml", label: "XML (.xml)" },
     { value: "image/png", label: "PNG (.png)" },
     { value: "image/jpeg", label: "JPEG (.jpg, .jpeg)" },
     { value: "image/webp", label: "WebP (.webp)" },
