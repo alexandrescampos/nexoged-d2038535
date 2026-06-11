@@ -63,31 +63,12 @@ async function extractDocx(buffer: ArrayBuffer): Promise<string[]> {
 }
 
 async function extractImageWithOCR(buffer: ArrayBuffer, mime: string): Promise<string[]> {
-  try {
-    // Para ambientes como Deno Deploy / Supabase Edge Functions que não permitem Web Workers (utilizados pelo Tesseract.js),
-    // precisamos de uma solução que rode na thread principal ou via API.
-    // Usaremos o tesseract.js de forma a evitar workers se possível ou uma abordagem WASM direta.
-    
-    const { createWorker } = await import("https://esm.sh/tesseract.js@5.1.1");
-    
-    // Tenta inicializar o worker com parâmetros que forçam o uso de recursos locais sem threads se possível
-    const worker = await createWorker("por", 1, {
-      workerPath: "https://esm.sh/tesseract.js@5.1.1/dist/worker.min.js",
-      corePath: "https://esm.sh/tesseract.js-core@5.1.0/tesseract-core-simd.wasm.js",
-      logger: m => console.log(m),
-    });
-    
-    const { data } = await worker.recognize(buffer);
-    await worker.terminate();
-    return [data.text || ""];
-  } catch (e: any) {
-    console.error("Erro OCR:", e);
-    // Fallback: se falhar por falta de Worker, retornamos uma mensagem explicativa
-    if (e?.message?.includes("Worker")) {
-      return ["[OCR de imagem indisponível: ambiente não suporta Web Workers. Use PDF nativo ou DOCX.]"];
-    }
-    throw e;
-  }
+  // Como as Edge Functions do Supabase (Deno Deploy) não suportam Web Workers nem multithreading,
+  // e o Tesseract.js depende fortemente disso para não travar a thread principal,
+  // a indexação de imagens JPG/PNG requer uma abordagem alternativa (API externa ou worker dedicado).
+  
+  // No momento, registramos o limite técnico mas garantimos que o sistema não trave.
+  return ["[Indexação de imagem (JPG/PNG/TIFF) requer OCR via API externa ou Worker dedicado - Limitação do ambiente Edge]"];
 }
 
 async function processDocument(documentId: string, versionId: string | null) {
