@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { useGEDSettings } from "@/hooks/useGEDSettings";
+import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -28,7 +30,7 @@ import {
 import { Plus, Trash2, Edit2, Loader2, FileText } from "lucide-react";
 
 export default function DocumentTypesSettings() {
-  const { documentTypes, isLoading, createType, updateType, deleteType, isCreating } = useGEDSettings();
+  const { documentTypes, customFields, isLoading, createType, updateType, deleteType, isCreating } = useGEDSettings();
   const { sortedItems, sortField, sortDirection, handleSort } = useTableSort(documentTypes || []);
   const [isOpen, setIsOpen] = useState(false);
   const [editingType, setEditingType] = useState<any>(null);
@@ -37,20 +39,34 @@ export default function DocumentTypesSettings() {
     initials: "",
     description: "",
     requires_expiration_date: false,
-    requires_creation_date: false
+    requires_creation_date: false,
+    associated_field_ids: [] as string[]
   });
+
+  const toggleField = (fieldId: string) => {
+    setFormData(prev => {
+      const ids = [...prev.associated_field_ids];
+      const idx = ids.indexOf(fieldId);
+      if (idx === -1) {
+        ids.push(fieldId);
+      } else {
+        ids.splice(idx, 1);
+      }
+      return { ...prev, associated_field_ids: ids };
+    });
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (editingType) {
-      updateType({ id: editingType.id, updates: formData }, {
+      updateType({ id: editingType.id, updates: formData, customFieldIds: formData.associated_field_ids }, {
         onSuccess: () => {
           setIsOpen(false);
           setEditingType(null);
         }
       });
     } else {
-      createType(formData, {
+      createType({ type: formData, customFieldIds: formData.associated_field_ids }, {
         onSuccess: () => {
           setIsOpen(false);
           setFormData({
@@ -58,7 +74,8 @@ export default function DocumentTypesSettings() {
             initials: "",
             description: "",
             requires_expiration_date: false,
-            requires_creation_date: false
+            requires_creation_date: false,
+            associated_field_ids: []
           });
         }
       });
@@ -72,7 +89,8 @@ export default function DocumentTypesSettings() {
       initials: type.initials,
       description: type.description || "",
       requires_expiration_date: type.requires_expiration_date,
-      requires_creation_date: type.requires_creation_date
+      requires_creation_date: type.requires_creation_date,
+      associated_field_ids: (type.associated_fields || []).map((f: any) => f.id)
     });
     setIsOpen(true);
   };
@@ -98,7 +116,8 @@ export default function DocumentTypesSettings() {
               initials: "",
               description: "",
               requires_expiration_date: false,
-              requires_creation_date: false
+              requires_creation_date: false,
+              associated_field_ids: []
             });
           }
         }}>
@@ -169,6 +188,38 @@ export default function DocumentTypesSettings() {
                     onCheckedChange={(val) => setFormData({...formData, requires_expiration_date: val})} 
                   />
                 </div>
+                
+                <div className="grid gap-2 border rounded-lg p-3">
+                  <Label>Campos Adicionais Associados</Label>
+                  <CardDescription className="mb-2">
+                    Estes campos serão solicitados ao usuário durante o upload deste tipo de documento.
+                  </CardDescription>
+                  <ScrollArea className="h-[150px] border rounded-md p-2">
+                    {customFields.length === 0 ? (
+                      <p className="text-xs text-muted-foreground italic text-center py-4">
+                        Nenhum campo adicional cadastrado.
+                      </p>
+                    ) : (
+                      <div className="space-y-2">
+                        {customFields.map((field) => (
+                          <div key={field.id} className="flex items-center space-x-2">
+                            <Checkbox 
+                              id={`field-${field.id}`} 
+                              checked={formData.associated_field_ids.includes(field.id)}
+                              onCheckedChange={() => toggleField(field.id)}
+                            />
+                            <Label 
+                              htmlFor={`field-${field.id}`}
+                              className="text-sm font-normal cursor-pointer flex-1"
+                            >
+                              {field.name} <span className="text-[10px] text-muted-foreground uppercase">({field.field_type})</span>
+                            </Label>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </ScrollArea>
+                </div>
               </div>
               <DialogFooter>
                 <Button type="button" variant="outline" onClick={() => setIsOpen(false)}>Cancelar</Button>
@@ -193,6 +244,7 @@ export default function DocumentTypesSettings() {
                 <SortableTableHead field="initials" sortField={sortField} sortDirection={sortDirection} onSort={handleSort}>Sigla</SortableTableHead>
                 <SortableTableHead field="name" sortField={sortField} sortDirection={sortDirection} onSort={handleSort}>Nome</SortableTableHead>
                 <TableHead>Requisitos</TableHead>
+                <TableHead>Campos Extras</TableHead>
                 <TableHead className="text-right">Ações</TableHead>
               </TableRow>
             </TableHeader>
@@ -213,6 +265,19 @@ export default function DocumentTypesSettings() {
                         {type.requires_creation_date && <span className="text-[10px] bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded">Data Criação</span>}
                         {type.requires_expiration_date && <span className="text-[10px] bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded">Vencimento</span>}
                         {!type.requires_creation_date && !type.requires_expiration_date && <span className="text-[10px] text-muted-foreground italic">Nenhum</span>}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex flex-wrap gap-1">
+                        {type.associated_fields?.length > 0 ? (
+                          type.associated_fields.map((f: any) => (
+                            <Badge key={f.id} variant="outline" className="text-[10px] font-normal py-0">
+                              {f.name}
+                            </Badge>
+                          ))
+                        ) : (
+                          <span className="text-[10px] text-muted-foreground italic">Nenhum</span>
+                        )}
                       </div>
                     </TableCell>
                     <TableCell className="text-right">

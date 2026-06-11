@@ -132,6 +132,26 @@ export interface DocumentType {
   created_at: string;
   updated_at: string;
   created_by?: string;
+  associated_fields?: CustomField[];
+}
+
+export interface CustomField {
+  id: string;
+  name: string;
+  description?: string;
+  field_type: 'boolean' | 'integer' | 'decimal' | 'text' | 'long_text' | 'date' | 'list';
+  list_id?: string;
+  is_required: boolean;
+  user_id?: string;
+  created_at?: string;
+}
+
+export interface CustomFieldValue {
+  id: string;
+  document_id: string;
+  custom_field_id: string;
+  value: string;
+  field_data?: CustomField;
 }
 
 export interface Document {
