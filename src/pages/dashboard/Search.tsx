@@ -6,10 +6,19 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Search as SearchIcon, FileText, Loader2, X } from "lucide-react";
+import { Search as SearchIcon, FileText, Loader2, X, Eye } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useNavigate } from "react-router-dom";
 import { formatBrasiliaDate as formatDate } from "@/lib/timezone";
+import { gedRepository } from "@/repository/gedRepository";
+import { toast } from "sonner";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+
 
 const SEARCH_STORAGE_KEY = "ged_advanced_search_state";
 
