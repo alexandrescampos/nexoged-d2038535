@@ -35,12 +35,13 @@ export default function GoogleDriveIntegrationSettings({ organizationId }: Googl
   });
 
   // Update local state when data is loaded
-  useState(() => {
+  useEffect(() => {
     if (integration) {
-      setApiKey(integration.credentials.apiKey || "");
+      const credentials = integration.credentials as any;
+      setApiKey(credentials?.apiKey || "");
       setIsActive(integration.is_active);
     }
-  });
+  }, [integration]);
 
   const upsertMutation = useMutation({
     mutationFn: async () => {
