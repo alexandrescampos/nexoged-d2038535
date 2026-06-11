@@ -1262,13 +1262,26 @@ export default function DocumentsPage() {
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="edit-pages">Número de Páginas</Label>
-                <Input 
-                  id="edit-pages" 
-                  type="number" 
-                  min={1} 
-                  value={editData.page_count}
-                  onChange={(e) => setEditData({ ...editData, page_count: parseInt(e.target.value) || 1 })}
-                />
+                <div className="flex items-center gap-2">
+                  <Input 
+                    id="edit-pages" 
+                    type="number" 
+                    min={1} 
+                    value={editData.page_count}
+                    onChange={(e) => setEditData({ ...editData, page_count: parseInt(e.target.value) || 1 })}
+                    disabled // Auto-calculated during upload, edited only if strictly necessary (kept disabled for control)
+                  />
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <AlertCircle className="h-4 w-4 text-muted-foreground" />
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        O número de páginas é calculado automaticamente durante o upload.
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </div>
               </div>
             </div>
 
