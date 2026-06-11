@@ -21,6 +21,21 @@ serve(async (req) => {
       throw new Error('Missing API keys')
     }
 
+    if (action === 'about') {
+      const driveUrl = `${GATEWAY_URL}/drive/v3/about?fields=user,storageQuota`
+      const response = await fetch(driveUrl, {
+        headers: {
+          'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+          'X-Connection-Api-Key': GOOGLE_DRIVE_API_KEY
+        }
+      })
+      const data = await response.json()
+      return new Response(JSON.stringify({ ok: response.ok, ...data }), {
+        status: response.ok ? 200 : response.status,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      })
+    }
+
     if (action === 'list') {
       const folderId = url.searchParams.get('folderId') || 'root'
       const query = `'${folderId}' in parents and trashed = false`
