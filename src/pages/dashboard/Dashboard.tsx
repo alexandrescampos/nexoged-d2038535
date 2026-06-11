@@ -1,292 +1,300 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
-import { useGED } from "@/hooks/useGED";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { 
-  Star, 
-  Clock, 
-  FileText, 
-  AlertCircle,
-  Plus,
-  ChevronRight,
-  HardDrive,
-  Users,
-  Calendar,
-  AlertTriangle
-} from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { useNavigate } from "react-router-dom";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { useTabs } from "@/contexts/TabsContext";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatBytes } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
+import {
+  AreaChart,
+  Area,
+  CartesianGrid,
+  XAxis,
+  YAxis,
+  Tooltip,
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell,
+  BarChart,
+  Bar,
+  Legend,
+} from "recharts";
+
+interface MonthlyPoint {
+  label: string;
+  total: number;
+}
+interface NameTotal {
+  name: string;
+  total: number;
+}
+interface FolderBytes {
+  name: string;
+  bytes: number;
+}
+
+interface Indicators {
+  total_docs: number;
+  total_folders: number;
+  total_users: number;
+  max_users: number;
+  used_pages: number;
+  contracted_pages: number;
+  used_storage_bytes: number;
+  used_storage_gb: number;
+  contracted_storage_gb: number;
+  monthly_uploads: MonthlyPoint[];
+  storage_by_folder: FolderBytes[];
+  top_users: NameTotal[];
+  pages_by_user: NameTotal[];
+}
+
+const PIE_COLORS = ["#3b82f6", "#ef4444", "#10b981", "#f59e0b", "#8b5cf6", "#ec4899", "#14b8a6"];
+
+function StatCard({
+  title,
+  value,
+  className,
+}: {
+  title: string;
+  value: React.ReactNode;
+  className?: string;
+}) {
+  return (
+    <Card className={`border-none shadow-sm ${className ?? ""}`}>
+      <CardContent className="p-4">
+        <p className="text-xs uppercase font-semibold opacity-90">{title}</p>
+        <p className="text-3xl font-bold mt-2">{value}</p>
+      </CardContent>
+    </Card>
+  );
+}
 
 export default function OrgDashboard() {
   const { organization, profile } = useAuth();
-  const navigate = useNavigate();
-  const { openTab } = useTabs();
-  
-  const { documents: recentDocuments, isLoading: isLoadingRecent } = useGED(null, false, true);
-  const { documents: favoriteDocuments, isLoading: isLoadingFavorites } = useGED(null, true, false);
-
-  const [stats, setStats] = useState({
-    totalDocs: 0,
-    usedSpace: 0,
-    pendingDocs: 0,
-    totalUsers: 0,
-    expiredDocs: 0,
-    nearExpiryDocs: 0
-  });
-  const [isLoadingStats, setIsLoadingStats] = useState(true);
+  const [data, setData] = useState<Indicators | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchStats = async () => {
+    const load = async () => {
       if (!organization?.id) return;
-      setIsLoadingStats(true);
-      try {
-        const today = new Date().toISOString().split('T')[0];
-        const next30Days = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
-
-        const [docsCount, spaceUsage, pendingDocs, activeUsers, expiredCount, nearExpiryCount] = await Promise.all([
-          supabase.from("ged_documents").select("id", { count: "exact", head: true }).eq("organization_id", organization.id).neq("status", "deleted"),
-          supabase.rpc('sum_org_document_size', { p_org_id: organization.id }),
-          supabase.from("ged_documents").select("id", { count: "exact", head: true }).eq("organization_id", organization.id).eq("status", "pending"),
-          supabase.from("profiles").select("id", { count: "exact", head: true }).eq("organization_id", organization.id).eq("is_active", true),
-          supabase.from("ged_documents").select("id", { count: "exact", head: true })
-            .eq("organization_id", organization.id)
-            .neq("status", "deleted")
-            .lt("expiration_date", today),
-          supabase.from("ged_documents").select("id", { count: "exact", head: true })
-            .eq("organization_id", organization.id)
-            .neq("status", "deleted")
-            .gte("expiration_date", today)
-            .lte("expiration_date", next30Days),
-        ]);
-
-        setStats({
-          totalDocs: docsCount.count || 0,
-          usedSpace: (spaceUsage.data as number) || 0,
-          pendingDocs: pendingDocs.count || 0,
-          totalUsers: activeUsers.count || 0,
-          expiredDocs: expiredCount.count || 0,
-          nearExpiryDocs: nearExpiryCount.count || 0
-        });
-      } catch (err) {
-        console.error("Dashboard stats error:", err);
-      } finally {
-        setIsLoadingStats(false);
+      setLoading(true);
+      const { data, error } = await supabase.rpc("dashboard_indicators", {
+        p_org_id: organization.id,
+      });
+      if (error) {
+        console.error("dashboard_indicators error", error);
+      } else {
+        setData(data as unknown as Indicators);
       }
+      setLoading(false);
     };
-    fetchStats();
+    load();
   }, [organization?.id]);
+
+  const usedGb = Number(data?.used_storage_gb ?? 0);
+  const contractedGb = Number(data?.contracted_storage_gb ?? 0);
+  const remainingGb = Math.max(contractedGb - usedGb, 0);
+
+  const storagePie = [
+    { name: "Utilizado", value: Number(usedGb.toFixed(2)) },
+    { name: "Disponível", value: Number(remainingGb.toFixed(2)) },
+  ];
+
+  const folderData = (data?.storage_by_folder ?? []).map((f) => ({
+    name: f.name,
+    gb: Number((Number(f.bytes) / 1024 ** 3).toFixed(3)),
+  }));
 
   return (
     <div className="space-y-6 animate-fade-in p-2 md:p-0">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold text-foreground">Olá, {profile?.full_name?.split(' ')[0] || 'Usuário'}</h1>
-          <p className="text-muted-foreground">Aqui está um resumo do seu Nexo GED</p>
-        </div>
+      <div>
+        <h1 className="text-3xl font-bold text-foreground">
+          Olá, {profile?.full_name?.split(" ")[0] || "Usuário"}
+        </h1>
+        <p className="text-muted-foreground">Indicadores do Nexo GED</p>
       </div>
 
+      {/* Monthly uploads */}
+      <Card className="shadow-sm">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm font-bold">Documentos enviados por mês</CardTitle>
+        </CardHeader>
+        <CardContent className="h-[260px]">
+          {loading ? (
+            <Skeleton className="h-full w-full" />
+          ) : (
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={data?.monthly_uploads ?? []}>
+                <defs>
+                  <linearGradient id="docs" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#a3d977" stopOpacity={0.8} />
+                    <stop offset="95%" stopColor="#a3d977" stopOpacity={0.1} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                <XAxis dataKey="label" fontSize={12} />
+                <YAxis fontSize={12} label={{ value: "Nº de documentos", angle: -90, position: "insideLeft", fontSize: 11 }} />
+                <Tooltip />
+                <Area type="monotone" dataKey="total" stroke="#7cb342" fill="url(#docs)" />
+              </AreaChart>
+            </ResponsiveContainer>
+          )}
+        </CardContent>
+      </Card>
 
-
-
-      {/* Stats Cards */}
+      {/* Stat cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <Card className="border-none shadow-sm bg-primary/5">
-          <CardContent className="p-4 flex flex-col gap-1">
-            <HardDrive className="h-5 w-5 text-primary mb-1" />
-            <span className="text-xs text-muted-foreground uppercase font-semibold">Espaço</span>
-            <span className="text-xl font-bold">{isLoadingStats ? "..." : formatBytes(stats.usedSpace)}</span>
+        <StatCard
+          title="Documentos cadastrados"
+          value={loading ? "..." : (data?.total_docs ?? 0).toLocaleString("pt-BR")}
+          className="bg-sky-500 text-white"
+        />
+        <StatCard
+          title="Repositórios e pastas"
+          value={loading ? "..." : (data?.total_folders ?? 0).toLocaleString("pt-BR")}
+          className="bg-slate-600 text-white"
+        />
+        <StatCard
+          title="Usuários cadastrados"
+          value={
+            loading
+              ? "..."
+              : `${data?.total_users ?? 0}/${
+                  (data?.max_users ?? 0) >= 999999 ? "∞" : data?.max_users ?? 0
+                }`
+          }
+          className="bg-emerald-500 text-white"
+        />
+        <StatCard
+          title="Páginas cadastradas"
+          value={loading ? "..." : Number(data?.used_pages ?? 0).toLocaleString("pt-BR")}
+          className="bg-orange-500 text-white"
+        />
+      </div>
+
+      {/* Charts grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* GBs utilizados */}
+        <Card className="shadow-sm">
+          <CardHeader className="pb-1">
+            <CardTitle className="text-sm font-bold">GBs utilizados</CardTitle>
+            <p className="text-xs text-muted-foreground">GBs utilizados segundo o contrato</p>
+          </CardHeader>
+          <CardContent className="h-[260px]">
+            {loading ? (
+              <Skeleton className="h-full w-full" />
+            ) : (
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie data={storagePie} dataKey="value" nameKey="name" outerRadius="80%" label>
+                    <Cell fill="#ef4444" />
+                    <Cell fill="#3b82f6" />
+                  </Pie>
+                  <Tooltip formatter={(v: number) => `${v} GB`} />
+                  <Legend />
+                </PieChart>
+              </ResponsiveContainer>
+            )}
           </CardContent>
         </Card>
-        <Card className="border-none shadow-sm bg-blue-500/5">
-          <CardContent className="p-4 flex flex-col gap-1">
-            <FileText className="h-5 w-5 text-blue-500 mb-1" />
-            <span className="text-xs text-muted-foreground uppercase font-semibold">Documentos</span>
-            <span className="text-xl font-bold">{isLoadingStats ? "..." : stats.totalDocs}</span>
+
+        {/* GBs por repositório */}
+        <Card className="shadow-sm">
+          <CardHeader className="pb-1">
+            <CardTitle className="text-sm font-bold">GBs por repositório</CardTitle>
+            <p className="text-xs text-muted-foreground">Consumo agrupado por repositório</p>
+          </CardHeader>
+          <CardContent className="h-[260px]">
+            {loading ? (
+              <Skeleton className="h-full w-full" />
+            ) : folderData.length === 0 ? (
+              <p className="text-xs text-muted-foreground text-center pt-16">Sem dados</p>
+            ) : (
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={folderData}
+                    dataKey="gb"
+                    nameKey="name"
+                    innerRadius="55%"
+                    outerRadius="80%"
+                  >
+                    {folderData.map((_, i) => (
+                      <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip formatter={(v: number) => `${v} GB`} />
+                  <Legend />
+                </PieChart>
+              </ResponsiveContainer>
+            )}
           </CardContent>
         </Card>
-        <Card className="border-none shadow-sm bg-orange-500/5">
-          <CardContent className="p-4 flex flex-col gap-1">
-            <AlertCircle className="h-5 w-5 text-orange-500 mb-1" />
-            <span className="text-xs text-muted-foreground uppercase font-semibold">Pendentes</span>
-            <span className="text-xl font-bold">{isLoadingStats ? "..." : stats.pendingDocs}</span>
+
+        {/* Usuários mais ativos */}
+        <Card className="shadow-sm">
+          <CardHeader className="pb-1">
+            <CardTitle className="text-sm font-bold">Usuários mais ativos</CardTitle>
+            <p className="text-xs text-muted-foreground">Usuários com mais acessos nos últimos 30 dias</p>
+          </CardHeader>
+          <CardContent className="h-[260px]">
+            {loading ? (
+              <Skeleton className="h-full w-full" />
+            ) : (data?.top_users?.length ?? 0) === 0 ? (
+              <p className="text-xs text-muted-foreground text-center pt-16">Sem dados</p>
+            ) : (
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={data?.top_users ?? []} layout="vertical" margin={{ left: 8 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                  <XAxis type="number" fontSize={11} />
+                  <YAxis type="category" dataKey="name" width={110} fontSize={11} />
+                  <Tooltip />
+                  <Bar dataKey="total" fill="#ec4899" />
+                </BarChart>
+              </ResponsiveContainer>
+            )}
           </CardContent>
         </Card>
-        <Card className="border-none shadow-sm bg-purple-500/5">
-          <CardContent className="p-4 flex flex-col gap-1">
-            <Users className="h-5 w-5 text-purple-500 mb-1" />
-            <span className="text-xs text-muted-foreground uppercase font-semibold">Usuários</span>
-            <span className="text-xl font-bold">{isLoadingStats ? "..." : stats.totalUsers}</span>
+
+        {/* Páginas indexadas */}
+        <Card className="shadow-sm">
+          <CardHeader className="pb-1">
+            <CardTitle className="text-sm font-bold">Páginas indexadas</CardTitle>
+            <p className="text-xs text-muted-foreground">Páginas indexadas por usuário (30 dias)</p>
+          </CardHeader>
+          <CardContent className="h-[260px]">
+            {loading ? (
+              <Skeleton className="h-full w-full" />
+            ) : (data?.pages_by_user?.length ?? 0) === 0 ? (
+              <p className="text-xs text-muted-foreground text-center pt-16">Sem dados</p>
+            ) : (
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={data?.pages_by_user ?? []}
+                    dataKey="total"
+                    nameKey="name"
+                    outerRadius="80%"
+                    label
+                  >
+                    {(data?.pages_by_user ?? []).map((_, i) => (
+                      <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip />
+                  <Legend />
+                </PieChart>
+              </ResponsiveContainer>
+            )}
           </CardContent>
         </Card>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-        {/* Main Content Area */}
-        <div className="lg:col-span-4 space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Favorites */}
-            <Card className="shadow-sm border-muted">
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-bold flex items-center gap-2">
-                  <Star className="h-4 w-4 text-yellow-400 fill-yellow-400" />
-                  Favoritos
-                </CardTitle>
-                <Button variant="ghost" size="sm" className="h-7 text-xs px-2" onClick={() => navigate("/dashboard/favorites")}>
-                  Ver todos <ChevronRight className="h-3 w-3 ml-1" />
-                </Button>
-              </CardHeader>
-              <CardContent className="p-0">
-                <ScrollArea className="h-[250px]">
-                  {isLoadingFavorites ? (
-                    <div className="p-4 space-y-2"><Skeleton className="h-10 w-full" /><Skeleton className="h-10 w-full" /></div>
-                  ) : favoriteDocuments.length === 0 ? (
-                    <div className="p-10 text-center text-muted-foreground text-xs">Sem favoritos</div>
-                  ) : (
-                    <div className="divide-y">
-                      {favoriteDocuments.slice(0, 5).map(doc => (
-                        <div key={doc.id} className="p-3 hover:bg-accent/50 cursor-pointer flex items-center gap-3 transition-colors" onClick={() => {
-                          const item = { title: "Documentos", url: "/dashboard/documents", icon: FileText };
-                          openTab({
-                            id: item.url,
-                            title: item.title,
-                            icon: item.icon,
-                          });
-                          navigate(`/dashboard/documents?id=${doc.id}`);
-                        }}>
-                          <div className="bg-primary/10 p-2 rounded-md"><FileText className="h-4 w-4 text-primary" /></div>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-xs font-semibold truncate">{doc.title}</p>
-                            <p className="text-[10px] text-muted-foreground uppercase">{doc.document_type || 'Documento'}</p>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </ScrollArea>
-              </CardContent>
-            </Card>
-
-            {/* Recent Documents */}
-            <Card className="shadow-sm border-muted">
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-bold flex items-center gap-2">
-                  <Clock className="h-4 w-4 text-blue-500" />
-                  Últimos Acessos
-                </CardTitle>
-                <Button variant="ghost" size="sm" className="h-7 text-xs px-2" onClick={() => navigate("/dashboard/recent")}>
-                  Ver todos <ChevronRight className="h-3 w-3 ml-1" />
-                </Button>
-              </CardHeader>
-              <CardContent className="p-0">
-                <ScrollArea className="h-[250px]">
-                  {isLoadingRecent ? (
-                    <div className="p-4 space-y-2"><Skeleton className="h-10 w-full" /><Skeleton className="h-10 w-full" /></div>
-                  ) : recentDocuments.length === 0 ? (
-                    <div className="p-10 text-center text-muted-foreground text-xs">Nenhum acesso recente</div>
-                  ) : (
-                    <div className="divide-y">
-                      {recentDocuments.slice(0, 5).map(doc => (
-                        <div key={doc.id} className="p-3 hover:bg-accent/50 cursor-pointer flex items-center gap-3 transition-colors" onClick={() => {
-                          const item = { title: "Documentos", url: "/dashboard/documents", icon: FileText };
-                          openTab({
-                            id: item.url,
-                            title: item.title,
-                            icon: item.icon,
-                          });
-                          navigate(`/dashboard/documents?id=${doc.id}`);
-                        }}>
-                          <div className="bg-blue-500/10 p-2 rounded-md"><FileText className="h-4 w-4 text-blue-500" /></div>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-xs font-semibold truncate">{doc.title}</p>
-                            <p className="text-[10px] text-muted-foreground">{new Date(doc.updated_at).toLocaleDateString()}</p>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </ScrollArea>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Alerts Section */}
-          <div className="space-y-4">
-            {stats.expiredDocs > 0 && (
-              <Card className="border-red-500/20 bg-red-500/5 shadow-none">
-                <CardContent className="p-4 flex items-center gap-4">
-                  <div className="bg-red-500 p-2 rounded-full"><AlertTriangle className="h-5 w-5 text-white" /></div>
-                  <div className="flex-1">
-                    <h4 className="text-sm font-bold text-red-700">Documentos Vencidos</h4>
-                    <p className="text-xs text-red-600/80">Você possui {stats.expiredDocs} documentos com data de validade expirada.</p>
-                  </div>
-                  <Button size="sm" variant="outline" className="border-red-500/30 text-red-700 hover:bg-red-500/10" onClick={() => {
-                    const item = { title: "Relatório de Vencimentos", url: "/dashboard/expiration-report", icon: Calendar };
-                    openTab({
-                      id: item.url,
-                      title: item.title,
-                      icon: item.icon,
-                    });
-                    navigate(item.url);
-                  }}>
-                    Ver Todos
-                  </Button>
-                </CardContent>
-              </Card>
-            )}
-
-            {stats.nearExpiryDocs > 0 && (
-              <Card className="border-amber-500/20 bg-amber-500/5 shadow-none">
-                <CardContent className="p-4 flex items-center gap-4">
-                  <div className="bg-amber-500 p-2 rounded-full"><Calendar className="h-5 w-5 text-white" /></div>
-                  <div className="flex-1">
-                    <h4 className="text-sm font-bold text-amber-700">Documentos a Vencer</h4>
-                    <p className="text-xs text-amber-600/80">Você possui {stats.nearExpiryDocs} documentos que vencerão nos próximos 30 dias.</p>
-                  </div>
-                  <Button size="sm" variant="outline" className="border-amber-500/30 text-amber-700 hover:bg-amber-500/10" onClick={() => {
-                    const item = { title: "Relatório de Vencimentos", url: "/dashboard/expiration-report", icon: Calendar };
-                    openTab({
-                      id: item.url,
-                      title: item.title,
-                      icon: item.icon,
-                    });
-                    navigate(item.url);
-                  }}>
-                    Ver Todos
-                  </Button>
-                </CardContent>
-              </Card>
-            )}
-
-            {stats.pendingDocs > 0 && (
-              <Card className="border-orange-500/20 bg-orange-500/5 shadow-none">
-                <CardContent className="p-4 flex items-center gap-4">
-                  <div className="bg-orange-500 p-2 rounded-full"><AlertCircle className="h-5 w-5 text-white" /></div>
-                  <div className="flex-1">
-                    <h4 className="text-sm font-bold text-orange-700">Documentos Pendentes</h4>
-                    <p className="text-xs text-orange-600/80">Você possui {stats.pendingDocs} documentos que requerem atenção ou classificação.</p>
-                  </div>
-                  <Button size="sm" variant="outline" className="border-orange-500/30 text-orange-700 hover:bg-orange-500/10" onClick={() => {
-                    const item = { title: "Documentos", url: "/dashboard/documents", icon: FileText };
-                    openTab({
-                      id: item.url,
-                      title: item.title,
-                      icon: item.icon,
-                    });
-                    navigate("/dashboard/documents?status=pending");
-                  }}>
-                    Resolver Agora
-                  </Button>
-                </CardContent>
-              </Card>
-            )}
-          </div>
-        </div>
-      </div>
+      <p className="text-xs text-muted-foreground">
+        Armazenamento: {formatBytes(Number(data?.used_storage_bytes ?? 0))} de{" "}
+        {contractedGb} GB contratados.
+      </p>
     </div>
   );
 }
