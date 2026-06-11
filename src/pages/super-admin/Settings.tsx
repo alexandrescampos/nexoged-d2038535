@@ -60,8 +60,33 @@ export default function SuperAdminSettings() {
       setSystemName(systemSettings.system_name || "");
       setSystemVersion(systemSettings.system_version || "");
       setSupportPhone(systemSettings.support_phone || "");
+      try {
+        const parsed = systemSettings.ocr_allowed_mime_types ? JSON.parse(systemSettings.ocr_allowed_mime_types) : [];
+        setOcrMimes(Array.isArray(parsed) ? parsed : []);
+      } catch { setOcrMimes([]); }
     }
   }, [systemSettings]);
+
+  const toggleOcrMime = (mime: string) => {
+    setOcrMimes((prev) => prev.includes(mime) ? prev.filter((m) => m !== mime) : [...prev, mime]);
+  };
+
+  const handleSaveOcrMimes = async () => {
+    setIsSavingOcr(true);
+    try {
+      const { error } = await supabase
+        .from("system_settings")
+        .upsert({ key: "ocr_allowed_mime_types", value: JSON.stringify(ocrMimes), updated_at: new Date().toISOString() }, { onConflict: "key" });
+      if (error) throw error;
+      queryClient.invalidateQueries({ queryKey: ["system-settings"] });
+      toast({ title: "Whitelist atualizada", description: "Tipos de arquivo aceitos para OCR foram salvos." });
+    } catch (e) {
+      console.error(e);
+      toast({ title: "Erro ao salvar", description: "Não foi possível salvar a whitelist.", variant: "destructive" });
+    } finally {
+      setIsSavingOcr(false);
+    }
+  };
 
   const handleSaveSystemInfo = async () => {
     setIsSaving(true);
