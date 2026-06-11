@@ -238,7 +238,7 @@ export default function DocumentsPage() {
   const { documentTypes } = useGEDSettings();
   const { organization, user, isSuperAdmin, isOrgAdmin } = useAuth();
   const { moveItem } = useOrganizationStructure();
-  const { canUserDownload } = useDocumentPermissions();
+  const { canUserDownload, canUserDelete, canUserEdit } = useDocumentPermissions();
 
 
 
@@ -804,33 +804,39 @@ export default function DocumentsPage() {
                                   <Download className="h-4 w-4" /> Baixar
                                 </DropdownMenuItem>
                               )}
-                              <DropdownMenuItem
-                                className="gap-2"
-                                onClick={() => {
-                                  setDocumentToEdit(doc);
-                                  setEditData({
-                                    title: doc.title || "",
-                                    document_type_id: doc.document_type_id || "",
-                                    page_count: doc.page_count || 1,
-                                    description: doc.description || "",
-                                    expiration_date: doc.expiration_date || "",
-                                    document_creation_date: doc.document_creation_date || "",
-                                    tags: Array.isArray(doc.tags) ? doc.tags : [],
-                                    sigilo: doc.sigilo || "PUBLICO",
-                                  });
-                                }}
-                              >
-                                <FileCode className="h-4 w-4" /> Editar Dados
-                              </DropdownMenuItem>
+                               {canUserEdit(doc) && (
+                                <DropdownMenuItem
+                                  className="gap-2"
+                                  onClick={() => {
+                                    setDocumentToEdit(doc);
+                                    setEditData({
+                                      title: doc.title || "",
+                                      document_type_id: doc.document_type_id || "",
+                                      page_count: doc.page_count || 1,
+                                      description: doc.description || "",
+                                      expiration_date: doc.expiration_date || "",
+                                      document_creation_date: doc.document_creation_date || "",
+                                      tags: Array.isArray(doc.tags) ? doc.tags : [],
+                                      sigilo: doc.sigilo || "PUBLICO",
+                                    });
+                                  }}
+                                >
+                                  <FileCode className="h-4 w-4" /> Editar Dados
+                                </DropdownMenuItem>
+                              )}
                               <DropdownMenuItem className="gap-2" onClick={() => toggleFavorite({ id: doc.id, isFavorite: !doc.is_favorite })}>
                                 <Star className={`h-4 w-4 ${doc.is_favorite ? 'fill-yellow-400 text-yellow-400' : ''}`} />
                                 {doc.is_favorite ? 'Remover Favorito' : 'Favoritar'}
                               </DropdownMenuItem>
                               <DropdownMenuItem className="gap-2"><History className="h-4 w-4" /> Versões</DropdownMenuItem>
-                              <DropdownMenuSeparator />
-                              <DropdownMenuItem className="gap-2 text-destructive" onClick={() => setDocumentToDelete(doc.id)}>
-                                <Trash2 className="h-4 w-4" /> Excluir
-                              </DropdownMenuItem>
+                               {canUserDelete(doc) && (
+                                <>
+                                  <DropdownMenuSeparator />
+                                  <DropdownMenuItem className="gap-2 text-destructive" onClick={() => setDocumentToDelete(doc.id)}>
+                                    <Trash2 className="h-4 w-4" /> Excluir
+                                  </DropdownMenuItem>
+                                </>
+                              )}
                             </DropdownMenuContent>
                           </DropdownMenu>
                         </div>
@@ -946,8 +952,9 @@ export default function DocumentsPage() {
                           <DropdownMenuItem className="gap-2" disabled={!doc.has_file} onClick={() => handleDownloadFile(doc)}>
                             <Download className="h-4 w-4" /> Baixar
                           </DropdownMenuItem>
-                        )}
-                        <DropdownMenuItem
+                         )}
+                        {canUserEdit(doc) && (
+                          <DropdownMenuItem
                           className="gap-2"
                           onClick={() => {
                             setDocumentToEdit(doc);
