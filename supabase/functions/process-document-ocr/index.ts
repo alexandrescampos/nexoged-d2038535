@@ -2,6 +2,7 @@
 // Extrai texto de documentos do GED e popula documento_ocr + documento_ocr_pagina.
 // Suporta: PDF (texto nativo) via unpdf, DOCX via mammoth, imagens/PDF escaneado via tesseract.js (lang=por).
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { resolveFileType, isAllowedByWhitelist, CANONICAL_MIMES } from "./mime-registry.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
