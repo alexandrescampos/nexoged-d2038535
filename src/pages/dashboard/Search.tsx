@@ -247,6 +247,8 @@ export default function SearchPage() {
                       <TableHead className="w-20">Página</TableHead>
                       <TableHead>Trecho</TableHead>
                       <TableHead className="w-32">Data</TableHead>
+                      <TableHead className="w-[80px] text-right">Ações</TableHead>
+
                     </TableRow>
                   </TableHeader>
                   <TableBody>
