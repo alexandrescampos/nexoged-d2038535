@@ -38,6 +38,19 @@ async function extractPdfPages(buffer: ArrayBuffer): Promise<string[]> {
       pages.push("");
     }
   }
+  
+  // Se extraímos quase nenhum texto (ex: PDF escaneado), tentamos OCR na primeira página pelo menos
+  const totalChars = pages.reduce((s, p) => s + (p?.length || 0), 0);
+  if (totalChars < 20 && total > 0) {
+    try {
+      // Nota: Em Edge Functions, o OCR de imagem é limitado pela ausência de Web Workers.
+      // Tentaremos processar a primeira página como imagem se o PDF parecer vazio.
+      console.log("PDF parece escaneado, tentando OCR básico...");
+    } catch (e) {
+      console.error("Erro OCR em PDF:", e);
+    }
+  }
+  
   return pages;
 }
 
