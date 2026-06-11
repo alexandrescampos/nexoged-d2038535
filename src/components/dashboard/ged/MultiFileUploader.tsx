@@ -64,6 +64,32 @@ export function MultiFileUploader({
   associatedFields = []
 }: MultiFileUploaderProps) {
   const [files, setFiles] = useState<FileWithProgress[]>([]);
+  const [isDrivePickerOpen, setIsDrivePickerOpen] = useState(false);
+
+  const addFilesToQueue = useCallback((newFilesList: File[]) => {
+    const validatedFiles = newFilesList.filter(file => {
+      const mimeType = file.type;
+      const extension = `.${file.name.split('.').pop()?.toLowerCase()}`;
+      
+      const isMimeAllowed = Object.keys(acceptedFileTypes).includes(mimeType);
+      const isExtAllowed = Object.values(acceptedFileTypes).flat().includes(extension);
+      
+      return isMimeAllowed || isExtAllowed;
+    });
+
+    const formattedFiles = validatedFiles.map(file => ({
+      file,
+      id: Math.random().toString(36).substring(7),
+      progress: 0,
+      status: 'pending' as const,
+      description: '',
+      creationDate: undefined,
+      expirationDate: undefined,
+      customFields: {}
+    }));
+
+    setFiles(prev => [...prev, ...formattedFiles]);
+  }, [acceptedFileTypes]);
 
   const onDrop = useCallback((acceptedFiles: File[], fileRejections: FileRejection[]) => {
     // Extra validation before state update to ensure we don't even add non-allowed files to the list
