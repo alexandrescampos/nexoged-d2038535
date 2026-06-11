@@ -1,4 +1,6 @@
 import { PDFDocument } from 'pdf-lib';
+import * as XLSX from 'xlsx';
+
 
 /**
  * Utilitário para otimização de documentos antes do upload.
