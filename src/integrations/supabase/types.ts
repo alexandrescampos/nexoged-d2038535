@@ -1000,6 +1000,33 @@ export type Database = {
           },
         ]
       }
+      google_oauth_states: {
+        Row: {
+          created_at: string
+          expires_at: string
+          organization_id: string
+          redirect_path: string | null
+          state: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          expires_at?: string
+          organization_id: string
+          redirect_path?: string | null
+          state: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string
+          organization_id?: string
+          redirect_path?: string | null
+          state?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       list_items: {
         Row: {
           created_at: string
@@ -1198,6 +1225,79 @@ export type Database = {
             foreignKeyName: "organization_cnpjs_organization_id_fkey"
             columns: ["organization_id"]
             isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      organization_google_drive_connections: {
+        Row: {
+          access_token: string
+          connected_by: string | null
+          created_at: string
+          google_display_name: string | null
+          google_email: string
+          google_photo_url: string | null
+          last_error: string | null
+          last_used_at: string | null
+          organization_id: string
+          refresh_token: string
+          scope: string
+          status: string
+          token_expires_at: string
+          updated_at: string
+        }
+        Insert: {
+          access_token: string
+          connected_by?: string | null
+          created_at?: string
+          google_display_name?: string | null
+          google_email: string
+          google_photo_url?: string | null
+          last_error?: string | null
+          last_used_at?: string | null
+          organization_id: string
+          refresh_token: string
+          scope: string
+          status?: string
+          token_expires_at: string
+          updated_at?: string
+        }
+        Update: {
+          access_token?: string
+          connected_by?: string | null
+          created_at?: string
+          google_display_name?: string | null
+          google_email?: string
+          google_photo_url?: string | null
+          last_error?: string | null
+          last_used_at?: string | null
+          organization_id?: string
+          refresh_token?: string
+          scope?: string
+          status?: string
+          token_expires_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "organization_google_drive_connections_connected_by_fkey"
+            columns: ["connected_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "organization_google_drive_connections_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: true
+            referencedRelation: "organization_usage"
+            referencedColumns: ["organization_id"]
+          },
+          {
+            foreignKeyName: "organization_google_drive_connections_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: true
             referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
@@ -2248,6 +2348,7 @@ export type Database = {
         }
         Returns: string
       }
+      get_org_gdrive_status: { Args: { p_org_id: string }; Returns: Json }
       get_org_max_users: { Args: { _org_id: string }; Returns: number }
       get_org_user_count: { Args: { _org_id: string }; Returns: number }
       get_super_admin_ids: { Args: never; Returns: string[] }
@@ -2281,6 +2382,7 @@ export type Database = {
       normalize_name: { Args: { input: string }; Returns: string }
       normalize_text: { Args: { input_text: string }; Returns: string }
       ocr_dashboard_stats: { Args: { p_org_id: string }; Returns: Json }
+      org_has_active_gdrive: { Args: { p_org_id: string }; Returns: boolean }
       record_password_change: {
         Args: { p_new_password: string; p_user_id: string }
         Returns: undefined
