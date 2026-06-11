@@ -109,17 +109,45 @@ Deno.serve(async (req) => {
       });
     }
 
+    // Paginated fetch helper for Drive list endpoint
+    async function fetchAllPages(qStr: string, extraParams: Record<string, string>, maxPages: number) {
+      const all: any[] = [];
+      let pageToken: string | undefined;
+      for (let i = 0; i < maxPages; i++) {
+        const params = new URLSearchParams({
+          q: qStr,
+          fields: "nextPageToken,files(id,name,mimeType,size,iconLink)",
+          pageSize: "1000",
+          orderBy: "folder,name",
+          supportsAllDrives: "true",
+          includeItemsFromAllDrives: "true",
+          ...extraParams,
+        });
+        if (pageToken) params.set("pageToken", pageToken);
+        const r = await fetch(`${DRIVE_API}/files?${params.toString()}`, { headers });
+        if (!r.ok) {
+          const t = await r.text();
+          return { ok: false as const, status: r.status, body: t };
+        }
+        const j = await r.json();
+        if (Array.isArray(j.files)) all.push(...j.files);
+        pageToken = j.nextPageToken;
+        if (!pageToken) break;
+      }
+      return { ok: true as const, files: all };
+    }
+
     if (action === "list") {
       const folderId = url.searchParams.get("folderId") || "root";
       const q = `'${folderId}' in parents and trashed = false`;
-      const r = await fetch(
-        `${DRIVE_API}/files?q=${encodeURIComponent(q)}&fields=files(id,name,mimeType,size,iconLink)&pageSize=100`,
-        { headers }
-      );
-      const j = await r.json();
-      return new Response(JSON.stringify(j), {
-        status: r.ok ? 200 : r.status,
-        headers: { ...corsHeaders, "Content-Type": "application/json" }
+      const result = await fetchAllPages(q, {}, 10);
+      if (!result.ok) {
+        return new Response(JSON.stringify({ error: "Falha ao listar", details: result.body }), {
+          status: result.status, headers: { ...corsHeaders, "Content-Type": "application/json" }
+        });
+      }
+      return new Response(JSON.stringify({ files: result.files }), {
+        status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" }
       });
     }
 
@@ -132,16 +160,18 @@ Deno.serve(async (req) => {
       }
       const safe = queryStr.replace(/'/g, "\\'");
       const q = `name contains '${safe}' and trashed = false`;
-      const r = await fetch(
-        `${DRIVE_API}/files?q=${encodeURIComponent(q)}&fields=files(id,name,mimeType,size,iconLink)&pageSize=50`,
-        { headers }
-      );
-      const j = await r.json();
-      return new Response(JSON.stringify(j), {
-        status: r.ok ? 200 : r.status,
-        headers: { ...corsHeaders, "Content-Type": "application/json" }
+      const result = await fetchAllPages(q, { corpora: "allDrives" }, 3);
+      if (!result.ok) {
+        return new Response(JSON.stringify({ error: "Falha na busca", details: result.body }), {
+          status: result.status, headers: { ...corsHeaders, "Content-Type": "application/json" }
+        });
+      }
+      return new Response(JSON.stringify({ files: result.files }), {
+        status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" }
       });
     }
+
+
 
     if (action === "download") {
       const fileId = url.searchParams.get("fileId");
