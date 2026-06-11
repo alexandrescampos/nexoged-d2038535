@@ -224,12 +224,16 @@ export function GoogleDrivePicker({ isOpen, onOpenChange, onFileSelect }: Google
                     )}
                     <div className="flex flex-col min-w-0">
                       <span className="text-sm font-medium truncate">{file.name}</span>
+                      {recursive && file.path && file.path !== file.name && (
+                        <span className="text-[10px] text-muted-foreground truncate">{file.path}</span>
+                      )}
                       {file.size && (
                         <span className="text-[10px] text-muted-foreground">
                           {(parseInt(file.size) / 1024 / 1024).toFixed(2)} MB
                         </span>
                       )}
                     </div>
+
                   </div>
                   
                   <div className="flex items-center gap-2">
