@@ -7,15 +7,15 @@ const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
 const REDIRECT_URI = `${SUPABASE_URL}/functions/v1/google-oauth-callback`;
 
-function htmlRedirect(target: string, message: string) {
-  return new Response(
-    `<!doctype html><html><head><meta charset="utf-8"><title>Google Drive</title></head>
-     <body style="font-family:system-ui;padding:24px">
-     <p>${message}</p>
-     <script>setTimeout(()=>{ window.location.href=${JSON.stringify(target)}; }, 600);</script>
-     </body></html>`,
-    { headers: { "Content-Type": "text/html; charset=utf-8" } }
-  );
+function htmlRedirect(target: string, _message: string) {
+  // Absolute URL required for 302 Location when target is a relative path.
+  const location = target.startsWith("http")
+    ? target
+    : `https://nexoged.lovable.app${target.startsWith("/") ? "" : "/"}${target}`;
+  return new Response(null, {
+    status: 302,
+    headers: { Location: location },
+  });
 }
 
 Deno.serve(async (req) => {
