@@ -104,8 +104,9 @@ export default function OrgDashboard() {
     toast.info("Gerando relatório profissional...");
 
     try {
-      // Small delay to ensure all charts are rendered
-      await new Promise((resolve) => setTimeout(resolve, 800));
+      // Wait for the header (rendered conditionally on `exporting`) and charts to be in the DOM
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+
 
       const canvas = await html2canvas(dashboardRef.current, {
         scale: 2,
@@ -244,28 +245,31 @@ export default function OrgDashboard() {
 
       {/* Main Container for PDF capture */}
       <div ref={dashboardRef} className="space-y-6 bg-transparent">
-        {/* Report Header (Visible only in PDF/Export) */}
-        <div className="hidden pdf-only flex justify-between items-center pb-6 border-b border-slate-200 mb-6 bg-white p-6 rounded-t-xl">
-          <div className="flex items-center gap-6">
-            {data?.org_logo ? (
-              <img src={data.org_logo} alt="Logo" className="h-14 object-contain" />
-            ) : (
-              <div className="h-14 w-14 bg-blue-600 flex items-center justify-center rounded text-white font-bold text-2xl">
-                N
+        {/* Report Header (Visible only during PDF export) */}
+        {exporting && (
+          <div className="flex justify-between items-center pb-6 border-b border-slate-200 mb-6 bg-white p-6 rounded-t-xl">
+            <div className="flex items-center gap-6">
+              {data?.org_logo ? (
+                <img src={data.org_logo} alt="Logo" className="h-14 object-contain" />
+              ) : (
+                <div className="h-14 w-14 bg-blue-600 flex items-center justify-center rounded text-white font-bold text-2xl">
+                  N
+                </div>
+              )}
+              <div>
+                <h2 className="text-2xl font-bold text-[#1e293b] leading-tight">RELATÓRIO DE INDICADORES</h2>
+                <p className="text-base text-slate-500 font-medium">{data?.org_name || "Nexo GED"}</p>
               </div>
-            )}
-            <div>
-              <h2 className="text-2xl font-bold text-[#1e293b] leading-tight">RELATÓRIO DE INDICADORES</h2>
-              <p className="text-base text-slate-500 font-medium">{data?.org_name || "Nexo GED"}</p>
+            </div>
+            <div className="text-right">
+              <p className="text-xs text-slate-400 uppercase font-bold tracking-wider mb-1">PERÍODO SELECIONADO</p>
+              <p className="text-base font-bold text-slate-700">
+                {format(startDate, "dd/MM/yyyy")} a {format(endDate, "dd/MM/yyyy")}
+              </p>
             </div>
           </div>
-          <div className="text-right">
-            <p className="text-xs text-slate-400 uppercase font-bold tracking-wider mb-1">PERÍODO SELECIONADO</p>
-            <p className="text-base font-bold text-slate-700">
-              {format(startDate, "dd/MM/yyyy")} a {format(endDate, "dd/MM/yyyy")}
-            </p>
-          </div>
-        </div>
+        )}
+
 
 
         {/* Monthly uploads - Full Width (Matches the screenshot layout) */}
