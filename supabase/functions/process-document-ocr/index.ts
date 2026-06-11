@@ -20,6 +20,10 @@ function admin() {
 const DEFAULT_ALLOWED_MIMES = [
   "application/pdf",
   "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  "application/vnd.ms-excel",
+  "text/csv",
+  "text/plain",
   "image/png", "image/jpeg", "image/webp", "image/gif", "image/bmp", "image/tiff",
 ];
 
@@ -40,6 +44,10 @@ function inferMime(fname: string, mime: string): string {
   const map: Record<string, string> = {
     pdf: "application/pdf",
     docx: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    xlsx: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    xls: "application/vnd.ms-excel",
+    csv: "text/csv",
+    txt: "text/plain",
     png: "image/png", jpg: "image/jpeg", jpeg: "image/jpeg", webp: "image/webp",
     gif: "image/gif", bmp: "image/bmp", tif: "image/tiff", tiff: "image/tiff",
     heic: "image/heic", heif: "image/heif",
@@ -91,6 +99,22 @@ async function extractDocx(buffer: ArrayBuffer): Promise<string[]> {
   const mammoth = await import("https://esm.sh/mammoth@1.8.0");
   const result = await mammoth.extractRawText({ arrayBuffer: buffer });
   return [result.value || ""];
+}
+
+async function extractXlsx(buffer: ArrayBuffer): Promise<string[]> {
+  const XLSX: any = await import("https://esm.sh/xlsx@0.18.5");
+  const wb = XLSX.read(new Uint8Array(buffer), { type: "array" });
+  const pages: string[] = [];
+  for (const name of wb.SheetNames) {
+    const ws = wb.Sheets[name];
+    const csv = XLSX.utils.sheet_to_csv(ws, { blankrows: false });
+    pages.push(`# ${name}\n${csv}`.trim());
+  }
+  return pages.length ? pages : [""];
+}
+
+async function extractText(buffer: ArrayBuffer): Promise<string[]> {
+  return [new TextDecoder("utf-8").decode(buffer)];
 }
 
 async function extractImageWithOCR(buffer: ArrayBuffer, mime: string): Promise<string[]> {
@@ -206,6 +230,10 @@ async function processDocument(documentId: string, versionId: string | null) {
       }
     } else if (mime.includes("word") || fname.endsWith(".docx")) {
       pages = await extractDocx(buffer);
+    } else if (mime.includes("spreadsheet") || mime === "application/vnd.ms-excel" || fname.endsWith(".xlsx") || fname.endsWith(".xls")) {
+      pages = await extractXlsx(buffer);
+    } else if (mime === "text/csv" || mime === "text/plain" || fname.endsWith(".csv") || fname.endsWith(".txt")) {
+      pages = await extractText(buffer);
     } else if (mime.startsWith("image/")) {
       pages = await extractImageWithOCR(buffer, mime);
     } else {

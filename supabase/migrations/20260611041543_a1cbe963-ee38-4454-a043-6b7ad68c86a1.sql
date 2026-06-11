@@ -1,0 +1,2 @@
+UPDATE public.documento_ocr_fila SET status='pendente', ultimo_erro=NULL, iniciado_em=NULL, finalizado_em=NULL WHERE status='erro' AND (ultimo_erro ILIKE '%spreadsheet%' OR ultimo_erro ILIKE '%não permitido%');
+SELECT public.trigger_ocr_queue();
