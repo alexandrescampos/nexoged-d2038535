@@ -10,6 +10,7 @@ export const gedSettingsRepository = {
       .order("name", { ascending: true });
 
     if (error) throw error;
+    
     return (data || []).map((type: any) => ({
       ...type,
       associated_fields: (type.associated_fields || []).map((af: any) => af.custom_field)
@@ -17,9 +18,6 @@ export const gedSettingsRepository = {
   },
 
   async getCustomFields(organizationId: string) {
-    // Note: custom_fields might be user-specific or organization-specific depending on how they were created
-    // Given the prompt "authenticated users can manage their own lists", let's assume they are shared in the org for now
-    // or just fetch all for the user. Profiles table has organization_id.
     const { data: { user } } = await supabase.auth.getUser();
     const { data, error } = await supabase
       .from("custom_fields")
@@ -48,18 +46,57 @@ export const gedSettingsRepository = {
       .single();
 
     if (error) throw error;
+
+    if (customFieldIds && customFieldIds.length > 0) {
+      const links = customFieldIds.map(cfId => ({
+        document_type_id: data.id,
+        custom_field_id: cfId
+      }));
+      const { error: linkError } = await supabase
+        .from("ged_document_type_custom_fields")
+        .insert(links);
+      if (linkError) throw linkError;
+    }
+
     return data as DocumentType;
   },
 
-  async updateDocumentType(id: string, updates: Partial<DocumentType>) {
+  async updateDocumentType(id: string, updates: Partial<DocumentType>, customFieldIds?: string[]) {
     const { data, error } = await supabase
       .from("ged_document_types")
-      .update(updates)
+      .update({
+        name: updates.name,
+        initials: updates.initials,
+        description: updates.description,
+        requires_expiration_date: updates.requires_expiration_date,
+        requires_creation_date: updates.requires_creation_date,
+        updated_at: new Date().toISOString()
+      })
       .eq("id", id)
       .select()
       .single();
 
     if (error) throw error;
+
+    if (customFieldIds !== undefined) {
+      // Refresh links: delete existing and insert new
+      await supabase
+        .from("ged_document_type_custom_fields")
+        .delete()
+        .eq("document_type_id", id);
+
+      if (customFieldIds.length > 0) {
+        const links = customFieldIds.map(cfId => ({
+          document_type_id: id,
+          custom_field_id: cfId
+        }));
+        const { error: linkError } = await supabase
+          .from("ged_document_type_custom_fields")
+          .insert(links);
+        if (linkError) throw linkError;
+      }
+    }
+
     return data as DocumentType;
   },
 

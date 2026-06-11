@@ -28,6 +28,7 @@ import {
   DialogTrigger 
 } from "@/components/ui/dialog";
 import { Plus, Trash2, Edit2, Loader2, FileText } from "lucide-react";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 export default function DocumentTypesSettings() {
   const { documentTypes, customFields, isLoading, createType, updateType, deleteType, isCreating } = useGEDSettings();
