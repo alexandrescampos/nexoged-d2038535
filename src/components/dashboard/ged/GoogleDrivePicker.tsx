@@ -37,8 +37,11 @@ export function GoogleDrivePicker({ isOpen, onOpenChange, onFileSelect }: Google
   const [history, setHistory] = useState<string[]>([]);
   const [downloadingIds, setDownloadingIds] = useState<Set<string>>(new Set());
 
+  const [notConfigured, setNotConfigured] = useState(false);
+
   const fetchFiles = async (folderId: string = 'root', searchQuery: string = '') => {
     setLoading(true);
+    setNotConfigured(false);
     try {
       const queryParams = new URLSearchParams(
         searchQuery 
@@ -50,11 +53,24 @@ export function GoogleDrivePicker({ isOpen, onOpenChange, onFileSelect }: Google
         method: 'GET'
       });
 
-      if (error) throw error;
+      if (error) {
+        // Check if it's a configuration error
+        const errorMsg = (error.message || '') + ' ' + JSON.stringify(error);
+        if (errorMsg.includes('não configurado') || errorMsg.includes('400')) {
+          setNotConfigured(true);
+          return;
+        }
+        throw error;
+      }
       setFiles(data.files || []);
     } catch (error: any) {
       console.error('Error fetching files:', error);
-      toast.error('Erro ao buscar arquivos do Google Drive');
+      const msg = error?.message || '';
+      if (msg.includes('não configurado')) {
+        setNotConfigured(true);
+      } else {
+        toast.error('Erro ao buscar arquivos do Google Drive');
+      }
     } finally {
       setLoading(false);
     }
