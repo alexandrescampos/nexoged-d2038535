@@ -150,7 +150,42 @@ Deno.serve(async (req) => {
           status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" }
         });
       }
-      const r = await fetch(`${DRIVE_API}/files/${fileId}?alt=media`, { headers });
+
+      // First, fetch metadata to detect Google Workspace files (Docs/Sheets/Slides/Drawings)
+      const metaRes = await fetch(`${DRIVE_API}/files/${fileId}?fields=id,name,mimeType`, { headers });
+      if (!metaRes.ok) {
+        const t = await metaRes.text();
+        console.error("Metadata error:", t);
+        return new Response(JSON.stringify({ error: "Falha ao obter metadados", details: t }), {
+          status: metaRes.status, headers: { ...corsHeaders, "Content-Type": "application/json" }
+        });
+      }
+      const meta = await metaRes.json();
+      const mt: string = meta.mimeType || "";
+
+      // Map Google Workspace MIME types to an export format
+      const exportMap: Record<string, { mime: string; ext: string }> = {
+        "application/vnd.google-apps.document":     { mime: "application/pdf", ext: "pdf" },
+        "application/vnd.google-apps.spreadsheet":  { mime: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", ext: "xlsx" },
+        "application/vnd.google-apps.presentation": { mime: "application/pdf", ext: "pdf" },
+        "application/vnd.google-apps.drawing":      { mime: "image/png", ext: "png" },
+      };
+
+      const isGoogleDoc = mt.startsWith("application/vnd.google-apps.");
+      const exportInfo = exportMap[mt];
+
+      if (isGoogleDoc && !exportInfo) {
+        return new Response(JSON.stringify({
+          error: "Tipo de arquivo Google não suportado para download",
+          details: `MIME ${mt} não pode ser exportado.`,
+        }), { status: 415, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+
+      const fetchUrl = exportInfo
+        ? `${DRIVE_API}/files/${fileId}/export?mimeType=${encodeURIComponent(exportInfo.mime)}`
+        : `${DRIVE_API}/files/${fileId}?alt=media`;
+
+      const r = await fetch(fetchUrl, { headers });
       if (!r.ok) {
         const t = await r.text();
         console.error("Download error:", t);
@@ -158,12 +193,17 @@ Deno.serve(async (req) => {
           status: r.status, headers: { ...corsHeaders, "Content-Type": "application/json" }
         });
       }
-      const ct = r.headers.get("Content-Type") || "application/octet-stream";
+      const ct = exportInfo?.mime || r.headers.get("Content-Type") || "application/octet-stream";
+      const filename = exportInfo
+        ? `${(meta.name || "arquivo").replace(/\.[^.]+$/, "")}.${exportInfo.ext}`
+        : (meta.name || "download");
+
       return new Response(r.body, {
         headers: {
           ...corsHeaders,
           "Content-Type": ct,
-          "Content-Disposition": r.headers.get("Content-Disposition") || "attachment",
+          "Content-Disposition": `attachment; filename="${filename}"`,
+          "X-File-Name": encodeURIComponent(filename),
         },
       });
     }
