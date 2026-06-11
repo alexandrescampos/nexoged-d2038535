@@ -51,7 +51,7 @@ function FieldInput({ field, value, onChange }: { field: CustomField, value: any
         .from("list_items")
         .select("*")
         .eq("list_id", field.list_id)
-        .order("item_value", { ascending: true });
+        .order("value", { ascending: true });
       if (error) throw error;
       return data;
     },
@@ -129,7 +129,7 @@ function FieldInput({ field, value, onChange }: { field: CustomField, value: any
           </SelectTrigger>
           <SelectContent>
             {listItems.map((item: any) => (
-              <SelectItem key={item.id} value={item.item_value}>{item.item_value}</SelectItem>
+              <SelectItem key={item.id} value={item.value}>{item.value}</SelectItem>
             ))}
           </SelectContent>
         </Select>
