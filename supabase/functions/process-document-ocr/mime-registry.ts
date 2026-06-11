@@ -63,6 +63,12 @@ export const MIME_REGISTRY: MimeEntry[] = [
     family: "text",
   },
   {
+    canonical: "application/xml",
+    aliases: ["text/xml", "application/xhtml+xml"],
+    extensions: ["xml", "xsd", "xsl", "xslt"],
+    family: "text",
+  },
+  {
     canonical: "image/png",
     aliases: ["image/x-png"],
     extensions: ["png"],
