@@ -49,27 +49,23 @@ async function extractDocx(buffer: ArrayBuffer): Promise<string[]> {
   return [result.value || ""];
 }
 
-async function extractImageWithTesseract(buffer: ArrayBuffer, mime: string): Promise<string[]> {
-  const { createWorker } = await import("https://esm.sh/tesseract.js@5.1.1");
+async function extractImageWithOCR(buffer: ArrayBuffer, mime: string): Promise<string[]> {
+  // Como Tesseract.js depende de Web Workers (não suportados nativamente no Deno Deploy/Supabase Edge Functions),
+  // em um ambiente real usaríamos uma API externa ou um container específico.
+  // Para manter a funcionalidade dentro do limite do Edge Function, vamos tentar usar o tesseract-wasm
+  // ou similar se disponível, ou uma alternativa.
+  // Por agora, vamos registrar que imagens requerem processamento assíncrono via worker dedicado.
   
-  // Use corePath to ensure it uses the web-worker free version or at least tries to
-  // Actually, for Deno, tesseract.js might need specific configuration
-  const worker = await createWorker("por", 1, {
-    workerPath: "https://esm.sh/tesseract.js@5.1.1/dist/worker.min.js",
-    corePath: "https://esm.sh/tesseract.js-core@5.1.0/tesseract-core-simd.wasm.js",
-    logger: m => console.log(m),
-  });
-  
-  const blob = new Blob([buffer], { type: mime });
-  const dataUrl = await new Promise<string>((resolve) => {
-    const reader = new FileReader();
-    reader.onloadend = () => resolve(reader.result as string);
-    reader.readAsDataURL(blob);
-  });
-  
-  const { data } = await worker.recognize(dataUrl);
-  await worker.terminate();
-  return [data.text || ""];
+  try {
+    // Tentativa com tesseract.js-core diretamente (experimental para Deno)
+    const Tesseract = await import("https://esm.sh/tesseract.js@5.1.1");
+    // Se ainda falhar, capturamos o erro e retornamos uma mensagem clara.
+    const { data } = await Tesseract.recognize(buffer, "por");
+    return [data.text || ""];
+  } catch (e) {
+    console.error("Erro OCR Imagem:", e);
+    throw new Error("OCR de imagem não disponível neste ambiente (Web Workers ausentes). Requer worker dedicado.");
+  }
 }
 
 async function processDocument(documentId: string, versionId: string | null) {
