@@ -31,27 +31,15 @@ export default function GoogleDriveIntegrationPage() {
   const fetchAbout = async () => {
     setLoading(true);
     try {
-      const { data, error } = await supabase.functions.invoke("google-drive-integration", {
-        body: null,
-        method: "GET" as any,
+      const projectUrl = import.meta.env.VITE_SUPABASE_URL as string;
+      const anon = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string;
+      const res = await fetch(`${projectUrl}/functions/v1/google-drive-integration?action=about`, {
+        headers: { Authorization: `Bearer ${anon}`, apikey: anon },
       });
-      // Edge function uses query params; call via fetch instead
-      const { data: sess } = await supabase.auth.getSession();
-      const url = `${(supabase as any).functionsUrl ?? ""}`;
-      // Fallback: use functions.invoke with custom path
-      throw new Error("use-direct");
-    } catch {
-      try {
-        const projectUrl = import.meta.env.VITE_SUPABASE_URL as string;
-        const anon = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string;
-        const res = await fetch(`${projectUrl}/functions/v1/google-drive-integration?action=about`, {
-          headers: { Authorization: `Bearer ${anon}`, apikey: anon },
-        });
-        const json = await res.json();
-        setInfo(json);
-      } catch (e: any) {
-        setInfo({ ok: false, error: { message: e.message } });
-      }
+      const json = await res.json();
+      setInfo(json);
+    } catch (e: any) {
+      setInfo({ ok: false, error: { message: e.message } });
     } finally {
       setLoading(false);
     }
