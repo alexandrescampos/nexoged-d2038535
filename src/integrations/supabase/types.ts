@@ -2004,7 +2004,10 @@ export type Database = {
       check_user_has_history: { Args: { p_user_id: string }; Returns: boolean }
       check_user_is_admin: { Args: { user_id: string }; Returns: boolean }
       cleanup_api_usage_log: { Args: never; Returns: undefined }
-      dashboard_indicators: { Args: { p_org_id: string }; Returns: Json }
+      dashboard_indicators: {
+        Args: { p_end_date?: string; p_org_id: string; p_start_date?: string }
+        Returns: Json
+      }
       enqueue_document_ocr: {
         Args: {
           p_documento_id: string
