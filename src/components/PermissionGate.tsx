@@ -15,13 +15,20 @@ interface PermissionGateProps {
  * Componente para proteger partes da UI baseada em permissões RBAC.
  */
 export function PermissionGate({ permission, children, fallback = null }: PermissionGateProps) {
-  const { user, isSuperAdmin, isOrgAdmin } = useAuth();
+  const { user, isSuperAdmin, isOrgAdmin, isUser } = useAuth();
   const { userPermissions, isLoading } = useUserPermissions(user?.id);
 
   if (isLoading) return null;
 
-  // Super Admins e Org Admins têm todas as permissões
-  const hasAccess = isSuperAdmin || isOrgAdmin || userPermissions.includes(permission);
+  // Super Admins e Org Admins têm todas as permissões.
+  // Usuários comuns podem ter permissões padrão.
+  const defaultUserPermissions: GedPermission[] = ["visualizar_documento"];
+
+  const hasAccess =
+    isSuperAdmin ||
+    isOrgAdmin ||
+    userPermissions.includes(permission) ||
+    (isUser && defaultUserPermissions.includes(permission));
 
   if (!hasAccess) return <>{fallback}</>;
 
@@ -37,7 +44,7 @@ interface PermissionProtectedRouteProps {
  * Componente para proteger rotas inteiras baseada em permissões RBAC.
  */
 export function PermissionProtectedRoute({ permission, children }: PermissionProtectedRouteProps) {
-  const { user, isSuperAdmin, isOrgAdmin, isAuthReady } = useAuth();
+  const { user, isSuperAdmin, isOrgAdmin, isUser, isAuthReady } = useAuth();
   const { userPermissions, isLoading } = useUserPermissions(user?.id);
   const location = useLocation();
 
@@ -49,7 +56,14 @@ export function PermissionProtectedRoute({ permission, children }: PermissionPro
     );
   }
 
-  const hasAccess = isSuperAdmin || isOrgAdmin || userPermissions.includes(permission);
+  // Usuários comuns podem ter permissões padrão.
+  const defaultUserPermissions: GedPermission[] = ["visualizar_documento"];
+
+  const hasAccess =
+    isSuperAdmin ||
+    isOrgAdmin ||
+    userPermissions.includes(permission) ||
+    (isUser && defaultUserPermissions.includes(permission));
 
   if (!hasAccess) {
     return <Navigate to="/dashboard" state={{ from: location }} replace />;
