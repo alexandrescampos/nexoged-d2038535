@@ -621,6 +621,84 @@ export type Database = {
           },
         ]
       }
+      ged_document_custom_field_values: {
+        Row: {
+          created_at: string | null
+          custom_field_id: string
+          document_id: string
+          id: string
+          updated_at: string | null
+          value: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          custom_field_id: string
+          document_id: string
+          id?: string
+          updated_at?: string | null
+          value?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          custom_field_id?: string
+          document_id?: string
+          id?: string
+          updated_at?: string | null
+          value?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ged_document_custom_field_values_custom_field_id_fkey"
+            columns: ["custom_field_id"]
+            isOneToOne: false
+            referencedRelation: "custom_fields"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ged_document_custom_field_values_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "ged_documents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ged_document_type_custom_fields: {
+        Row: {
+          created_at: string | null
+          custom_field_id: string
+          document_type_id: string
+          id: string
+        }
+        Insert: {
+          created_at?: string | null
+          custom_field_id: string
+          document_type_id: string
+          id?: string
+        }
+        Update: {
+          created_at?: string | null
+          custom_field_id?: string
+          document_type_id?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ged_document_type_custom_fields_custom_field_id_fkey"
+            columns: ["custom_field_id"]
+            isOneToOne: false
+            referencedRelation: "custom_fields"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ged_document_type_custom_fields_document_type_id_fkey"
+            columns: ["document_type_id"]
+            isOneToOne: false
+            referencedRelation: "ged_document_types"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ged_document_types: {
         Row: {
           created_at: string
