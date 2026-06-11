@@ -164,6 +164,8 @@ export function useGED(folderId: string | null = null, filterFavorites: boolean 
     setStatus,
     page,
     setPage,
+    pageSize,
+    setPageSize,
     getDownloadUrl: (id: string) => gedRepository.getDownloadUrl(id)
   };
 }
