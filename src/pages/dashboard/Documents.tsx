@@ -230,7 +230,11 @@ export default function DocumentsPage() {
     getDownloadUrl,
     updateDocument,
     isUpdatingDoc,
-    totalCount: folderTotalCount,
+    totalCount,
+    page,
+    setPage,
+    pageSize,
+    setPageSize
   } = useGED(currentFolder, false, false, searchParams.get("status"));
   const isSearching = (searchTerm ?? "").trim().length > 0;
   const isFiltering = isSearching || selectedTags.length > 0;
