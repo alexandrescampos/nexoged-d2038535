@@ -89,16 +89,16 @@ export function GoogleDrivePicker({ isOpen, onOpenChange, onFileSelect }: Google
     
     setDownloadingIds(prev => new Set(prev).add(driveFile.id));
     try {
-      const { data, error } = await supabase.functions.invoke('google-drive-integration', {
-        method: 'GET',
-        query: { action: 'download', fileId: driveFile.id }
+      const { data, error } = await supabase.functions.invoke(`google-drive-integration?action=download&fileId=${driveFile.id}`, {
+        method: 'GET'
       });
 
       if (error) throw error;
 
       // Data is a Blob
       const blob = data as Blob;
-      const file = new File([blob], driveFile.name, { type: driveFile.mimeType });
+      // Using a type assertion to bypass the typing issue with new File
+      const file = new (window as any).File([blob], driveFile.name, { type: driveFile.mimeType }) as File;
       
       onFileSelect([file]);
       toast.success(`${driveFile.name} importado com sucesso!`);
