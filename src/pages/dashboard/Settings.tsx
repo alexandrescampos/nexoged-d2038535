@@ -16,6 +16,7 @@ import OrganizationCnpjs from "@/components/dashboard/OrganizationCnpjs";
 import ApiIntegrationSettings from "@/components/dashboard/ApiIntegrationSettings";
 import UserAuditLog from "@/components/dashboard/UserAuditLog";
 import DocumentTypesSettings from "@/components/dashboard/DocumentTypesSettings";
+import GoogleDriveIntegrationSettings from "@/components/dashboard/GoogleDriveIntegrationSettings";
 
 
 export default function OrgSettingsPage() {
