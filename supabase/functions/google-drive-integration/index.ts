@@ -7,6 +7,7 @@ const corsHeaders = {
 const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY')
 const GOOGLE_DRIVE_API_KEY = Deno.env.get('GOOGLE_DRIVE_API_KEY')
 const GATEWAY_URL = "https://connector-gateway.lovable.dev/google_drive"
+// v2 - about endpoint added
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
