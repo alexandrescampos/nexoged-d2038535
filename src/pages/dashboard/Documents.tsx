@@ -48,9 +48,20 @@ import {
   Loader2,
   X,
   Tag as TagIcon,
-  ChevronLeft
+  ChevronLeft,
+  Check,
+  ChevronsUpDown
 } from "lucide-react";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
 import { CustomFieldsForm } from "@/components/dashboard/ged/CustomFieldsForm";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
