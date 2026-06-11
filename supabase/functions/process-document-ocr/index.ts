@@ -230,6 +230,10 @@ async function processDocument(documentId: string, versionId: string | null) {
       }
     } else if (mime.includes("word") || fname.endsWith(".docx")) {
       pages = await extractDocx(buffer);
+    } else if (mime.includes("spreadsheet") || mime === "application/vnd.ms-excel" || fname.endsWith(".xlsx") || fname.endsWith(".xls")) {
+      pages = await extractXlsx(buffer);
+    } else if (mime === "text/csv" || mime === "text/plain" || fname.endsWith(".csv") || fname.endsWith(".txt")) {
+      pages = await extractText(buffer);
     } else if (mime.startsWith("image/")) {
       pages = await extractImageWithOCR(buffer, mime);
     } else {
