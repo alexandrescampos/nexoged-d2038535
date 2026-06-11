@@ -23,7 +23,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useDocumentPermissions } from "@/hooks/useDocumentPermissions";
 import { supabase } from "@/integrations/supabase/client";
 import { MultiFileUploader } from "@/components/dashboard/ged/MultiFileUploader";
-import { Files } from "lucide-react";
+import { Files, AlertCircle } from "lucide-react";
 import { 
   FileText, 
   Upload, 
@@ -1198,7 +1198,7 @@ export default function DocumentsPage() {
                       document_type_id: uploadData.document_type_id || null,
                       expiration_date: item.expirationDate || null,
                       document_creation_date: item.creationDate || null,
-                      page_count: 1,
+                      page_count: 1, // Will be auto-calculated in useGED mutation
                       description: item.description || uploadData.description || null,
                       organization_id: organization.id,
                       folder_id: currentFolder,
@@ -1262,13 +1262,26 @@ export default function DocumentsPage() {
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="edit-pages">Número de Páginas</Label>
-                <Input 
-                  id="edit-pages" 
-                  type="number" 
-                  min={1} 
-                  value={editData.page_count}
-                  onChange={(e) => setEditData({ ...editData, page_count: parseInt(e.target.value) || 1 })}
-                />
+                <div className="flex items-center gap-2">
+                  <Input 
+                    id="edit-pages" 
+                    type="number" 
+                    min={1} 
+                    value={editData.page_count}
+                    onChange={(e) => setEditData({ ...editData, page_count: parseInt(e.target.value) || 1 })}
+                    disabled // Auto-calculated during upload, edited only if strictly necessary (kept disabled for control)
+                  />
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <AlertCircle className="h-4 w-4 text-muted-foreground" />
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        O número de páginas é calculado automaticamente durante o upload.
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </div>
               </div>
             </div>
 

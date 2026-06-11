@@ -52,7 +52,15 @@ export function useGED(folderId: string | null = null, filterFavorites: boolean 
   const uploadMutation = useMutation({
     mutationFn: async ({ doc, file }: { doc: any, file: File }) => {
       const optimizedFile = await documentProcessor.optimizeDocument(file);
-      return gedRepository.createDocument(doc, optimizedFile as File);
+      
+      // Auto-calculate page count if not provided or to ensure accuracy
+      const actualPageCount = await documentProcessor.countPages(file);
+      const updatedDoc = {
+        ...doc,
+        page_count: actualPageCount
+      };
+
+      return gedRepository.createDocument(updatedDoc, optimizedFile as File);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["ged-documents"] });
