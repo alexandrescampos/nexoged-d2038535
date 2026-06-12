@@ -13,6 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Loader2, User, Building2, Shield, Lock, Phone, Check, X } from "lucide-react";
 import { passwordSchema as passwordValidationSchema } from "@/utils/password-validation";
+import { ThemePicker } from "@/components/ThemePicker";
 
 // Phone mask helper
 function maskPhone(value: string): string {
