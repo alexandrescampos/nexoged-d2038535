@@ -107,12 +107,11 @@ const ORG_ADMIN_FAQ: FaqCategory[] = [
     icon: Settings,
     title: "Configurações",
     questions: [
-      "Como alterar os dados da organização?",
-      "Como configurar as regras do GED?",
+      "Como alterar o nome, CNPJ ou logo da organização?",
       "Como conectar o Google Drive?",
-      "Como exportar os dados da organização?",
     ],
   },
+
   {
     icon: UserCircle,
     title: "Conta & Suporte",

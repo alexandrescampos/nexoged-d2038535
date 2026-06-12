@@ -104,7 +104,7 @@ Menu lateral (rota /dashboard):
 - **Controle de Acesso**: perfis de permissão (perfil), permissões por perfil, escopo de usuário (departamento/setor/pasta), Simulador de Acesso e Dashboard de Segurança.
 
 ## Configurações
-- **Configurações**: dados da organização (nome, logo, CNPJs), regras de GED (geração de nome de arquivo, versionamento) e exportação de dados.
+- **Configurações**: dados da organização (nome, CNPJ, cidade, logo) e gestão de CNPJs/filiais.
 - **Google Drive**: conectar/desconectar a conta Google da organização e usar o Picker para importar arquivos.
 - **Sobre**: versão e informações do sistema.
 
