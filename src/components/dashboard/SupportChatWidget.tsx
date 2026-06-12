@@ -11,6 +11,11 @@ import {
   ChevronDown,
   ChevronRight,
   HelpCircle,
+  Shield,
+  LayoutDashboard,
+  CreditCard,
+  Star,
+  UserCircle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,38 +28,135 @@ interface FaqCategory {
   icon: React.ElementType;
   title: string;
   questions: string[];
-  adminOnly?: boolean;
 }
 
-const faqCategories: FaqCategory[] = [
+const SUPER_ADMIN_FAQ: FaqCategory[] = [
+  {
+    icon: LayoutDashboard,
+    title: "Visão Geral",
+    questions: [
+      "Onde vejo o total de organizações e usuários do sistema?",
+      "Como acompanhar o uso consolidado (páginas e GB)?",
+      "Como analisar o uso do chatbot?",
+    ],
+  },
+  {
+    icon: Building2,
+    title: "Organizações & Planos",
+    questions: [
+      "Como criar uma nova organização?",
+      "Como alterar os limites contratados (páginas e GB) de uma organização?",
+      "Como criar ou editar um plano comercial?",
+      "Como configurar o Stripe?",
+    ],
+  },
+  {
+    icon: Shield,
+    title: "Usuários & Segurança",
+    questions: [
+      "Como gerenciar usuários de qualquer organização?",
+      "Como redefinir a senha de um usuário?",
+      "Onde consulto a auditoria global do sistema?",
+    ],
+  },
+  {
+    icon: FileText,
+    title: "Conteúdo & Legal",
+    questions: [
+      "Como editar os Termos de Uso?",
+      "Como editar a Política de Privacidade (LGPD)?",
+      "Onde altero as configurações globais do sistema?",
+    ],
+  },
+];
+
+const ORG_ADMIN_FAQ: FaqCategory[] = [
   {
     icon: Building2,
     title: "Cadastros",
     questions: [
       "Como cadastrar um CNPJ/filial?",
       "Como gerenciar usuários da organização?",
+      "Como criar um Tipo de Documento?",
+      "Como criar uma Lista de Cadastro?",
+      "Como configurar Campos Adicionais?",
     ],
-    adminOnly: true,
   },
   {
     icon: FileText,
     title: "Documentos",
     questions: [
       "Como fazer upload de um documento?",
-      "Como acompanhar a vigência de um arquivo?",
-      "Como excluir um documento?",
+      "Como fazer upload em lote?",
+      "Como funciona o versionamento de documentos?",
+      "Como acompanhar a vigência e vencimentos?",
+      "Como restaurar um documento da lixeira?",
+    ],
+  },
+  {
+    icon: Shield,
+    title: "Controle de Acesso",
+    questions: [
+      "Como criar Perfis de Permissão?",
+      "Como definir o escopo de um usuário?",
+      "Como usar o Simulador de Acesso?",
+      "O que mostra o Dashboard de Segurança?",
     ],
   },
   {
     icon: Settings,
-    title: "Conta, Acesso e API",
+    title: "Configurações",
+    questions: [
+      "Como alterar os dados da organização?",
+      "Como configurar as regras do GED?",
+      "Como conectar o Google Drive?",
+      "Como exportar os dados da organização?",
+    ],
+  },
+  {
+    icon: UserCircle,
+    title: "Conta & Suporte",
     questions: [
       "Como alterar minha senha?",
-      "Não consigo acessar um menu, o que fazer?",
-      "Como alterar dados da organização?",
       "Onde vejo a versão do sistema?",
       "Onde encontro o telefone de suporte?",
-      "Como utilizar a API de documentos?",
+    ],
+  },
+];
+
+const USER_FAQ: FaqCategory[] = [
+  {
+    icon: FileText,
+    title: "Documentos",
+    questions: [
+      "Como pesquisar um documento?",
+      "Como abrir e baixar um documento?",
+      "Como faço upload de um documento (se autorizado)?",
+    ],
+  },
+  {
+    icon: Star,
+    title: "Vencimentos & Favoritos",
+    questions: [
+      "Como acompanhar vencimentos dos meus documentos?",
+      "Como marcar um documento como favorito?",
+      "Onde vejo meus últimos acessos?",
+    ],
+  },
+  {
+    icon: UserCircle,
+    title: "Minha Conta",
+    questions: [
+      "Como alterar minha senha?",
+      "Como atualizar meus dados pessoais?",
+    ],
+  },
+  {
+    icon: Shield,
+    title: "Acesso",
+    questions: [
+      "Não consigo ver um menu ou pasta, o que fazer?",
+      "Como solicitar mais permissões?",
     ],
   },
 ];
@@ -62,7 +164,11 @@ const faqCategories: FaqCategory[] = [
 export function SupportChatWidget() {
   const { messages, isLoading, isOpen, sendMessage, clearMessages, toggleOpen } = useSupportChat();
   const { isSuperAdmin, isOrgAdmin } = useAuth();
-  const isAdmin = isSuperAdmin || isOrgAdmin;
+  const faqCategories = isSuperAdmin
+    ? SUPER_ADMIN_FAQ
+    : isOrgAdmin
+      ? ORG_ADMIN_FAQ
+      : USER_FAQ;
   const [input, setInput] = useState("");
   const [showFaq, setShowFaq] = useState(true);
   const [expandedFaq, setExpandedFaq] = useState<string | null>(null);
@@ -162,9 +268,8 @@ export function SupportChatWidget() {
               Perguntas Frequentes
             </button>
             <div className="space-y-1">
-              {faqCategories
-                .filter((cat) => !cat.adminOnly || isAdmin)
-                .map((cat) => {
+              {faqCategories.map((cat) => {
+
                 const Icon = cat.icon;
                 const isExpanded = expandedFaq === cat.title;
                 return (
