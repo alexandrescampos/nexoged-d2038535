@@ -268,9 +268,8 @@ export function SupportChatWidget() {
               Perguntas Frequentes
             </button>
             <div className="space-y-1">
-              {faqCategories
-                .filter((cat) => !cat.adminOnly || isAdmin)
-                .map((cat) => {
+              {faqCategories.map((cat) => {
+
                 const Icon = cat.icon;
                 const isExpanded = expandedFaq === cat.title;
                 return (
