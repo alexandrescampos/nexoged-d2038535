@@ -107,7 +107,6 @@ Menu lateral (rota /dashboard):
 - **Configurações**: dados da organização (nome, CNPJ, cidade, logo) e gestão de CNPJs/filiais.
 - **Google Drive**: conectar/desconectar a conta Google da organização e usar o Picker para importar arquivos.
 - **Sobre**: versão e informações do sistema.
-- **Sobre**: versão e informações do sistema.
 
 Exclusivo do Administrador:
 - Criar/editar usuários, papéis, perfis, permissões e escopos.
