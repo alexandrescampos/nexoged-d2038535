@@ -14,14 +14,17 @@ export function useSupportChat() {
   const abortRef = useRef<AbortController | null>(null);
 
   const getUserContext = useCallback(() => {
-    const roleLabel = roles.includes("org_admin")
-      ? "Administrador"
-      : roles.includes("user")
-        ? "Gestor"
-        : "Usuário";
+    const roleLabel = roles.includes("super_admin")
+      ? "Super Admin"
+      : roles.includes("org_admin")
+        ? "Administrador"
+        : roles.includes("user")
+          ? "Gestor"
+          : "Usuário";
     return {
       name: profile?.full_name || "Não informado",
       role: roleLabel,
+      roles,
       organization: organization?.name || "Não informada",
       organization_id: organization?.id,
       user_id: profile?.id,
