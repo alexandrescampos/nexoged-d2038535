@@ -379,6 +379,9 @@ export default function ProfilePage() {
           </Form>
         </CardContent>
       </Card>
+
+      <ThemePicker scope="user" />
     </div>
   );
 }
+
