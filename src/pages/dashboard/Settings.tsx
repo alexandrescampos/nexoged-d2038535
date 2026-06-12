@@ -423,7 +423,10 @@ export default function OrgSettingsPage() {
             </div>
           </CardContent>
         </Card>
+
+        {isOrgAdmin && <ThemePicker scope="org" />}
       </div>
     </div>
   );
 }
+
