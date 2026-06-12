@@ -164,7 +164,11 @@ const USER_FAQ: FaqCategory[] = [
 export function SupportChatWidget() {
   const { messages, isLoading, isOpen, sendMessage, clearMessages, toggleOpen } = useSupportChat();
   const { isSuperAdmin, isOrgAdmin } = useAuth();
-  const isAdmin = isSuperAdmin || isOrgAdmin;
+  const faqCategories = isSuperAdmin
+    ? SUPER_ADMIN_FAQ
+    : isOrgAdmin
+      ? ORG_ADMIN_FAQ
+      : USER_FAQ;
   const [input, setInput] = useState("");
   const [showFaq, setShowFaq] = useState(true);
   const [expandedFaq, setExpandedFaq] = useState<string | null>(null);
