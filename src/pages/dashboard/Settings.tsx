@@ -16,6 +16,7 @@ import OrganizationCnpjs from "@/components/dashboard/OrganizationCnpjs";
 import ApiIntegrationSettings from "@/components/dashboard/ApiIntegrationSettings";
 import UserAuditLog from "@/components/dashboard/UserAuditLog";
 import DocumentTypesSettings from "@/components/dashboard/DocumentTypesSettings";
+import { ThemePicker } from "@/components/ThemePicker";
 
 
 export default function OrgSettingsPage() {
@@ -422,7 +423,10 @@ export default function OrgSettingsPage() {
             </div>
           </CardContent>
         </Card>
+
+        {isOrgAdmin && <ThemePicker scope="org" />}
       </div>
     </div>
   );
 }
+
