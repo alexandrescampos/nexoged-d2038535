@@ -1372,6 +1372,8 @@ export type Database = {
           status: Database["public"]["Enums"]["org_status"]
           terms_accepted_at: string | null
           terms_accepted_version: string | null
+          theme_mode: string | null
+          theme_palette: string | null
           updated_at: string
           zip_code: string | null
         }
@@ -1398,6 +1400,8 @@ export type Database = {
           status?: Database["public"]["Enums"]["org_status"]
           terms_accepted_at?: string | null
           terms_accepted_version?: string | null
+          theme_mode?: string | null
+          theme_palette?: string | null
           updated_at?: string
           zip_code?: string | null
         }
@@ -1424,6 +1428,8 @@ export type Database = {
           status?: Database["public"]["Enums"]["org_status"]
           terms_accepted_at?: string | null
           terms_accepted_version?: string | null
+          theme_mode?: string | null
+          theme_palette?: string | null
           updated_at?: string
           zip_code?: string | null
         }
@@ -1676,6 +1682,8 @@ export type Database = {
           organization_id: string | null
           password_updated_at: string | null
           phone: string | null
+          theme_mode: string | null
+          theme_palette: string | null
           updated_at: string
         }
         Insert: {
@@ -1692,6 +1700,8 @@ export type Database = {
           organization_id?: string | null
           password_updated_at?: string | null
           phone?: string | null
+          theme_mode?: string | null
+          theme_palette?: string | null
           updated_at?: string
         }
         Update: {
@@ -1708,6 +1718,8 @@ export type Database = {
           organization_id?: string | null
           password_updated_at?: string | null
           phone?: string | null
+          theme_mode?: string | null
+          theme_palette?: string | null
           updated_at?: string
         }
         Relationships: [
