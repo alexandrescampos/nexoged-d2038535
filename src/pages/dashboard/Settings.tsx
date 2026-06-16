@@ -17,6 +17,7 @@ import ApiIntegrationSettings from "@/components/dashboard/ApiIntegrationSetting
 import UserAuditLog from "@/components/dashboard/UserAuditLog";
 import DocumentTypesSettings from "@/components/dashboard/DocumentTypesSettings";
 import { ThemePicker } from "@/components/ThemePicker";
+import { UsageIndicator } from "@/components/dashboard/UsageIndicator";
 
 
 export default function OrgSettingsPage() {
