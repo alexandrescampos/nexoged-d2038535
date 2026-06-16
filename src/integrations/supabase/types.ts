@@ -767,6 +767,10 @@ export type Database = {
       }
       ged_document_versions: {
         Row: {
+          approved_at: string | null
+          approved_by: string | null
+          based_on_version_id: string | null
+          change_description: string | null
           checksum: string | null
           created_at: string | null
           created_by: string | null
@@ -775,10 +779,21 @@ export type Database = {
           file_path: string
           file_size: number | null
           id: string
+          is_restoration: boolean
           mime_type: string | null
+          organization_id: string | null
+          status: string
+          title: string | null
+          version_label: string
+          version_major: number
+          version_minor: number
           version_number: number
         }
         Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          based_on_version_id?: string | null
+          change_description?: string | null
           checksum?: string | null
           created_at?: string | null
           created_by?: string | null
@@ -787,10 +802,21 @@ export type Database = {
           file_path: string
           file_size?: number | null
           id?: string
+          is_restoration?: boolean
           mime_type?: string | null
+          organization_id?: string | null
+          status?: string
+          title?: string | null
+          version_label?: string
+          version_major?: number
+          version_minor?: number
           version_number: number
         }
         Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          based_on_version_id?: string | null
+          change_description?: string | null
           checksum?: string | null
           created_at?: string | null
           created_by?: string | null
@@ -799,7 +825,14 @@ export type Database = {
           file_path?: string
           file_size?: number | null
           id?: string
+          is_restoration?: boolean
           mime_type?: string | null
+          organization_id?: string | null
+          status?: string
+          title?: string | null
+          version_label?: string
+          version_major?: number
+          version_minor?: number
           version_number?: number
         }
         Relationships: [
@@ -816,6 +849,7 @@ export type Database = {
         Row: {
           created_at: string | null
           created_by: string | null
+          current_version_id: string | null
           deleted_at: string | null
           description: string | null
           document_creation_date: string | null
@@ -826,6 +860,8 @@ export type Database = {
           id: string
           is_favorite: boolean | null
           keywords: string[] | null
+          latest_version_at: string | null
+          latest_version_number: string | null
           organization_id: string
           owner_id: string | null
           page_count: number | null
@@ -840,6 +876,7 @@ export type Database = {
         Insert: {
           created_at?: string | null
           created_by?: string | null
+          current_version_id?: string | null
           deleted_at?: string | null
           description?: string | null
           document_creation_date?: string | null
@@ -850,6 +887,8 @@ export type Database = {
           id?: string
           is_favorite?: boolean | null
           keywords?: string[] | null
+          latest_version_at?: string | null
+          latest_version_number?: string | null
           organization_id: string
           owner_id?: string | null
           page_count?: number | null
@@ -864,6 +903,7 @@ export type Database = {
         Update: {
           created_at?: string | null
           created_by?: string | null
+          current_version_id?: string | null
           deleted_at?: string | null
           description?: string | null
           document_creation_date?: string | null
@@ -874,6 +914,8 @@ export type Database = {
           id?: string
           is_favorite?: boolean | null
           keywords?: string[] | null
+          latest_version_at?: string | null
+          latest_version_number?: string | null
           organization_id?: string
           owner_id?: string | null
           page_count?: number | null
@@ -2340,7 +2382,15 @@ export type Database = {
       }
     }
     Functions: {
+      approve_document_version: {
+        Args: { p_version_id: string }
+        Returns: undefined
+      }
       can_org_add_user: { Args: { _org_id: string }; Returns: boolean }
+      cancel_document_version: {
+        Args: { p_reason?: string; p_version_id: string }
+        Returns: undefined
+      }
       check_password_is_not_repeated: {
         Args: { p_new_password: string; p_user_id: string }
         Returns: boolean
@@ -2348,6 +2398,49 @@ export type Database = {
       check_user_has_history: { Args: { p_user_id: string }; Returns: boolean }
       check_user_is_admin: { Args: { user_id: string }; Returns: boolean }
       cleanup_api_usage_log: { Args: never; Returns: undefined }
+      create_document_version: {
+        Args: {
+          p_based_on?: string
+          p_bump_type: string
+          p_change_description: string
+          p_document_id: string
+          p_file_name: string
+          p_file_path: string
+          p_file_size: number
+          p_is_restoration?: boolean
+          p_mime_type: string
+          p_title?: string
+        }
+        Returns: {
+          approved_at: string | null
+          approved_by: string | null
+          based_on_version_id: string | null
+          change_description: string | null
+          checksum: string | null
+          created_at: string | null
+          created_by: string | null
+          document_id: string
+          file_name: string
+          file_path: string
+          file_size: number | null
+          id: string
+          is_restoration: boolean
+          mime_type: string | null
+          organization_id: string | null
+          status: string
+          title: string | null
+          version_label: string
+          version_major: number
+          version_minor: number
+          version_number: number
+        }
+        SetofOptions: {
+          from: "*"
+          to: "ged_document_versions"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       dashboard_indicators: {
         Args: { p_end_date?: string; p_org_id: string; p_start_date?: string }
         Returns: Json
@@ -2398,6 +2491,38 @@ export type Database = {
       record_password_change: {
         Args: { p_new_password: string; p_user_id: string }
         Returns: undefined
+      }
+      restore_document_version: {
+        Args: { p_version_id: string }
+        Returns: {
+          approved_at: string | null
+          approved_by: string | null
+          based_on_version_id: string | null
+          change_description: string | null
+          checksum: string | null
+          created_at: string | null
+          created_by: string | null
+          document_id: string
+          file_name: string
+          file_path: string
+          file_size: number | null
+          id: string
+          is_restoration: boolean
+          mime_type: string | null
+          organization_id: string | null
+          status: string
+          title: string | null
+          version_label: string
+          version_major: number
+          version_minor: number
+          version_number: number
+        }
+        SetofOptions: {
+          from: "*"
+          to: "ged_document_versions"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
       search_documents_fts: {
         Args: {
