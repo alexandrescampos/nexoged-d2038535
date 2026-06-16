@@ -17,6 +17,7 @@ import ApiIntegrationSettings from "@/components/dashboard/ApiIntegrationSetting
 import UserAuditLog from "@/components/dashboard/UserAuditLog";
 import DocumentTypesSettings from "@/components/dashboard/DocumentTypesSettings";
 import { ThemePicker } from "@/components/ThemePicker";
+import { UsageIndicator } from "@/components/dashboard/UsageIndicator";
 
 
 export default function OrgSettingsPage() {
@@ -347,7 +348,7 @@ export default function OrgSettingsPage() {
                 Plano Atual
               </CardTitle>
               <CardDescription>
-                Detalhes do seu plano e limites
+                Detalhes do seu plano e limites contratados
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -357,9 +358,18 @@ export default function OrgSettingsPage() {
               </div>
               <Separator />
               <div className="flex justify-between items-center">
-                <span className="text-muted-foreground">Limite de Funcionários</span>
+                <span className="text-muted-foreground">Páginas Contratadas</span>
                 <span className="font-medium">
-                  {organization?.max_users === null ? "Ilimitado" : (organization?.max_users ?? 10)}
+                  {organization?.contracted_pages?.toLocaleString("pt-BR") ?? "—"}
+                </span>
+              </div>
+              <Separator />
+              <div className="flex justify-between items-center">
+                <span className="text-muted-foreground">Espaço Contratado</span>
+                <span className="font-medium">
+                  {organization?.contracted_storage_gb != null
+                    ? `${organization.contracted_storage_gb} GB`
+                    : "—"}
                 </span>
               </div>
               <Separator />
@@ -368,6 +378,13 @@ export default function OrgSettingsPage() {
               </div>
             </CardContent>
           </Card>
+        )}
+
+        {/* Usage indicator - real usage vs contracted */}
+        {isOrgAdmin && (
+          <div className="md:col-span-2">
+            <UsageIndicator />
+          </div>
         )}
 
 
