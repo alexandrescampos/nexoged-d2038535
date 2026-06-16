@@ -62,6 +62,10 @@ interface Indicators {
   pages_by_user: NameTotal[];
   expired_docs_count: number;
   expiring_soon_docs_count: number;
+  total_versions?: number;
+  versions_signed?: number;
+  versions_pending?: number;
+  versions_cancelled?: number;
   org_logo?: string;
   org_name?: string;
   start_date: string;
