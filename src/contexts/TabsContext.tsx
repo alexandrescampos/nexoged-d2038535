@@ -39,9 +39,10 @@ export function TabsProvider({ children, storageKey = STORAGE_KEY }: TabsProvide
       const stored = sessionStorage.getItem(storageKey);
       if (stored) {
         const parsed = JSON.parse(stored);
-        return parsed.map((t: { id: string; title: string }) => ({
+        return parsed.map((t: { id: string; title: string; path?: string }) => ({
           id: t.id,
           title: t.title,
+          path: t.path,
           icon: null,
         }));
       }
@@ -60,7 +61,7 @@ export function TabsProvider({ children, storageKey = STORAGE_KEY }: TabsProvide
 
   // Persist tabs to sessionStorage (without icons)
   useEffect(() => {
-    const toStore = openTabs.map((t) => ({ id: t.id, title: t.title }));
+    const toStore = openTabs.map((t) => ({ id: t.id, title: t.title, path: t.path }));
     sessionStorage.setItem(storageKey, JSON.stringify(toStore));
   }, [openTabs, storageKey]);
 
