@@ -18,12 +18,13 @@ Deno.serve(async (req) => {
     const url = new URL(req.url);
     let token = url.searchParams.get('token') ?? '';
     let password: string | null = url.searchParams.get('password');
-    const action = url.searchParams.get('action') || 'info';
+    let action = url.searchParams.get('action') || 'info';
 
     if (req.method === 'POST') {
       const body = await req.json().catch(() => ({}));
       token = body.token || token;
       password = body.password ?? password;
+      action = body.action || action;
     }
 
     if (!token) {
