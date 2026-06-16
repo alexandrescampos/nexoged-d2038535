@@ -119,6 +119,190 @@ export type Database = {
           },
         ]
       }
+      documento_aprovacao: {
+        Row: {
+          aprovador_id: string | null
+          comentario: string | null
+          created_at: string
+          decidido_em: string | null
+          documento_id: string
+          etapa_id: string | null
+          fluxo_id: string | null
+          id: string
+          nome_etapa: string
+          ordem: number
+          organization_id: string
+          perfil_responsavel_id: string | null
+          status: Database["public"]["Enums"]["status_etapa_aprovacao"]
+          updated_at: string
+        }
+        Insert: {
+          aprovador_id?: string | null
+          comentario?: string | null
+          created_at?: string
+          decidido_em?: string | null
+          documento_id: string
+          etapa_id?: string | null
+          fluxo_id?: string | null
+          id?: string
+          nome_etapa: string
+          ordem: number
+          organization_id: string
+          perfil_responsavel_id?: string | null
+          status?: Database["public"]["Enums"]["status_etapa_aprovacao"]
+          updated_at?: string
+        }
+        Update: {
+          aprovador_id?: string | null
+          comentario?: string | null
+          created_at?: string
+          decidido_em?: string | null
+          documento_id?: string
+          etapa_id?: string | null
+          fluxo_id?: string | null
+          id?: string
+          nome_etapa?: string
+          ordem?: number
+          organization_id?: string
+          perfil_responsavel_id?: string | null
+          status?: Database["public"]["Enums"]["status_etapa_aprovacao"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "documento_aprovacao_documento_id_fkey"
+            columns: ["documento_id"]
+            isOneToOne: false
+            referencedRelation: "ged_documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "documento_aprovacao_etapa_id_fkey"
+            columns: ["etapa_id"]
+            isOneToOne: false
+            referencedRelation: "fluxo_aprovacao_etapa"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "documento_aprovacao_fluxo_id_fkey"
+            columns: ["fluxo_id"]
+            isOneToOne: false
+            referencedRelation: "fluxo_aprovacao"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "documento_aprovacao_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organization_usage"
+            referencedColumns: ["organization_id"]
+          },
+          {
+            foreignKeyName: "documento_aprovacao_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "documento_aprovacao_perfil_responsavel_id_fkey"
+            columns: ["perfil_responsavel_id"]
+            isOneToOne: false
+            referencedRelation: "perfil"
+            referencedColumns: ["perfil_id"]
+          },
+        ]
+      }
+      documento_assinatura: {
+        Row: {
+          assinado_em: string | null
+          assinante_id: string | null
+          assinatura_obrigatoria: boolean
+          certificado_info: Json | null
+          created_at: string
+          documento_id: string
+          hash_evidencia: string | null
+          id: string
+          ordem: number
+          organization_id: string
+          perfil_assinante_id: string | null
+          status: Database["public"]["Enums"]["status_assinatura"]
+          tipo_assinatura: Database["public"]["Enums"]["tipo_assinatura"]
+          updated_at: string
+          versao_id: string | null
+        }
+        Insert: {
+          assinado_em?: string | null
+          assinante_id?: string | null
+          assinatura_obrigatoria?: boolean
+          certificado_info?: Json | null
+          created_at?: string
+          documento_id: string
+          hash_evidencia?: string | null
+          id?: string
+          ordem: number
+          organization_id: string
+          perfil_assinante_id?: string | null
+          status?: Database["public"]["Enums"]["status_assinatura"]
+          tipo_assinatura?: Database["public"]["Enums"]["tipo_assinatura"]
+          updated_at?: string
+          versao_id?: string | null
+        }
+        Update: {
+          assinado_em?: string | null
+          assinante_id?: string | null
+          assinatura_obrigatoria?: boolean
+          certificado_info?: Json | null
+          created_at?: string
+          documento_id?: string
+          hash_evidencia?: string | null
+          id?: string
+          ordem?: number
+          organization_id?: string
+          perfil_assinante_id?: string | null
+          status?: Database["public"]["Enums"]["status_assinatura"]
+          tipo_assinatura?: Database["public"]["Enums"]["tipo_assinatura"]
+          updated_at?: string
+          versao_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "documento_assinatura_documento_id_fkey"
+            columns: ["documento_id"]
+            isOneToOne: false
+            referencedRelation: "ged_documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "documento_assinatura_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organization_usage"
+            referencedColumns: ["organization_id"]
+          },
+          {
+            foreignKeyName: "documento_assinatura_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "documento_assinatura_perfil_assinante_id_fkey"
+            columns: ["perfil_assinante_id"]
+            isOneToOne: false
+            referencedRelation: "perfil"
+            referencedColumns: ["perfil_id"]
+          },
+          {
+            foreignKeyName: "documento_assinatura_versao_id_fkey"
+            columns: ["versao_id"]
+            isOneToOne: false
+            referencedRelation: "ged_document_versions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       documento_ocr: {
         Row: {
           created_at: string
@@ -426,6 +610,150 @@ export type Database = {
           },
         ]
       }
+      fluxo_aprovacao: {
+        Row: {
+          ativo: boolean
+          created_at: string
+          created_by: string | null
+          descricao: string | null
+          id: string
+          nome: string
+          organization_id: string
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          created_at?: string
+          created_by?: string | null
+          descricao?: string | null
+          id?: string
+          nome: string
+          organization_id: string
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          created_at?: string
+          created_by?: string | null
+          descricao?: string | null
+          id?: string
+          nome?: string
+          organization_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fluxo_aprovacao_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organization_usage"
+            referencedColumns: ["organization_id"]
+          },
+          {
+            foreignKeyName: "fluxo_aprovacao_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      fluxo_aprovacao_etapa: {
+        Row: {
+          aprovacao_obrigatoria: boolean
+          created_at: string
+          fluxo_id: string
+          id: string
+          nome_etapa: string
+          ordem: number
+          perfil_responsavel_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          aprovacao_obrigatoria?: boolean
+          created_at?: string
+          fluxo_id: string
+          id?: string
+          nome_etapa: string
+          ordem: number
+          perfil_responsavel_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          aprovacao_obrigatoria?: boolean
+          created_at?: string
+          fluxo_id?: string
+          id?: string
+          nome_etapa?: string
+          ordem?: number
+          perfil_responsavel_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fluxo_aprovacao_etapa_fluxo_id_fkey"
+            columns: ["fluxo_id"]
+            isOneToOne: false
+            referencedRelation: "fluxo_aprovacao"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fluxo_aprovacao_etapa_perfil_responsavel_id_fkey"
+            columns: ["perfil_responsavel_id"]
+            isOneToOne: false
+            referencedRelation: "perfil"
+            referencedColumns: ["perfil_id"]
+          },
+        ]
+      }
+      fluxo_assinatura: {
+        Row: {
+          assinatura_obrigatoria: boolean
+          created_at: string
+          id: string
+          ordem: number
+          perfil_assinante_id: string | null
+          tipo_assinatura: Database["public"]["Enums"]["tipo_assinatura"]
+          tipo_documento_id: string
+          updated_at: string
+        }
+        Insert: {
+          assinatura_obrigatoria?: boolean
+          created_at?: string
+          id?: string
+          ordem: number
+          perfil_assinante_id?: string | null
+          tipo_assinatura?: Database["public"]["Enums"]["tipo_assinatura"]
+          tipo_documento_id: string
+          updated_at?: string
+        }
+        Update: {
+          assinatura_obrigatoria?: boolean
+          created_at?: string
+          id?: string
+          ordem?: number
+          perfil_assinante_id?: string | null
+          tipo_assinatura?: Database["public"]["Enums"]["tipo_assinatura"]
+          tipo_documento_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fluxo_assinatura_perfil_assinante_id_fkey"
+            columns: ["perfil_assinante_id"]
+            isOneToOne: false
+            referencedRelation: "perfil"
+            referencedColumns: ["perfil_id"]
+          },
+          {
+            foreignKeyName: "fluxo_assinatura_tipo_documento_id_fkey"
+            columns: ["tipo_documento_id"]
+            isOneToOne: false
+            referencedRelation: "ged_document_types"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       folder_authorized_users: {
         Row: {
           created_at: string | null
@@ -713,42 +1041,70 @@ export type Database = {
       }
       ged_document_types: {
         Row: {
+          ativo: boolean
           created_at: string
           created_by: string | null
           description: string | null
+          dias_retencao: number | null
+          fluxo_aprovacao_id: string | null
           id: string
           initials: string
           name: string
+          nivel_sigilo_padrao: string | null
+          ocr_obrigatorio: boolean
           organization_id: string
+          pdfa_obrigatorio: boolean
+          politica_assinatura_id: string | null
           requires_creation_date: boolean | null
           requires_expiration_date: boolean | null
           updated_at: string
         }
         Insert: {
+          ativo?: boolean
           created_at?: string
           created_by?: string | null
           description?: string | null
+          dias_retencao?: number | null
+          fluxo_aprovacao_id?: string | null
           id?: string
           initials: string
           name: string
+          nivel_sigilo_padrao?: string | null
+          ocr_obrigatorio?: boolean
           organization_id: string
+          pdfa_obrigatorio?: boolean
+          politica_assinatura_id?: string | null
           requires_creation_date?: boolean | null
           requires_expiration_date?: boolean | null
           updated_at?: string
         }
         Update: {
+          ativo?: boolean
           created_at?: string
           created_by?: string | null
           description?: string | null
+          dias_retencao?: number | null
+          fluxo_aprovacao_id?: string | null
           id?: string
           initials?: string
           name?: string
+          nivel_sigilo_padrao?: string | null
+          ocr_obrigatorio?: boolean
           organization_id?: string
+          pdfa_obrigatorio?: boolean
+          politica_assinatura_id?: string | null
           requires_creation_date?: boolean | null
           requires_expiration_date?: boolean | null
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "ged_document_types_fluxo_aprovacao_id_fkey"
+            columns: ["fluxo_aprovacao_id"]
+            isOneToOne: false
+            referencedRelation: "fluxo_aprovacao"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "ged_document_types_organization_id_fkey"
             columns: ["organization_id"]
@@ -761,6 +1117,13 @@ export type Database = {
             columns: ["organization_id"]
             isOneToOne: false
             referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ged_document_types_politica_assinatura_id_fkey"
+            columns: ["politica_assinatura_id"]
+            isOneToOne: false
+            referencedRelation: "politica_assinatura"
             referencedColumns: ["id"]
           },
         ]
@@ -1709,6 +2072,75 @@ export type Database = {
         }
         Relationships: []
       }
+      politica_assinatura: {
+        Row: {
+          assinatura_obrigatoria: boolean
+          ativo: boolean
+          carimbo_tempo: boolean
+          certificado_obrigatorio: boolean
+          created_at: string
+          created_by: string | null
+          descricao: string | null
+          id: string
+          nome: string
+          ordem_assinatura: boolean
+          organization_id: string
+          permite_coassinatura: boolean
+          quantidade_minima_assinaturas: number
+          tipo_assinatura: Database["public"]["Enums"]["tipo_assinatura"]
+          updated_at: string
+        }
+        Insert: {
+          assinatura_obrigatoria?: boolean
+          ativo?: boolean
+          carimbo_tempo?: boolean
+          certificado_obrigatorio?: boolean
+          created_at?: string
+          created_by?: string | null
+          descricao?: string | null
+          id?: string
+          nome: string
+          ordem_assinatura?: boolean
+          organization_id: string
+          permite_coassinatura?: boolean
+          quantidade_minima_assinaturas?: number
+          tipo_assinatura?: Database["public"]["Enums"]["tipo_assinatura"]
+          updated_at?: string
+        }
+        Update: {
+          assinatura_obrigatoria?: boolean
+          ativo?: boolean
+          carimbo_tempo?: boolean
+          certificado_obrigatorio?: boolean
+          created_at?: string
+          created_by?: string | null
+          descricao?: string | null
+          id?: string
+          nome?: string
+          ordem_assinatura?: boolean
+          organization_id?: string
+          permite_coassinatura?: boolean
+          quantidade_minima_assinaturas?: number
+          tipo_assinatura?: Database["public"]["Enums"]["tipo_assinatura"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "politica_assinatura_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organization_usage"
+            referencedColumns: ["organization_id"]
+          },
+          {
+            foreignKeyName: "politica_assinatura_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -2382,10 +2814,19 @@ export type Database = {
       }
     }
     Functions: {
+      apply_document_type_policy: {
+        Args: { p_document_id: string }
+        Returns: Json
+      }
       approve_document_version: {
         Args: { p_version_id: string }
         Returns: undefined
       }
+      approve_step: {
+        Args: { p_comentario?: string; p_etapa_instancia_id: string }
+        Returns: undefined
+      }
+      archive_document: { Args: { p_document_id: string }; Returns: undefined }
       can_org_add_user: { Args: { _org_id: string }; Returns: boolean }
       cancel_document_version: {
         Args: { p_reason?: string; p_version_id: string }
@@ -2492,6 +2933,10 @@ export type Database = {
         Args: { p_new_password: string; p_user_id: string }
         Returns: undefined
       }
+      reject_step: {
+        Args: { p_comentario: string; p_etapa_instancia_id: string }
+        Returns: undefined
+      }
       restore_document_version: {
         Args: { p_version_id: string }
         Returns: {
@@ -2547,6 +2992,19 @@ export type Database = {
       }
       show_limit: { Args: never; Returns: number }
       show_trgm: { Args: { "": string }; Returns: string[] }
+      sign_document: {
+        Args: {
+          p_assinatura_id: string
+          p_certificado?: Json
+          p_hash_evidencia?: string
+          p_tipo: Database["public"]["Enums"]["tipo_assinatura"]
+        }
+        Returns: undefined
+      }
+      submit_for_approval: {
+        Args: { p_document_id: string }
+        Returns: undefined
+      }
       sum_org_document_size: { Args: { p_org_id: string }; Returns: number }
       trigger_ocr_queue: { Args: never; Returns: undefined }
       unaccent: { Args: { "": string }; Returns: string }
@@ -2576,6 +3034,9 @@ export type Database = {
         | "RESTRITO"
         | "CONFIDENCIAL"
         | "SIGILOSO"
+      status_assinatura: "PENDENTE" | "ASSINADA" | "RECUSADA" | "CANCELADA"
+      status_etapa_aprovacao: "PENDENTE" | "APROVADA" | "REPROVADA" | "PULADA"
+      tipo_assinatura: "NENHUMA" | "SIMPLES" | "AVANCADA" | "QUALIFICADA"
       tipo_escopo_enum: "DEPARTAMENTO" | "SETOR" | "PASTA"
     }
     CompositeTypes: {
@@ -2731,6 +3192,9 @@ export const Constants = {
         "CONFIDENCIAL",
         "SIGILOSO",
       ],
+      status_assinatura: ["PENDENTE", "ASSINADA", "RECUSADA", "CANCELADA"],
+      status_etapa_aprovacao: ["PENDENTE", "APROVADA", "REPROVADA", "PULADA"],
+      tipo_assinatura: ["NENHUMA", "SIMPLES", "AVANCADA", "QUALIFICADA"],
       tipo_escopo_enum: ["DEPARTAMENTO", "SETOR", "PASTA"],
     },
   },
