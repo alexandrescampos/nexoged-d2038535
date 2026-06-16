@@ -1389,6 +1389,13 @@ export default function DocumentsPage() {
         </DialogContent>
       </Dialog>
 
+      <DocumentVersionsDialog
+        documentId={versionsDoc?.id ?? null}
+        documentTitle={versionsDoc?.title}
+        open={!!versionsDoc}
+        onOpenChange={(o) => { if (!o) setVersionsDoc(null); }}
+      />
+
       {/* Modal de Edição */}
       <Dialog open={!!documentToEdit} onOpenChange={(open) => { if (!open) { setDocumentToEdit(null); setEditCustomFields({}); } }}>
         <DialogContent className="sm:max-w-[720px] max-h-[calc(100vh-2rem)] overflow-y-auto">
