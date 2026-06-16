@@ -283,6 +283,26 @@ export default function DocumentsPage() {
     a.past_nm_pasta.localeCompare(b.past_nm_pasta)
   );
 
+  // Rebuild breadcrumb from URL ?folder= using the org folder hierarchy
+  useEffect(() => {
+    if (!currentFolder) {
+      setFolderPath([]);
+      return;
+    }
+    if (!allOrganizationFolders.length) return;
+    const byId = new Map<string, any>(allOrganizationFolders.map((f: any) => [f.past_id, f]));
+    const path: { id: string; name: string }[] = [];
+    let cursor: any = byId.get(currentFolder);
+    const guard = new Set<string>();
+    while (cursor && !guard.has(cursor.past_id)) {
+      guard.add(cursor.past_id);
+      path.unshift({ id: cursor.past_id, name: cursor.past_nm_pasta });
+      cursor = cursor.past_id_pai ? byId.get(cursor.past_id_pai) : null;
+    }
+    setFolderPath(path);
+  }, [currentFolder, allOrganizationFolders]);
+
+
   const { moveItem } = useOrganizationStructure();
   const { canUserDownload, canUserDelete, canUserEdit } = useDocumentPermissions();
 
