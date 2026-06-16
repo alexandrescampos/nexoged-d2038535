@@ -104,11 +104,10 @@ export const documentVersionRepository = {
   },
 
   async getVersionText(versionId: string): Promise<string> {
-    // Fetch OCR text for a version (if any)
-    const { data, error } = await supabase
-      .from("documento_ocr_pagina")
+    const q: any = supabase.from("documento_ocr_pagina");
+    const { data, error } = await q
       .select("numero_pagina, texto_original")
-      .eq("versao_id" as any, versionId)
+      .eq("versao_id", versionId)
       .order("numero_pagina");
     if (error) return "";
     return (data || []).map((p: any) => p.texto_original || "").join("\n\n");
