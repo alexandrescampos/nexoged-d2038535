@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useGEDSettings } from "@/hooks/useGEDSettings";
 import { CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
@@ -200,8 +200,16 @@ const SIGILO_DESCRIPTIONS: Record<string, string> = {
 export default function DocumentsPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const searchInputRef = useRef<HTMLInputElement>(null);
-  const [currentFolder, setCurrentFolder] = useState<string | null>(null);
+  const currentFolder = searchParams.get("folder");
   const [folderPath, setFolderPath] = useState<{ id: string; name: string }[]>([]);
+  const setCurrentFolder = useCallback((id: string | null) => {
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev);
+      if (id) next.set("folder", id);
+      else next.delete("folder");
+      return next;
+    }, { replace: true });
+  }, [setSearchParams]);
   const [viewMode, setViewMode] = useState<"grid" | "list">("list");
   const [isUploadOpen, setIsUploadOpen] = useState(false);
   const [documentToDelete, setDocumentToDelete] = useState<string | null>(null);
@@ -274,6 +282,26 @@ export default function DocumentsPage() {
   const sortedOrgFolders = [...allOrganizationFolders].sort((a, b) => 
     a.past_nm_pasta.localeCompare(b.past_nm_pasta)
   );
+
+  // Rebuild breadcrumb from URL ?folder= using the org folder hierarchy
+  useEffect(() => {
+    if (!currentFolder) {
+      setFolderPath([]);
+      return;
+    }
+    if (!allOrganizationFolders.length) return;
+    const byId = new Map<string, any>(allOrganizationFolders.map((f: any) => [f.past_id, f]));
+    const path: { id: string; name: string }[] = [];
+    let cursor: any = byId.get(currentFolder);
+    const guard = new Set<string>();
+    while (cursor && !guard.has(cursor.past_id)) {
+      guard.add(cursor.past_id);
+      path.unshift({ id: cursor.past_id, name: cursor.past_nm_pasta });
+      cursor = cursor.past_id_pai ? byId.get(cursor.past_id_pai) : null;
+    }
+    setFolderPath(path);
+  }, [currentFolder, allOrganizationFolders]);
+
 
   const { moveItem } = useOrganizationStructure();
   const { canUserDownload, canUserDelete, canUserEdit } = useDocumentPermissions();
