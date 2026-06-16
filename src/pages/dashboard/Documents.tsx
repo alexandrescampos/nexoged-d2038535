@@ -935,6 +935,7 @@ export default function DocumentsPage() {
                                 {doc.is_favorite ? 'Remover Favorito' : 'Favoritar'}
                               </DropdownMenuItem>
                               <DropdownMenuItem className="gap-2" onClick={() => setVersionsDoc({ id: doc.id, title: doc.title })}><History className="h-4 w-4" /> Versões</DropdownMenuItem>
+                              <DropdownMenuItem className="gap-2" disabled={!doc.has_file} onClick={() => setShareDoc({ id: doc.id, title: doc.title })}><Share2 className="h-4 w-4" /> Compartilhar link</DropdownMenuItem>
                                {canUserDelete(doc) && (
                                 <>
                                   <DropdownMenuSeparator />
