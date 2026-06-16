@@ -100,6 +100,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { SortableTableHead } from "@/components/SortableTableHead";
 import { useTableSort } from "@/hooks/useTableSort";
 import { toast } from "sonner";
+import { DocumentVersionsDialog } from "@/components/dashboard/ged/DocumentVersionsDialog";
 import {
   Tooltip,
   TooltipContent,
