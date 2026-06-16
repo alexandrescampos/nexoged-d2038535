@@ -13,6 +13,7 @@ import { PermissionProtectedRoute } from "@/components/PermissionGate";
 // Pages
 import Auth from "./pages/Auth";
 import ResetPassword from "./pages/ResetPassword";
+import PublicShare from "./pages/PublicShare";
 import NotFound from "./pages/NotFound";
 
 // Layouts
@@ -96,6 +97,7 @@ const App = () => {
             {/* Public Routes */}
             <Route path="/auth" element={<Auth />} />
             <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/s/:token" element={<PublicShare />} />
             <Route path="/" element={<Navigate to="/auth" replace />} />
 
             {/* Super Admin Routes */}

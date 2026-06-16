@@ -1400,6 +1400,8 @@ export default function DocumentsPage() {
         onOpenChange={(o) => { if (!o) setVersionsDoc(null); }}
       />
 
+      <ShareDocumentDialog document={shareDoc} onClose={() => setShareDoc(null)} />
+
       {/* Modal de Edição */}
       <Dialog open={!!documentToEdit} onOpenChange={(open) => { if (!open) { setDocumentToEdit(null); setEditCustomFields({}); } }}>
         <DialogContent className="sm:max-w-[720px] max-h-[calc(100vh-2rem)] overflow-y-auto">
