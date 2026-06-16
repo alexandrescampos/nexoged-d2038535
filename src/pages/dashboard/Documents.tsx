@@ -52,7 +52,8 @@ import {
   Tag as TagIcon,
   ChevronLeft,
   Check,
-  ChevronsUpDown
+  ChevronsUpDown,
+  Share2
 } from "lucide-react";
 import {
   Command,
@@ -63,6 +64,7 @@ import {
   CommandList,
 } from "@/components/ui/command";
 import { CustomFieldsForm } from "@/components/dashboard/ged/CustomFieldsForm";
+import { ShareDocumentDialog } from "@/components/dashboard/ged/ShareDocumentDialog";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -216,6 +218,7 @@ export default function DocumentsPage() {
   const [documentToDelete, setDocumentToDelete] = useState<string | null>(null);
   const [documentToEdit, setDocumentToEdit] = useState<any | null>(null);
   const [versionsDoc, setVersionsDoc] = useState<{ id: string; title: string } | null>(null);
+  const [shareDoc, setShareDoc] = useState<{ id: string; title: string } | null>(null);
   const [editCustomFields, setEditCustomFields] = useState<Record<string, any>>({});
   const [selectedUploadFolderId, setSelectedUploadUploadFolderId] = useState<string | null>(null);
   const [isFolderSelectOpen, setIsFolderSelectOpen] = useState(false);
