@@ -34,7 +34,12 @@ export function ShareDocumentDialog({ document, onClose }: Props) {
       });
       if (error) throw error;
       const token = (data as any)?.token;
-      const url = `${window.location.origin}/s/${token}`;
+      // O preview do Lovable (id-preview--*.lovable.app) exige login na conta Lovable
+      // para acessar. Para links públicos, usamos sempre o domínio publicado.
+      const host = window.location.host;
+      const isLovablePreview = /lovableproject\.com$/.test(host) || /^id-preview--.*\.lovable\.app$/.test(host);
+      const base = isLovablePreview ? "https://nexoged.tecnologianexo.com.br" : window.location.origin;
+      const url = `${base}/s/${token}`;
       setLink(url);
       toast.success("Link de compartilhamento gerado");
     } catch (e: any) {
