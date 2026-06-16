@@ -31,12 +31,22 @@ export const documentVersionRepository = {
   async listVersions(documentId: string): Promise<DocumentVersion[]> {
     const { data, error } = await supabase
       .from("ged_document_versions")
-      .select("*, creator:profiles!ged_document_versions_created_by_fkey(full_name)")
+      .select("*")
       .eq("document_id", documentId)
       .order("version_major", { ascending: false })
       .order("version_minor", { ascending: false });
     if (error) throw error;
-    return (data || []).map((v: any) => ({ ...v, creator_name: v.creator?.full_name }));
+    const versions = (data || []) as any[];
+    const creatorIds = Array.from(new Set(versions.map((v) => v.created_by).filter(Boolean)));
+    const nameMap = new Map<string, string>();
+    if (creatorIds.length > 0) {
+      const { data: profs } = await supabase
+        .from("profiles")
+        .select("id, full_name")
+        .in("id", creatorIds);
+      (profs || []).forEach((p: any) => nameMap.set(p.id, p.full_name));
+    }
+    return versions.map((v) => ({ ...v, creator_name: nameMap.get(v.created_by) }));
   },
 
   async createVersion(params: {
