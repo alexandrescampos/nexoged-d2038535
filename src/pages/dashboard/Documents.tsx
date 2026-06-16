@@ -100,6 +100,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { SortableTableHead } from "@/components/SortableTableHead";
 import { useTableSort } from "@/hooks/useTableSort";
 import { toast } from "sonner";
+import { DocumentVersionsDialog } from "@/components/dashboard/ged/DocumentVersionsDialog";
 import {
   Tooltip,
   TooltipContent,
@@ -214,6 +215,7 @@ export default function DocumentsPage() {
   const [isUploadOpen, setIsUploadOpen] = useState(false);
   const [documentToDelete, setDocumentToDelete] = useState<string | null>(null);
   const [documentToEdit, setDocumentToEdit] = useState<any | null>(null);
+  const [versionsDoc, setVersionsDoc] = useState<{ id: string; title: string } | null>(null);
   const [editCustomFields, setEditCustomFields] = useState<Record<string, any>>({});
   const [selectedUploadFolderId, setSelectedUploadUploadFolderId] = useState<string | null>(null);
   const [isFolderSelectOpen, setIsFolderSelectOpen] = useState(false);
@@ -929,7 +931,7 @@ export default function DocumentsPage() {
                                 <Star className={`h-4 w-4 ${doc.is_favorite ? 'fill-yellow-400 text-yellow-400' : ''}`} />
                                 {doc.is_favorite ? 'Remover Favorito' : 'Favoritar'}
                               </DropdownMenuItem>
-                              <DropdownMenuItem className="gap-2"><History className="h-4 w-4" /> Versões</DropdownMenuItem>
+                              <DropdownMenuItem className="gap-2" onClick={() => setVersionsDoc({ id: doc.id, title: doc.title })}><History className="h-4 w-4" /> Versões</DropdownMenuItem>
                                {canUserDelete(doc) && (
                                 <>
                                   <DropdownMenuSeparator />
@@ -1088,7 +1090,7 @@ export default function DocumentsPage() {
                           <Star className={`h-4 w-4 ${doc.is_favorite ? 'fill-yellow-400 text-yellow-400' : ''}`} />
                           {doc.is_favorite ? 'Remover Favorito' : 'Favoritar'}
                         </DropdownMenuItem>
-                        <DropdownMenuItem className="gap-2"><History className="h-4 w-4" /> Versões</DropdownMenuItem>
+                        <DropdownMenuItem className="gap-2" onClick={() => setVersionsDoc({ id: doc.id, title: doc.title })}><History className="h-4 w-4" /> Versões</DropdownMenuItem>
                         {canUserDelete(doc) && (
                           <>
                             <DropdownMenuSeparator />
@@ -1386,6 +1388,13 @@ export default function DocumentsPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <DocumentVersionsDialog
+        documentId={versionsDoc?.id ?? null}
+        documentTitle={versionsDoc?.title}
+        open={!!versionsDoc}
+        onOpenChange={(o) => { if (!o) setVersionsDoc(null); }}
+      />
 
       {/* Modal de Edição */}
       <Dialog open={!!documentToEdit} onOpenChange={(open) => { if (!open) { setDocumentToEdit(null); setEditCustomFields({}); } }}>
