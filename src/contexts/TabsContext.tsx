@@ -119,8 +119,19 @@ export function TabsProvider({ children, storageKey = STORAGE_KEY }: TabsProvide
     setActiveTabState(id);
   }, []);
 
+  const updateTabPath = useCallback((id: string, path: string) => {
+    setOpenTabs((prev) => {
+      const idx = prev.findIndex((t) => t.id === id);
+      if (idx < 0) return prev;
+      if (prev[idx].path === path) return prev;
+      const updated = [...prev];
+      updated[idx] = { ...updated[idx], path };
+      return updated;
+    });
+  }, []);
+
   return (
-    <TabsContext.Provider value={{ openTabs, activeTab, openTab, closeTab, setActiveTab, isClosing }}>
+    <TabsContext.Provider value={{ openTabs, activeTab, openTab, closeTab, setActiveTab, updateTabPath, isClosing }}>
       {children}
     </TabsContext.Provider>
   );
