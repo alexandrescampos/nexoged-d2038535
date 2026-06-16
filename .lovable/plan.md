@@ -1,146 +1,143 @@
-# Módulo de Gestão de Versões de Documentos
+# Módulo: Políticas de Assinatura e Workflow por Tipo de Documento
 
-Este é um módulo grande. Vou entregá-lo em **4 fases sequenciais** para garantir qualidade e permitir validação intermediária.
+Módulo corporativo grande. Proponho **4 fases sequenciais** para garantir qualidade e permitir validação intermediária. Cada fase é autossuficiente e o sistema continua funcional ao final de cada uma.
+
+---
 
 ## Visão geral
 
-O projeto já possui a tabela `ged_document_versions` (10 colunas) usada apenas como "arquivos versionados". Vamos **estender** esse modelo para um sistema completo de versões com numeração semântica (1.0, 1.1, 2.0), status, aprovação, comparação, restauração e auditoria — sem quebrar a estrutura atual.
+O Tipo de Documento passa a ser o "controlador" do comportamento documental. Ao criar um documento, herdamos automaticamente:
+
+```text
+Tipo Documento
+   ├─ Política de Assinatura  → tipo, qtd mínima, ordem, carimbo, certificado
+   ├─ Fluxo de Aprovação      → etapas (Elaborador → Jurídico → Diretoria …)
+   ├─ Fluxo de Assinatura     → assinantes ordenados (Diretor → Cliente …)
+   ├─ Nível de Sigilo padrão
+   ├─ OCR obrigatório
+   ├─ PDF/A obrigatório
+   └─ Dias de retenção
+```
+
+O status do documento avança por essa máquina:
+
+```text
+RASCUNHO → EM_REVISAO → AGUARDANDO_APROVACAO → APROVADO
+        → AGUARDANDO_ASSINATURA → ASSINADO → ARQUIVADO
+                                                (ou CANCELADO em qualquer ponto)
+```
 
 ---
 
-## Fase 1 — Backend / Banco de dados
+## Fase 1 — Banco de dados e políticas
 
-### 1.1 Estender `ged_documents`
+### 1.1 Estender `ged_document_types`
 Adicionar colunas:
-- `current_version_id UUID` (FK → ged_document_versions)
-- `latest_version_number TEXT` (ex: "2.1")
-- `latest_version_at TIMESTAMPTZ`
+- `politica_assinatura_id UUID` (FK)
+- `fluxo_aprovacao_id UUID` (FK)
+- `nivel_sigilo_padrao ged_sigilo` (default `INTERNO`)
+- `ocr_obrigatorio BOOLEAN DEFAULT false`
+- `pdfa_obrigatorio BOOLEAN DEFAULT false`
+- `dias_retencao INT`
+- `ativo BOOLEAN DEFAULT true`
 
-### 1.2 Estender `ged_document_versions`
-Adicionar colunas (mantendo `version_number INT` legado):
-- `version_label TEXT NOT NULL DEFAULT '1.0'` (ex: "1.0", "1.1", "2.0")
-- `version_major INT NOT NULL DEFAULT 1`
-- `version_minor INT NOT NULL DEFAULT 0`
-- `title TEXT`
-- `change_description TEXT NOT NULL` (observação obrigatória)
-- `status TEXT NOT NULL DEFAULT 'RASCUNHO'` — enum: RASCUNHO, EM_REVISAO, APROVADA, ASSINADA, ARQUIVADA, CANCELADA
-- `approved_by UUID`, `approved_at TIMESTAMPTZ`
-- `based_on_version_id UUID` (para rastrear restaurações)
-- `is_restoration BOOLEAN DEFAULT false`
+### 1.2 Nova tabela `politica_assinatura`
+Campos: `id`, `organization_id`, `nome`, `descricao`, `assinatura_obrigatoria`, `tipo_assinatura` (enum NENHUMA / SIMPLES / AVANCADA / QUALIFICADA), `quantidade_minima_assinaturas`, `permite_coassinatura`, `ordem_assinatura`, `carimbo_tempo`, `certificado_obrigatorio`, `ativo`.
 
-Criar **enum** `ged_version_status` e **tipo** `ged_permission` adicionando: `visualizar_versoes`, `criar_versoes`, `restaurar_versoes`, `comparar_versoes`, `baixar_versoes`, `cancelar_versoes`.
+### 1.3 Fluxo de Aprovação
+- `fluxo_aprovacao` (id, organization_id, nome, descricao, ativo)
+- `fluxo_aprovacao_etapa` (id, fluxo_id, ordem, nome_etapa, perfil_responsavel_id, aprovacao_obrigatoria)
 
-### 1.3 Função RPC `create_document_version`
-Parâmetros: `p_document_id`, `p_bump_type` ('minor' | 'major'), `p_change_description`, `p_file_path`, `p_file_name`, `p_file_size`, `p_mime_type`, `p_title`.
+### 1.4 Fluxo de Assinatura por Tipo
+- `fluxo_assinatura` (id, tipo_documento_id, ordem, perfil_assinante_id, assinatura_obrigatoria, tipo_assinatura)
 
-Lógica:
-- Validar permissão (`criar_versoes`)
-- Validar `change_description` não vazia
-- Calcular próximo número: minor → (major, minor+1); major → (major+1, 0)
-- Inserir em `ged_document_versions`
-- Atualizar `ged_documents.current_version_id`, `latest_version_number`, `latest_version_at`
-- Registrar em `ged_audit_log` (ação: `version_created`)
-- Disparar enfileiramento OCR via `enqueue_document_ocr`
-- Retornar a nova versão
+### 1.5 Instâncias por documento
+- `documento_aprovacao` (id, documento_id, fluxo_id, etapa_id, ordem, status, aprovador_id, decidido_em, comentario)
+- `documento_assinatura` (id, documento_id, ordem, perfil_assinante_id, assinante_id, tipo_assinatura, status, assinado_em, hash, certificado_info)
 
-### 1.4 Função RPC `restore_document_version`
-- Cria nova versão (minor bump) copiando arquivo da versão antiga
-- `is_restoration = true`, `based_on_version_id = <antiga>`
-- `change_description` = "Restauração da versão X.Y"
-- Registra auditoria `version_restored`
+### 1.6 Status do documento
+Adicionar valores ao enum/status de `ged_documents`: `AGUARDANDO_APROVACAO`, `APROVADO`, `AGUARDANDO_ASSINATURA`, `ASSINADO`, `ARQUIVADO`. (Mantém RASCUNHO, EM_REVISAO, CANCELADO já existentes.)
 
-### 1.5 Função RPC `cancel_document_version`
-- Atualiza `status = 'CANCELADA'` (nunca delete físico)
-- Bloqueia se versão for `ASSINADA`
-- Audit `version_cancelled`
+### 1.7 RPCs (toda lógica server-side)
+- `create_document_with_policy(...)` — herda política/sigilo/OCR do tipo e instancia aprovações + assinaturas.
+- `submit_for_approval(doc_id)` — gera as etapas em `documento_aprovacao`.
+- `approve_step(etapa_id, comentario)` / `reject_step(...)` — avança ou bloqueia o fluxo.
+- `sign_document(doc_id, tipo, evidencia)` — valida que `tipo_assinatura` cumpre o exigido pela política (QUALIFICADA exige ICP-Brasil; AVANCADA permite Gov.br/MFA/OTP; SIMPLES permite login).
+- `archive_document(doc_id)` — bloqueia se assinatura obrigatória não cumprida.
 
-### 1.6 Trigger de imutabilidade
-Trigger em `ged_document_versions`: se `OLD.status = 'ASSINADA'`, bloquear UPDATE/DELETE (exceto super_admin).
+### 1.8 RLS e GRANTs
+RLS por `organization_id` em todas as novas tabelas; GRANT a `authenticated` e `service_role`.
 
-### 1.7 RLS
-Manter políticas existentes; adicionar política para ler todas as versões respeitando acesso ao documento pai.
+### 1.9 Auditoria
+Cada RPC grava em `ged_audit_log` com ações: `type_policy_changed`, `approval_submitted`, `approval_approved`, `approval_rejected`, `document_signed`, `document_archived`, `document_cancelled`.
 
 ---
 
-## Fase 2 — Repositório e hooks (frontend)
+## Fase 2 — Tela administrativa (cadastro de Tipos e Políticas)
 
-- `src/repository/documentVersionRepository.ts` — `listVersions`, `createVersion`, `restoreVersion`, `cancelVersion`, `approveVersion`, `getVersionDownloadUrl`, `compareVersions`.
-- `src/hooks/useDocumentVersions.ts` — React Query hook (list + mutations + invalidations).
-- Estender `useDocumentPermissions` para incluir as 6 novas permissões.
+Em `Administração → Tipos de Documento`:
 
----
+1. **Aba Política de Assinatura** — selecionar política existente ou criar nova (form com todos os campos da seção 1.2). Preview textual: "Documentos deste tipo exigirão 2 assinaturas QUALIFICADAS com certificado ICP-Brasil obrigatório."
+2. **Aba Fluxo de Aprovação** — seleciona fluxo + visualiza etapas; permite criar fluxo novo com editor de etapas (drag-and-drop de ordem).
+3. **Aba Fluxo de Assinatura** — editor de assinantes por ordem (perfil + obrigatório).
+4. **Aba Configurações Documentais** — toggles para OCR, PDF/A, sigilo padrão, dias de retenção.
 
-## Fase 3 — Interface
-
-### 3.1 Tabs do documento
-Refatorar o dialog de detalhes de documento para abas:
-```
-Documento
-├─ Informações
-├─ Arquivos
-├─ Histórico de Versões  ← NOVO
-├─ OCR
-├─ Assinaturas (placeholder)
-├─ Auditoria
-```
-
-### 3.2 Aba "Histórico de Versões"
-Componente `DocumentVersionsTab.tsx`:
-- Badge "Versão Atual: 2.1" no topo
-- Tabela: Versão | Status | Usuário | Data | Observação | Tamanho | Ações (download, restaurar, cancelar, comparar)
-- Botão "Nova Versão" → dialog `NewVersionDialog`
-- Botão "Comparar Versões" → dialog `CompareVersionsDialog`
-
-### 3.3 Dialog "Nova Versão"
-- Radio: **Nova revisão** (minor) / **Nova versão principal** (major)
-- Upload de arquivo (PDF/DOCX/TXT)
-- Textarea **observação obrigatória** (validação Zod)
-- Preview da próxima numeração
-
-### 3.4 Dialog "Comparar Versões"
-- Dois selects: Versão Origem / Destino
-- Para arquivos textuais (TXT, OCR do PDF/DOCX): diff linha-a-linha com `diff` lib — destaque verde (incluído), vermelho (removido), amarelo (alterado)
-- Para PDFs sem OCR: comparar texto extraído via `documento_ocr_pagina`
-
-### 3.5 Permissões
-Esconder botões via `PermissionGate` conforme as 6 novas permissões.
+Páginas novas:
+- `src/pages/dashboard/SignaturePolicies.tsx`
+- `src/pages/dashboard/ApprovalFlows.tsx`
+- Refatorar `DocumentTypesSettings.tsx` em abas.
 
 ---
 
-## Fase 4 — Dashboard e auditoria
+## Fase 3 — Execução do fluxo no documento
 
-### 4.1 Indicadores
-Adicionar à RPC `dashboard_indicators`:
-- `docs_with_multiple_versions`
-- `versions_created_in_period`
-- `versions_approved`
-- `versions_signed`
-- `versions_cancelled`
+1. **Criação de documento** chama `create_document_with_policy` — usuário não precisa configurar nada, herda tudo do tipo.
+2. **Aba "Aprovações"** no diálogo de documento — lista etapas, botões Aprovar/Reprovar (visíveis para o perfil responsável da etapa atual).
+3. **Aba "Assinaturas"** no diálogo de documento — lista assinantes, botão "Assinar" abre modal pedindo o tipo de evidência exigido pela política:
+   - QUALIFICADA → upload do certificado A1/A3 ou integração ICP-Brasil
+   - AVANCADA → Gov.br / código MFA / OTP
+   - SIMPLES → confirmar senha
+4. **Botão "Arquivar"** habilitado apenas quando todos os requisitos forem cumpridos.
+5. **Badges de status** atualizados em toda a listagem de documentos.
 
-Renderizar 4 cards novos em `src/pages/dashboard/Dashboard.tsx`.
+---
 
-### 4.2 Auditoria
-Toda mudança de versão grava em `ged_audit_log` (action: version_created, version_restored, version_cancelled, version_approved, version_downloaded, version_viewed, version_compared).
+## Fase 4 — Dashboard e relatórios
+
+Estender `dashboard_indicators`:
+- `docs_by_type` (gráfico)
+- `docs_pending_approval`
+- `docs_pending_signature`
+- `docs_signed`
+- `flows_in_progress`
+
+Adicionar 5 cards em `Dashboard.tsx` + gráfico de "Documentos por Tipo".
+
+Relatório dedicado em `src/pages/dashboard/WorkflowReport.tsx` com filtros (tipo, status, período, responsável).
 
 ---
 
 ## Detalhes técnicos
 
-**Lib de diff:** `diff` (npm) — leve, sem dependências pesadas.
-**OCR:** chamar `enqueue_document_ocr(documento_id, versao_id)` que já existe — cada versão gera seu próprio índice.
-**Storage:** arquivos continuam em `ged_files` bucket. Cada versão tem seu próprio `file_path` — nunca sobrescrever.
-**Numeração:** calculada no servidor (RPC) com lock por `document_id` para evitar race.
-**Permissões novas:** adicionadas ao enum `ged_permission` e ao seed inicial de `permissao`.
+- **Enum `tipo_assinatura`**: `NENHUMA | SIMPLES | AVANCADA | QUALIFICADA`. Validação server-side em `sign_document`.
+- **Imutabilidade**: documentos com status `ASSINADO` ou `ARQUIVADO` são protegidos por trigger (similar ao `protect_signed_versions` existente).
+- **Reaproveitamento**: o módulo de versões já implementado fica integrado — toda assinatura é vinculada à versão atual (`current_version_id`), garantindo que a evidência aponte para o arquivo exato.
+- **Permissões novas** (adicionar ao enum `ged_permission`): `gerenciar_politicas`, `gerenciar_fluxos`, `aprovar_etapa`, `assinar_documento_qualificado`.
+- **ICP-Brasil / Gov.br**: nesta entrega ficam como *placeholders* — o RPC valida o `tipo_assinatura` e armazena a evidência, mas a integração com provedores externos (ITI, Gov.br OAuth) é tratada em iteração futura.
 
 ---
 
 ## Entrega
 
-Devido ao tamanho, sugiro:
-- **Esta resposta (após aprovação):** executo **Fase 1 + Fase 2** (banco, RPCs, repositório, hooks).
-- **Próxima:** Fase 3 (UI completa com abas, dialogs, comparação).
-- **Próxima:** Fase 4 (dashboard, indicadores, ajustes finais).
+Sugestão de divisão:
 
-Posso ajustar essa divisão se preferir tudo de uma vez (será uma resposta muito grande) ou em mais fases menores.
+| Resposta | Conteúdo |
+|---|---|
+| Após este plano | Fase 1 (banco + RPCs + RLS) |
+| Próxima | Fase 2 (telas administrativas) |
+| Próxima | Fase 3 (execução do fluxo no documento) |
+| Próxima | Fase 4 (dashboard e relatórios) |
 
-Aprovar este plano para começar pela **Fase 1 + 2**?
+Posso ajustar (entregar tudo de uma vez = resposta muito grande, ou em fases menores). 
+
+**Aprovar este plano para começar pela Fase 1?**
