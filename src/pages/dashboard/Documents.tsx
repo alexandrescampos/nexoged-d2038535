@@ -52,7 +52,8 @@ import {
   Tag as TagIcon,
   ChevronLeft,
   Check,
-  ChevronsUpDown
+  ChevronsUpDown,
+  Share2
 } from "lucide-react";
 import {
   Command,
@@ -63,6 +64,7 @@ import {
   CommandList,
 } from "@/components/ui/command";
 import { CustomFieldsForm } from "@/components/dashboard/ged/CustomFieldsForm";
+import { ShareDocumentDialog } from "@/components/dashboard/ged/ShareDocumentDialog";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -216,6 +218,7 @@ export default function DocumentsPage() {
   const [documentToDelete, setDocumentToDelete] = useState<string | null>(null);
   const [documentToEdit, setDocumentToEdit] = useState<any | null>(null);
   const [versionsDoc, setVersionsDoc] = useState<{ id: string; title: string } | null>(null);
+  const [shareDoc, setShareDoc] = useState<{ id: string; title: string } | null>(null);
   const [editCustomFields, setEditCustomFields] = useState<Record<string, any>>({});
   const [selectedUploadFolderId, setSelectedUploadUploadFolderId] = useState<string | null>(null);
   const [isFolderSelectOpen, setIsFolderSelectOpen] = useState(false);
@@ -932,6 +935,7 @@ export default function DocumentsPage() {
                                 {doc.is_favorite ? 'Remover Favorito' : 'Favoritar'}
                               </DropdownMenuItem>
                               <DropdownMenuItem className="gap-2" onClick={() => setVersionsDoc({ id: doc.id, title: doc.title })}><History className="h-4 w-4" /> Versões</DropdownMenuItem>
+                              <DropdownMenuItem className="gap-2" disabled={!doc.has_file} onClick={() => setShareDoc({ id: doc.id, title: doc.title })}><Share2 className="h-4 w-4" /> Compartilhar link</DropdownMenuItem>
                                {canUserDelete(doc) && (
                                 <>
                                   <DropdownMenuSeparator />
@@ -1395,6 +1399,8 @@ export default function DocumentsPage() {
         open={!!versionsDoc}
         onOpenChange={(o) => { if (!o) setVersionsDoc(null); }}
       />
+
+      <ShareDocumentDialog document={shareDoc} onClose={() => setShareDoc(null)} />
 
       {/* Modal de Edição */}
       <Dialog open={!!documentToEdit} onOpenChange={(open) => { if (!open) { setDocumentToEdit(null); setEditCustomFields({}); } }}>

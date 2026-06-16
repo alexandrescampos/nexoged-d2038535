@@ -1003,6 +1003,66 @@ export type Database = {
           },
         ]
       }
+      ged_document_shares: {
+        Row: {
+          created_at: string
+          created_by: string
+          document_id: string
+          download_count: number
+          expires_at: string | null
+          id: string
+          max_downloads: number | null
+          organization_id: string
+          password_hash: string | null
+          revoked: boolean
+          token: string
+          version_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          document_id: string
+          download_count?: number
+          expires_at?: string | null
+          id?: string
+          max_downloads?: number | null
+          organization_id: string
+          password_hash?: string | null
+          revoked?: boolean
+          token: string
+          version_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          document_id?: string
+          download_count?: number
+          expires_at?: string | null
+          id?: string
+          max_downloads?: number | null
+          organization_id?: string
+          password_hash?: string | null
+          revoked?: boolean
+          token?: string
+          version_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ged_document_shares_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "ged_documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ged_document_shares_version_id_fkey"
+            columns: ["version_id"]
+            isOneToOne: false
+            referencedRelation: "ged_document_versions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ged_document_type_custom_fields: {
         Row: {
           created_at: string | null
@@ -2839,6 +2899,34 @@ export type Database = {
       check_user_has_history: { Args: { p_user_id: string }; Returns: boolean }
       check_user_is_admin: { Args: { user_id: string }; Returns: boolean }
       cleanup_api_usage_log: { Args: never; Returns: undefined }
+      create_document_share: {
+        Args: {
+          p_document_id: string
+          p_expires_at?: string
+          p_max_downloads?: number
+          p_password?: string
+        }
+        Returns: {
+          created_at: string
+          created_by: string
+          document_id: string
+          download_count: number
+          expires_at: string | null
+          id: string
+          max_downloads: number | null
+          organization_id: string
+          password_hash: string | null
+          revoked: boolean
+          token: string
+          version_id: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "ged_document_shares"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       create_document_version: {
         Args: {
           p_based_on?: string
@@ -3008,6 +3096,10 @@ export type Database = {
       sum_org_document_size: { Args: { p_org_id: string }; Returns: number }
       trigger_ocr_queue: { Args: never; Returns: undefined }
       unaccent: { Args: { "": string }; Returns: string }
+      validate_document_share: {
+        Args: { p_password?: string; p_token: string }
+        Returns: Json
+      }
     }
     Enums: {
       app_role: "super_admin" | "org_admin" | "manager" | "user"
