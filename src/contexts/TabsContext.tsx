@@ -6,6 +6,7 @@ export interface Tab {
   id: string;
   title: string;
   icon: LucideIcon;
+  path?: string;
 }
 
 interface TabsContextType {
@@ -14,6 +15,7 @@ interface TabsContextType {
   openTab: (tab: Tab) => void;
   closeTab: (id: string) => void;
   setActiveTab: (id: string) => void;
+  updateTabPath: (id: string, path: string) => void;
   isClosing: () => boolean;
 }
 

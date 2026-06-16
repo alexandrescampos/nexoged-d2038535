@@ -1,23 +1,18 @@
-## Problema
+## Causa real
 
-Em `src/pages/dashboard/Documents.tsx`, `currentFolder` e `folderPath` são `useState` locais. Quando o usuário muda de aba e volta, o componente desmonta/remonta e a navegação volta para a raiz.
+Minha mudança anterior persiste a pasta em `?folder=...`, mas o sistema de abas (`TabsContext` / `TabsBar`) usa `location.pathname` como `tab.id` e navega com `navigate(tab.id)` ao clicar. Resultado: ao voltar para a aba "Documentos", a URL é reescrita para `/dashboard/documents` sem o query string, e a página volta à raiz.
 
 ## Solução
 
-Persistir a pasta atual na URL via `useSearchParams` (`?folder=<past_id>`), que já está importado na página. Isso:
-- Sobrevive ao desmontar/remontar do componente quando se troca de aba.
-- Permite compartilhar/recarregar o link já dentro da pasta.
-- Mantém o histórico do navegador coerente (voltar funciona).
+Ensinar o sistema de abas a lembrar a URL completa (pathname + search) da aba.
 
-`folderPath` (breadcrumb) será reconstruído a partir do `folder` da URL usando a hierarquia já buscada em `allOrgFolders` (query `ged-folders-all` que já existe no arquivo), subindo pelos `parent_id` até a raiz.
+1. **`src/contexts/TabsContext.tsx`**:
+   - Adicionar campo opcional `path: string` em `Tab` (default = `id`).
+   - `openTab` aceita `path`; persistir `path` no sessionStorage junto com `id`/`title`.
+   - Novo método `updateTabPath(id, path)` para sincronizar a URL atual.
 
-## Mudanças
+2. **`src/components/TabsBar.tsx`**: `navigate(tab.path ?? tab.id)` ao clicar.
 
-Em `src/pages/dashboard/Documents.tsx`:
+3. **`src/components/layouts/DashboardLayout.tsx`** (e `SuperAdminLayout.tsx` por simetria): no `useEffect` de sync, sempre que a rota muda, chamar `updateTabPath(menuItem.url, location.pathname + location.search)` para a aba já aberta — assim a aba "Documentos" guarda `/dashboard/documents?folder=xyz`.
 
-1. Derivar `currentFolder` de `searchParams.get("folder")` em vez de `useState`.
-2. Substituir todos os `setCurrentFolder(id)` por `setSearchParams` preservando outros params (ex.: `status`). Para voltar à raiz, remover o param `folder`.
-3. Adicionar um `useEffect` que recomputa `folderPath` quando `currentFolder` ou a lista de pastas da org muda — percorrendo `parent_id` da pasta atual até a raiz.
-4. Remover as atualizações manuais de `setFolderPath` nos cliques (passam a vir do efeito acima); manter apenas `setSearchParams`.
-
-Nenhuma mudança em rotas, contexto de abas, hooks de dados ou backend. Apenas estado de UI da página Documentos.
+Sem mudanças em `Documents.tsx` além do que já foi feito (URL com `?folder=`).
