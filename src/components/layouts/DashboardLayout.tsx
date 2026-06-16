@@ -52,6 +52,8 @@ import {
   FolderTree,
   List as ListIcon,
   Cloud,
+  ShieldCheck,
+  Workflow,
 } from "lucide-react";
 import { TabsProvider, useTabs } from "@/contexts/TabsContext";
 import { TabsBar } from "@/components/TabsBar";
@@ -92,6 +94,8 @@ const menuGroups: MenuGroup[] = [
     items: [
       { title: "Documentos", url: "/dashboard/documents", icon: FileText, userAllowed: true },
       { title: "Tipos de Documento", url: "/dashboard/document-types", icon: Settings2, adminOnly: true },
+      { title: "Políticas de Assinatura", url: "/dashboard/signature-policies", icon: ShieldCheck, adminOnly: true },
+      { title: "Fluxos de Aprovação", url: "/dashboard/approval-flows", icon: Workflow, adminOnly: true },
       { title: "Listas de Cadastro", url: "/dashboard/lists", icon: ListIcon, adminOnly: true },
       { title: "Campos Adicionais", url: "/dashboard/custom-fields", icon: Settings2, adminOnly: true },
       

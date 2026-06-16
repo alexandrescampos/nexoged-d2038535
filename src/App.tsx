@@ -50,6 +50,8 @@ import OrgProfilePage from "./pages/dashboard/Profile";
 import PermissionsPage from "./pages/dashboard/Permissions";
 import AccessControlPage from "./pages/dashboard/AccessControl";
 import DocumentTypesPage from "./pages/dashboard/DocumentTypes";
+import SignaturePoliciesPage from "./pages/dashboard/SignaturePolicies";
+import ApprovalFlowsPage from "./pages/dashboard/ApprovalFlows";
 import FavoritesPage from "./pages/dashboard/Favorites";
 import RecentPage from "./pages/dashboard/Recent";
 import ExpirationReportPage from "./pages/dashboard/ExpirationReport";
@@ -175,6 +177,8 @@ const App = () => {
               <Route path="permissions" element={<AdminOnlyRoute><PermissionsPage /></AdminOnlyRoute>} />
               <Route path="access-control" element={<AdminOnlyRoute><AccessControlPage /></AdminOnlyRoute>} />
               <Route path="document-types" element={<AdminOnlyRoute><DocumentTypesPage /></AdminOnlyRoute>} />
+              <Route path="signature-policies" element={<AdminOnlyRoute><SignaturePoliciesPage /></AdminOnlyRoute>} />
+              <Route path="approval-flows" element={<AdminOnlyRoute><ApprovalFlowsPage /></AdminOnlyRoute>} />
               <Route path="lists" element={<AdminOnlyRoute><ListsPage /></AdminOnlyRoute>} />
               <Route path="custom-fields" element={<AdminOnlyRoute><CustomFieldsPage /></AdminOnlyRoute>} />
               <Route path="billing" element={<AdminOnlyRoute><BillingPage /></AdminOnlyRoute>} />

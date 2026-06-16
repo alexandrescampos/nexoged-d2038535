@@ -29,7 +29,7 @@ export const gedSettingsRepository = {
     return data as CustomField[];
   },
 
-  async createDocumentType(type: Omit<DocumentType, 'id' | 'created_at' | 'updated_at'>, customFieldIds?: string[]) {
+  async createDocumentType(type: any, customFieldIds?: string[]) {
     const { data: { user } } = await supabase.auth.getUser();
     const { data, error } = await supabase
       .from("ged_document_types")
@@ -40,6 +40,12 @@ export const gedSettingsRepository = {
         description: type.description,
         requires_expiration_date: type.requires_expiration_date,
         requires_creation_date: type.requires_creation_date,
+        politica_assinatura_id: type.politica_assinatura_id ?? null,
+        fluxo_aprovacao_id: type.fluxo_aprovacao_id ?? null,
+        nivel_sigilo_padrao: type.nivel_sigilo_padrao ?? "INTERNO",
+        ocr_obrigatorio: !!type.ocr_obrigatorio,
+        pdfa_obrigatorio: !!type.pdfa_obrigatorio,
+        dias_retencao: type.dias_retencao ?? null,
         created_by: user?.id
       }])
       .select()
@@ -61,7 +67,7 @@ export const gedSettingsRepository = {
     return data as DocumentType;
   },
 
-  async updateDocumentType(id: string, updates: Partial<DocumentType>, customFieldIds?: string[]) {
+  async updateDocumentType(id: string, updates: any, customFieldIds?: string[]) {
     const { data, error } = await supabase
       .from("ged_document_types")
       .update({
@@ -70,6 +76,12 @@ export const gedSettingsRepository = {
         description: updates.description,
         requires_expiration_date: updates.requires_expiration_date,
         requires_creation_date: updates.requires_creation_date,
+        politica_assinatura_id: updates.politica_assinatura_id ?? null,
+        fluxo_aprovacao_id: updates.fluxo_aprovacao_id ?? null,
+        nivel_sigilo_padrao: updates.nivel_sigilo_padrao ?? "INTERNO",
+        ocr_obrigatorio: !!updates.ocr_obrigatorio,
+        pdfa_obrigatorio: !!updates.pdfa_obrigatorio,
+        dias_retencao: updates.dias_retencao ?? null,
         updated_at: new Date().toISOString()
       })
       .eq("id", id)
