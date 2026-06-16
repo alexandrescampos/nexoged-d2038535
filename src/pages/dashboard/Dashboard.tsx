@@ -344,6 +344,34 @@ export default function OrgDashboard() {
           </div>
         </div>
 
+        {/* Versões de Documentos */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+          <div className="bg-[#1565C0] text-white p-4 rounded-md shadow-sm">
+            <p className="text-[10px] uppercase font-bold opacity-90 leading-tight">Total de Versões</p>
+            <p className="text-3xl font-bold mt-1">
+              {loading ? <Skeleton className="h-8 w-12 bg-white/20" /> : (data?.total_versions ?? 0)}
+            </p>
+          </div>
+          <div className="bg-[#0f766e] text-white p-4 rounded-md shadow-sm">
+            <p className="text-[10px] uppercase font-bold opacity-90 leading-tight">Versões Assinadas</p>
+            <p className="text-3xl font-bold mt-1">
+              {loading ? <Skeleton className="h-8 w-12 bg-white/20" /> : (data?.versions_signed ?? 0)}
+            </p>
+          </div>
+          <div className="bg-[#ca8a04] text-white p-4 rounded-md shadow-sm">
+            <p className="text-[10px] uppercase font-bold opacity-90 leading-tight">Versões Pendentes</p>
+            <p className="text-3xl font-bold mt-1">
+              {loading ? <Skeleton className="h-8 w-12 bg-white/20" /> : (data?.versions_pending ?? 0)}
+            </p>
+          </div>
+          <div className="bg-[#6b7280] text-white p-4 rounded-md shadow-sm">
+            <p className="text-[10px] uppercase font-bold opacity-90 leading-tight">Versões Canceladas</p>
+            <p className="text-3xl font-bold mt-1">
+              {loading ? <Skeleton className="h-8 w-12 bg-white/20" /> : (data?.versions_cancelled ?? 0)}
+            </p>
+          </div>
+        </div>
+
         {/* Charts grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {/* GBs utilizados */}
