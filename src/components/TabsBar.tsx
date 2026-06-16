@@ -18,7 +18,7 @@ export function TabsBar({ className }: TabsBarProps) {
   }
 
   const handleTabClick = (tab: Tab) => {
-    navigate(tab.id);
+    navigate(tab.path ?? tab.id);
   };
 
   const handleCloseTab = (e: React.MouseEvent, tabId: string) => {

@@ -302,7 +302,7 @@ function DashboardHeader() {
 
 function DashboardContent() {
   const location = useLocation();
-  const { openTab, openTabs, isClosing } = useTabs();
+  const { openTab, openTabs, updateTabPath, isClosing } = useTabs();
   const { organization } = useAuth();
 
   // Sync current URL with tabs (handles direct URL navigation)
@@ -311,16 +311,20 @@ function DashboardContent() {
     if (isClosing()) return;
 
     const menuItem = findMenuItem(location.pathname);
-    // Only open tab if it doesn't already exist
-    const tabExists = openTabs.some((t) => t.id === location.pathname);
-    if (menuItem && !tabExists) {
+    if (!menuItem) return;
+    const fullPath = location.pathname + location.search;
+    const tabExists = openTabs.some((t) => t.id === menuItem.url);
+    if (!tabExists) {
       openTab({
         id: menuItem.url,
         title: menuItem.title,
         icon: menuItem.icon,
+        path: fullPath,
       });
+    } else {
+      updateTabPath(menuItem.url, fullPath);
     }
-  }, [location.pathname]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [location.pathname, location.search]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <div className="flex-1 flex flex-col">

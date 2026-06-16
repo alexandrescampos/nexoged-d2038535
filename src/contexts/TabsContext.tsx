@@ -6,6 +6,7 @@ export interface Tab {
   id: string;
   title: string;
   icon: LucideIcon;
+  path?: string;
 }
 
 interface TabsContextType {
@@ -14,6 +15,7 @@ interface TabsContextType {
   openTab: (tab: Tab) => void;
   closeTab: (id: string) => void;
   setActiveTab: (id: string) => void;
+  updateTabPath: (id: string, path: string) => void;
   isClosing: () => boolean;
 }
 
@@ -37,9 +39,10 @@ export function TabsProvider({ children, storageKey = STORAGE_KEY }: TabsProvide
       const stored = sessionStorage.getItem(storageKey);
       if (stored) {
         const parsed = JSON.parse(stored);
-        return parsed.map((t: { id: string; title: string }) => ({
+        return parsed.map((t: { id: string; title: string; path?: string }) => ({
           id: t.id,
           title: t.title,
+          path: t.path,
           icon: null,
         }));
       }
@@ -58,7 +61,7 @@ export function TabsProvider({ children, storageKey = STORAGE_KEY }: TabsProvide
 
   // Persist tabs to sessionStorage (without icons)
   useEffect(() => {
-    const toStore = openTabs.map((t) => ({ id: t.id, title: t.title }));
+    const toStore = openTabs.map((t) => ({ id: t.id, title: t.title, path: t.path }));
     sessionStorage.setItem(storageKey, JSON.stringify(toStore));
   }, [openTabs, storageKey]);
 
@@ -116,8 +119,19 @@ export function TabsProvider({ children, storageKey = STORAGE_KEY }: TabsProvide
     setActiveTabState(id);
   }, []);
 
+  const updateTabPath = useCallback((id: string, path: string) => {
+    setOpenTabs((prev) => {
+      const idx = prev.findIndex((t) => t.id === id);
+      if (idx < 0) return prev;
+      if (prev[idx].path === path) return prev;
+      const updated = [...prev];
+      updated[idx] = { ...updated[idx], path };
+      return updated;
+    });
+  }, []);
+
   return (
-    <TabsContext.Provider value={{ openTabs, activeTab, openTab, closeTab, setActiveTab, isClosing }}>
+    <TabsContext.Provider value={{ openTabs, activeTab, openTab, closeTab, setActiveTab, updateTabPath, isClosing }}>
       {children}
     </TabsContext.Provider>
   );
