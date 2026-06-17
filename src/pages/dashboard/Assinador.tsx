@@ -158,8 +158,7 @@ export default function AssinadorPage() {
             icon={<MonitorSmartphone className="h-5 w-5" />}
             os="Windows"
             arch="10 / 11 · x64"
-            href="#"
-            disabled
+            href={win32Asset.url}
           />
           <DownloadCard
             icon={<Apple className="h-5 w-5" />}
