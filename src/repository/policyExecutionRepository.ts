@@ -172,6 +172,21 @@ export const policyExecutionRepository = {
       .order("created_at", { ascending: false });
     if (error) throw error;
     const rows = (data || []) as any[];
+    const docIds = Array.from(new Set(rows.map((r) => r.documento_id)));
+    // Buscar a menor ordem pendente por documento para mostrar apenas
+    // etapas que já estão liberadas (atuais), não as bloqueadas por etapas anteriores.
+    const minOrdemMap = new Map<string, number>();
+    if (docIds.length > 0) {
+      const { data: allPending } = await supabase
+        .from("documento_aprovacao")
+        .select("documento_id, ordem")
+        .in("documento_id", docIds)
+        .eq("status", "PENDENTE");
+      for (const r of (allPending || []) as any[]) {
+        const cur = minOrdemMap.get(r.documento_id);
+        if (cur === undefined || r.ordem < cur) minOrdemMap.set(r.documento_id, r.ordem);
+      }
+    }
     const [docMap, perfilMap] = await Promise.all([
       getDocumentMap(rows.map((r) => r.documento_id)),
       getPerfilNameMap(rows.map((r) => r.perfil_responsavel_id)),
@@ -182,7 +197,7 @@ export const policyExecutionRepository = {
         perfil: r.perfil_responsavel_id ? { perfil_nome: perfilMap.get(r.perfil_responsavel_id) } : null,
         documento: docMap.get(r.documento_id) || null,
       }))
-      .filter((r) => r.documento);
+      .filter((r) => r.documento && minOrdemMap.get(r.documento_id) === r.ordem);
   },
 
   async listAllPendingApprovalsForOrg(orgId: string) {
