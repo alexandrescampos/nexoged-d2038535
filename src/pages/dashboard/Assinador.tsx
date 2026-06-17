@@ -8,6 +8,7 @@ import { Download, Shield, CheckCircle2, XCircle, Loader2, MonitorSmartphone, Ap
 import { toast } from "sonner";
 import linuxAsset from "../../../public/downloads/NexoGED-Assinador-linux-x64.zip.asset.json";
 import darwinAsset from "../../../public/downloads/NexoGED-Assinador-darwin-x64.zip.asset.json";
+import win32Asset from "../../../public/downloads/NexoGED-Assinador-win32-x64.zip.asset.json";
 import {
   initPki,
   listCertificates,
@@ -157,8 +158,7 @@ export default function AssinadorPage() {
             icon={<MonitorSmartphone className="h-5 w-5" />}
             os="Windows"
             arch="10 / 11 · x64"
-            href="#"
-            disabled
+            href={win32Asset.url}
           />
           <DownloadCard
             icon={<Apple className="h-5 w-5" />}

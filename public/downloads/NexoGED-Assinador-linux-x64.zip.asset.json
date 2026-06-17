@@ -1,11 +1,11 @@
 {
   "version": 1,
-  "asset_id": "6f937b75-38c3-4063-8520-e193e45a651d",
+  "asset_id": "91f940e7-a544-4ebc-ac83-a81bcce89e26",
   "project_id": "23a8482d-7fb8-439b-b093-e64529cf2e70",
-  "url": "/__l5e/assets-v1/6f937b75-38c3-4063-8520-e193e45a651d/NexoGED-Assinador-linux-x64.zip",
-  "r2_key": "a/v1/23a8482d-7fb8-439b-b093-e64529cf2e70/6f937b75-38c3-4063-8520-e193e45a651d/NexoGED-Assinador-linux-x64.zip",
+  "url": "/__l5e/assets-v1/91f940e7-a544-4ebc-ac83-a81bcce89e26/NexoGED-Assinador-linux-x64.zip",
+  "r2_key": "a/v1/23a8482d-7fb8-439b-b093-e64529cf2e70/91f940e7-a544-4ebc-ac83-a81bcce89e26/NexoGED-Assinador-linux-x64.zip",
   "original_filename": "NexoGED-Assinador-linux-x64.zip",
-  "size": 109635846,
+  "size": 109225384,
   "content_type": "application/zip",
-  "created_at": "2026-06-17T19:56:08Z"
+  "created_at": "2026-06-17T23:20:28Z"
 }
