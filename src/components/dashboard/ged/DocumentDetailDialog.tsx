@@ -191,6 +191,11 @@ export function DocumentDetailDialog({ doc, onOpenChange }: Props) {
                         </div>
                       </div>
                     )}
+                    {a.status === "PENDENTE" && !isCurrent && canApprove(a) && (
+                      <p className="text-xs text-amber-600 pt-2 border-t">
+                        Aguardando aprovação da etapa anterior para liberar esta ação.
+                      </p>
+                    )}
                   </div>
                 );
               })}
