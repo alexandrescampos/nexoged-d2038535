@@ -65,6 +65,8 @@ import {
 } from "@/components/ui/command";
 import { CustomFieldsForm } from "@/components/dashboard/ged/CustomFieldsForm";
 import { ShareDocumentDialog } from "@/components/dashboard/ged/ShareDocumentDialog";
+import { DocumentDetailDialog } from "@/components/dashboard/ged/DocumentDetailDialog";
+import { GitBranch } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
