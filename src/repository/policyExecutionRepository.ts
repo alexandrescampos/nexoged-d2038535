@@ -185,6 +185,50 @@ export const policyExecutionRepository = {
       .filter((r) => r.documento);
   },
 
+  async listAllPendingApprovalsForOrg(orgId: string) {
+    const { data, error } = await supabase
+      .from("documento_aprovacao")
+      .select("id, documento_id, ordem, nome_etapa, status, created_at, perfil_responsavel_id")
+      .eq("organization_id", orgId)
+      .eq("status", "PENDENTE")
+      .order("created_at", { ascending: false });
+    if (error) throw error;
+    const rows = (data || []) as any[];
+    const [docMap, perfilMap] = await Promise.all([
+      getDocumentMap(rows.map((r) => r.documento_id)),
+      getPerfilNameMap(rows.map((r) => r.perfil_responsavel_id)),
+    ]);
+    return rows
+      .map((r) => ({
+        ...r,
+        perfil: r.perfil_responsavel_id ? { perfil_nome: perfilMap.get(r.perfil_responsavel_id) } : null,
+        documento: docMap.get(r.documento_id) || null,
+      }))
+      .filter((r) => r.documento);
+  },
+
+  async listAllPendingSignaturesForOrg(orgId: string) {
+    const { data, error } = await supabase
+      .from("documento_assinatura")
+      .select("id, documento_id, ordem, tipo_assinatura, status, assinado_em, created_at, perfil_assinante_id")
+      .eq("organization_id", orgId)
+      .eq("status", "PENDENTE")
+      .order("created_at", { ascending: false });
+    if (error) throw error;
+    const rows = (data || []) as any[];
+    const [docMap, perfilMap] = await Promise.all([
+      getDocumentMap(rows.map((r) => r.documento_id)),
+      getPerfilNameMap(rows.map((r) => r.perfil_assinante_id)),
+    ]);
+    return rows
+      .map((r) => ({
+        ...r,
+        perfil: r.perfil_assinante_id ? { perfil_nome: perfilMap.get(r.perfil_assinante_id) } : null,
+        documento: docMap.get(r.documento_id) || null,
+      }))
+      .filter((r) => r.documento);
+  },
+
   async listMyPendingSignatures(perfilIds: string[]) {
     if (perfilIds.length === 0) return [];
     const { data, error } = await supabase
