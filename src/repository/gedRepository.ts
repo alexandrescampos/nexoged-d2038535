@@ -345,6 +345,11 @@ export const gedRepository = {
       .insert([{
         document_id: documentId,
         version_number: versionNumber,
+        version_major: versionNumber,
+        version_minor: 0,
+        version_label: `${versionNumber}.0`,
+        change_description: versionNumber === 1 ? "Versão inicial" : `Versão ${versionNumber}`,
+        status: "APROVADA",
         file_path: filePath,
         file_name: file.name,
         file_size: file.size,
@@ -356,7 +361,12 @@ export const gedRepository = {
 
     if (versionError) throw versionError;
 
-    await supabase.from("ged_documents").update({ updated_at: new Date().toISOString() }).eq("id", documentId);
+    await supabase.from("ged_documents").update({
+      current_version_id: version.id,
+      latest_version_number: `${versionNumber}.0`,
+      latest_version_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    }).eq("id", documentId);
 
     // Trigger backend processing
     supabase.functions.invoke('process-document', {
