@@ -148,8 +148,7 @@ export function SignatureCaptureModal({
       } else {
         query = query
           .neq("status", "CANCELADA")
-          .order("version_major", { ascending: false })
-          .order("version_minor", { ascending: false })
+          .order("version_number", { ascending: false })
           .limit(1);
       }
       const { data: versao, error: vErr } = await query.maybeSingle();
