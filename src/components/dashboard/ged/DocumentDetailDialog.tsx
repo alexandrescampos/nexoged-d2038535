@@ -288,6 +288,8 @@ export function DocumentDetailDialog({ doc, onOpenChange }: Props) {
           onOpenChange={(o) => { if (!o) setSigning(null); }}
           tipo={signing.tipo_assinatura}
           isSigning={sign.isPending}
+          documentId={signing.documento_id}
+          versaoId={signing.versao_id}
           onConfirm={({ hashEvidencia, certificado }) => {
             sign.mutate(
               { assinaturaId: signing.id, tipo: signing.tipo_assinatura, hashEvidencia, certificado },
