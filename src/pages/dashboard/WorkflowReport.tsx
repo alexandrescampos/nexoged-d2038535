@@ -13,9 +13,11 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Skeleton } from "@/components/ui/skeleton";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
-import { Calendar as CalendarIcon, Download, ExternalLink, Workflow } from "lucide-react";
+import { Calendar as CalendarIcon, Download, ExternalLink, Workflow, CheckCircle2, PenLine } from "lucide-react";
 import { policyExecutionRepository } from "@/repository/policyExecutionRepository";
 import { formatBrasiliaDate } from "@/lib/timezone";
+
+type Mode = "approvals" | "signatures" | "all";
 
 const APPR_STATUS = ["TODOS", "PENDENTE", "APROVADA", "REPROVADA"];
 const SIGN_STATUS = ["TODOS", "PENDENTE", "ASSINADA", "RECUSADA"];
