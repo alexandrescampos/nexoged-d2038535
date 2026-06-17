@@ -6,8 +6,9 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Shield, KeyRound, FileBadge2, Loader2, ExternalLink, RefreshCw } from "lucide-react";
+import { Shield, KeyRound, FileBadge2, Loader2, ExternalLink, RefreshCw, Download } from "lucide-react";
 import { toast } from "sonner";
+import { Link } from "react-router-dom";
 import type { TipoAssinatura } from "@/repository/policyFlowRepository";
 import {
   initPki,
@@ -16,9 +17,12 @@ import {
   signHash,
   sha256Hex,
   resetPki,
-  WEB_PKI_INSTALL_URL,
+  getPairToken,
+  setPairToken,
+  describeBridgeError,
+  SIGNER_INSTALL_URL,
   type PkiCertificate,
-} from "@/lib/lacunaPki";
+} from "@/lib/signerBridge";
 import { documentVersionRepository } from "@/repository/documentVersionRepository";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -52,11 +56,12 @@ export function SignatureCaptureModal({
 
   // Lacuna state
   const useToken = tipo === "QUALIFICADA" || tipo === "AVANCADA";
-  const [pkiStatus, setPkiStatus] = useState<"idle" | "loading" | "ready" | "not-installed" | "error">("idle");
+  const [pkiStatus, setPkiStatus] = useState<"idle" | "loading" | "ready" | "not-installed" | "unpaired" | "error">("idle");
   const [pkiError, setPkiError] = useState<string | null>(null);
   const [certs, setCerts] = useState<PkiCertificate[]>([]);
   const [selectedThumb, setSelectedThumb] = useState<string>("");
   const [loadingCerts, setLoadingCerts] = useState(false);
+  const [pairInput, setPairInput] = useState<string>(getPairToken() || "");
 
   const reset = () => {
     setPassword("");
@@ -72,24 +77,33 @@ export function SignatureCaptureModal({
     setPkiError(null);
     try {
       await initPki();
-      setPkiStatus("ready");
-      await refreshCerts();
+      // tenta listar; se 401 (unpaired), mostra campo de pareamento
+      try {
+        await refreshCerts(true);
+        setPkiStatus("ready");
+      } catch (e: any) {
+        const msg = String(e?.message || e);
+        if (msg.includes("bridge-unpaired")) {
+          setPkiStatus("unpaired");
+        } else {
+          throw e;
+        }
+      }
     } catch (e: any) {
       const msg = String(e?.message || e);
-      if (msg.startsWith("web-pki-not-installed")) {
+      if (msg.includes("bridge-not-running")) {
         setPkiStatus("not-installed");
       } else {
         setPkiStatus("error");
-        setPkiError(msg);
+        setPkiError(describeBridgeError(e));
       }
     }
   };
 
-  const refreshCerts = async () => {
+  const refreshCerts = async (throwOnUnpaired = false) => {
     setLoadingCerts(true);
     try {
       const list = await listCertificates();
-      // Apenas válidos hoje
       const today = new Date();
       const valid = list.filter((c: any) => {
         const end = c.validityEnd ? new Date(c.validityEnd) : null;
@@ -98,10 +112,21 @@ export function SignatureCaptureModal({
       setCerts(valid);
       if (valid.length === 1) setSelectedThumb(valid[0].thumbprint);
     } catch (e: any) {
-      toast.error("Falha ao listar certificados: " + (e?.message || e));
+      if (throwOnUnpaired) throw e;
+      toast.error("Falha ao listar certificados: " + describeBridgeError(e));
     } finally {
       setLoadingCerts(false);
     }
+  };
+
+  const handlePair = async () => {
+    const t = pairInput.trim();
+    if (!/^\d{6}$/.test(t)) {
+      toast.error("Cole o código de 6 dígitos exibido na bandeja do assinador");
+      return;
+    }
+    setPairToken(t);
+    await loadPki();
   };
 
   useEffect(() => {
@@ -237,27 +262,45 @@ export function SignatureCaptureModal({
 
               {pkiStatus === "loading" && (
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <Loader2 className="h-4 w-4 animate-spin" /> Detectando Web PKI...
+                  <Loader2 className="h-4 w-4 animate-spin" /> Detectando NexoGED Assinador...
                 </div>
               )}
 
               {pkiStatus === "not-installed" && (
                 <Alert>
                   <AlertDescription className="text-xs space-y-2">
-                    <p>O componente <strong>Web PKI</strong> não foi detectado no navegador.</p>
-                    <p>Instale a extensão e o componente nativo para acessar seu certificado/token:</p>
-                    <a
-                      href={WEB_PKI_INSTALL_URL}
-                      target="_blank"
-                      rel="noreferrer"
+                    <p>O app <strong>NexoGED Assinador</strong> não está em execução nesta máquina.</p>
+                    <p>Baixe e instale o aplicativo desktop (Windows / macOS / Linux) — ele acessa seu certificado A1 ou token A3 com segurança.</p>
+                    <Link
+                      to={SIGNER_INSTALL_URL}
                       className="inline-flex items-center gap-1 text-primary underline"
+                      onClick={() => onOpenChange(false)}
                     >
-                      Instalar Web PKI <ExternalLink className="h-3 w-3" />
-                    </a>
+                      <Download className="h-3 w-3" /> Baixar NexoGED Assinador
+                    </Link>
                     <div>
-                      <Button size="sm" variant="outline" onClick={loadPki} className="mt-2">
-                        Já instalei, tentar novamente
+                      <Button size="sm" variant="outline" onClick={() => loadPki()} className="mt-2">
+                        Já instalei e abri, tentar novamente
                       </Button>
+                    </div>
+                  </AlertDescription>
+                </Alert>
+              )}
+
+              {pkiStatus === "unpaired" && (
+                <Alert>
+                  <AlertDescription className="text-xs space-y-2">
+                    <p>Assinador detectado. Cole o <strong>código de 6 dígitos</strong> exibido na bandeja do sistema (clique no ícone do NexoGED Assinador) para autorizar este navegador.</p>
+                    <div className="flex items-center gap-2">
+                      <Input
+                        value={pairInput}
+                        onChange={(e) => setPairInput(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                        placeholder="000000"
+                        inputMode="numeric"
+                        maxLength={6}
+                        className="font-mono tracking-widest text-center"
+                      />
+                      <Button size="sm" onClick={handlePair}>Parear</Button>
                     </div>
                   </AlertDescription>
                 </Alert>
@@ -266,8 +309,8 @@ export function SignatureCaptureModal({
               {pkiStatus === "error" && (
                 <Alert variant="destructive">
                   <AlertDescription className="text-xs">
-                    Erro ao iniciar Web PKI: {pkiError}
-                    <Button size="sm" variant="outline" onClick={loadPki} className="mt-2 ml-2">
+                    {pkiError}
+                    <Button size="sm" variant="outline" onClick={() => loadPki()} className="mt-2 ml-2">
                       Tentar novamente
                     </Button>
                   </AlertDescription>
@@ -294,13 +337,13 @@ export function SignatureCaptureModal({
                         ))}
                       </SelectContent>
                     </Select>
-                    <Button size="icon" variant="outline" onClick={refreshCerts} disabled={loadingCerts} title="Atualizar lista">
+                    <Button size="icon" variant="outline" onClick={() => refreshCerts()} disabled={loadingCerts} title="Atualizar lista">
                       <RefreshCw className={`h-4 w-4 ${loadingCerts ? "animate-spin" : ""}`} />
                     </Button>
                   </div>
                   {certs.length === 0 && !loadingCerts && (
                     <p className="text-xs text-muted-foreground">
-                      Conecte o token/leitor e atualize. Para A1, verifique se o certificado está importado no repositório do sistema.
+                      Conecte o token/leitor e atualize. Para A1, verifique se o certificado está importado no repositório do sistema (Windows CertStore / macOS Keychain).
                     </p>
                   )}
                 </>

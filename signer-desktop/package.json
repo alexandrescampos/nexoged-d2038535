@@ -1,0 +1,22 @@
+{
+  "name": "nexoged-assinador",
+  "version": "0.1.0",
+  "description": "Ponte local de assinatura A1/A3 para NexoGED",
+  "main": "main.cjs",
+  "private": true,
+  "scripts": {
+    "start": "electron .",
+    "package:win": "electron-packager . NexoGED-Assinador --platform=win32 --arch=x64 --out=dist --overwrite --asar --icon=assets/icon.ico --ignore=^/dist",
+    "package:mac": "electron-packager . NexoGED-Assinador --platform=darwin --arch=x64 --out=dist --overwrite --asar --icon=assets/icon.icns --ignore=^/dist",
+    "package:linux": "electron-packager . NexoGED-Assinador --platform=linux --arch=x64 --out=dist --overwrite --asar --ignore=^/dist"
+  },
+  "dependencies": {
+    "fastify": "^4.28.1",
+    "node-forge": "^1.3.1",
+    "pkcs11js": "^2.1.6"
+  },
+  "devDependencies": {
+    "electron": "^32.0.0",
+    "@electron/packager": "^18.3.5"
+  }
+}
