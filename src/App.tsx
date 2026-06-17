@@ -182,6 +182,7 @@ const App = () => {
               <Route path="document-types" element={<AdminOnlyRoute><DocumentTypesPage /></AdminOnlyRoute>} />
               <Route path="signature-policies" element={<AdminOnlyRoute><SignaturePoliciesPage /></AdminOnlyRoute>} />
               <Route path="approval-flows" element={<AdminOnlyRoute><ApprovalFlowsPage /></AdminOnlyRoute>} />
+              <Route path="workflow-report" element={<WorkflowReportPage />} />
               <Route path="lists" element={<AdminOnlyRoute><ListsPage /></AdminOnlyRoute>} />
               <Route path="custom-fields" element={<AdminOnlyRoute><CustomFieldsPage /></AdminOnlyRoute>} />
               <Route path="billing" element={<AdminOnlyRoute><BillingPage /></AdminOnlyRoute>} />
