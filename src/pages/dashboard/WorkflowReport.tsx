@@ -224,11 +224,13 @@ export default function WorkflowReport({ mode = "all" }: { mode?: Mode } = {}) {
         ))}
       </div>
 
-      <Tabs defaultValue="approvals">
-        <TabsList>
-          <TabsTrigger value="approvals">Aprovações</TabsTrigger>
-          <TabsTrigger value="signatures">Assinaturas</TabsTrigger>
-        </TabsList>
+      <Tabs defaultValue={showApprovals ? "approvals" : "signatures"}>
+        {mode === "all" && (
+          <TabsList>
+            <TabsTrigger value="approvals">Aprovações</TabsTrigger>
+            <TabsTrigger value="signatures">Assinaturas</TabsTrigger>
+          </TabsList>
+        )}
 
         <TabsContent value="approvals">
           <Card>
