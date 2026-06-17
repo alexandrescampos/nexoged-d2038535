@@ -54,6 +54,8 @@ import {
   Cloud,
   ShieldCheck,
   Workflow,
+  CheckCircle2,
+  PenLine,
 } from "lucide-react";
 import { TabsProvider, useTabs } from "@/contexts/TabsContext";
 import { TabsBar } from "@/components/TabsBar";
