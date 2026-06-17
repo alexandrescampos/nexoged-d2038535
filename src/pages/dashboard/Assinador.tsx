@@ -6,9 +6,10 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Download, Shield, CheckCircle2, XCircle, Loader2, MonitorSmartphone, Apple, Terminal } from "lucide-react";
 import { toast } from "sonner";
-import linuxAsset from "../../../public/downloads/NexoGED-Assinador-linux-x64.zip.asset.json";
-import darwinAsset from "../../../public/downloads/NexoGED-Assinador-darwin-x64.zip.asset.json";
-import win32Asset from "../../../public/downloads/NexoGED-Assinador-win32-x64.zip.asset.json";
+const RELEASE_BASE = "https://github.com/alexandrescampos/nexoged-d2038535/releases/latest/download";
+const WIN_URL = `${RELEASE_BASE}/NexoGED-Assinador-win32-x64.zip`;
+const MAC_URL = `${RELEASE_BASE}/NexoGED-Assinador-darwin-x64.zip`;
+const LINUX_URL = `${RELEASE_BASE}/NexoGED-Assinador-linux-x64.zip`;
 import {
   initPki,
   listCertificates,
@@ -158,19 +159,19 @@ export default function AssinadorPage() {
             icon={<MonitorSmartphone className="h-5 w-5" />}
             os="Windows"
             arch="10 / 11 · x64"
-            href={win32Asset.url}
+            href={WIN_URL}
           />
           <DownloadCard
             icon={<Apple className="h-5 w-5" />}
             os="macOS"
             arch="11+ · Intel/Apple Silicon"
-            href={darwinAsset.url}
+            href={MAC_URL}
           />
           <DownloadCard
             icon={<Terminal className="h-5 w-5" />}
             os="Linux"
             arch="x64 · zip"
-            href={linuxAsset.url}
+            href={LINUX_URL}
           />
         </CardContent>
       </Card>
