@@ -8,6 +8,7 @@ import { Download, Shield, CheckCircle2, XCircle, Loader2, MonitorSmartphone, Ap
 import { toast } from "sonner";
 import linuxAsset from "../../../public/downloads/NexoGED-Assinador-linux-x64.zip.asset.json";
 import darwinAsset from "../../../public/downloads/NexoGED-Assinador-darwin-x64.zip.asset.json";
+import win32Asset from "../../../public/downloads/NexoGED-Assinador-win32-x64.zip.asset.json";
 import {
   initPki,
   listCertificates,
