@@ -34,7 +34,7 @@ interface Props {
 
 const sha256Text = async (input: string) => {
   const buf = new TextEncoder().encode(input);
-  return sha256Hex(buf);
+  return sha256Hex(buf.buffer as ArrayBuffer);
 };
 
 export function SignatureCaptureModal({
