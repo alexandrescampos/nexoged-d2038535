@@ -56,11 +56,12 @@ export function SignatureCaptureModal({
 
   // Lacuna state
   const useToken = tipo === "QUALIFICADA" || tipo === "AVANCADA";
-  const [pkiStatus, setPkiStatus] = useState<"idle" | "loading" | "ready" | "not-installed" | "error">("idle");
+  const [pkiStatus, setPkiStatus] = useState<"idle" | "loading" | "ready" | "not-installed" | "unpaired" | "error">("idle");
   const [pkiError, setPkiError] = useState<string | null>(null);
   const [certs, setCerts] = useState<PkiCertificate[]>([]);
   const [selectedThumb, setSelectedThumb] = useState<string>("");
   const [loadingCerts, setLoadingCerts] = useState(false);
+  const [pairInput, setPairInput] = useState<string>(getPairToken() || "");
 
   const reset = () => {
     setPassword("");
@@ -76,15 +77,25 @@ export function SignatureCaptureModal({
     setPkiError(null);
     try {
       await initPki();
-      setPkiStatus("ready");
-      await refreshCerts();
+      // tenta listar; se 401 (unpaired), mostra campo de pareamento
+      try {
+        await refreshCerts(true);
+        setPkiStatus("ready");
+      } catch (e: any) {
+        const msg = String(e?.message || e);
+        if (msg.includes("bridge-unpaired")) {
+          setPkiStatus("unpaired");
+        } else {
+          throw e;
+        }
+      }
     } catch (e: any) {
       const msg = String(e?.message || e);
-      if (msg.startsWith("web-pki-not-installed")) {
+      if (msg.includes("bridge-not-running")) {
         setPkiStatus("not-installed");
       } else {
         setPkiStatus("error");
-        setPkiError(msg);
+        setPkiError(describeBridgeError(e));
       }
     }
   };
