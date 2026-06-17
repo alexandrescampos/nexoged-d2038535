@@ -254,6 +254,30 @@ export const policyExecutionRepository = {
       .order("created_at", { ascending: false });
     if (error) throw error;
     const rows = (data || []) as any[];
+    const docIds = Array.from(new Set(rows.map((r) => r.documento_id)));
+    // Apenas assinaturas que já estão liberadas: nenhuma aprovação pendente
+    // e é a primeira assinatura pendente do documento.
+    const minSigOrdemMap = new Map<string, number>();
+    const docsWithPendingApproval = new Set<string>();
+    if (docIds.length > 0) {
+      const [{ data: allSigs }, { data: pendingApprs }] = await Promise.all([
+        supabase
+          .from("documento_assinatura")
+          .select("documento_id, ordem")
+          .in("documento_id", docIds)
+          .eq("status", "PENDENTE"),
+        supabase
+          .from("documento_aprovacao")
+          .select("documento_id")
+          .in("documento_id", docIds)
+          .eq("status", "PENDENTE"),
+      ]);
+      for (const r of (allSigs || []) as any[]) {
+        const cur = minSigOrdemMap.get(r.documento_id);
+        if (cur === undefined || r.ordem < cur) minSigOrdemMap.set(r.documento_id, r.ordem);
+      }
+      for (const r of (pendingApprs || []) as any[]) docsWithPendingApproval.add(r.documento_id);
+    }
     const [docMap, perfilMap] = await Promise.all([
       getDocumentMap(rows.map((r) => r.documento_id)),
       getPerfilNameMap(rows.map((r) => r.perfil_assinante_id)),
@@ -264,7 +288,12 @@ export const policyExecutionRepository = {
         perfil: r.perfil_assinante_id ? { perfil_nome: perfilMap.get(r.perfil_assinante_id) } : null,
         documento: docMap.get(r.documento_id) || null,
       }))
-      .filter((r) => r.documento);
+      .filter(
+        (r) =>
+          r.documento &&
+          !docsWithPendingApproval.has(r.documento_id) &&
+          minSigOrdemMap.get(r.documento_id) === r.ordem,
+      );
   },
 
   async listAllWorkflowApprovals(orgId: string, from?: string, to?: string) {
