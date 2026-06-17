@@ -155,7 +155,7 @@ export function SignatureCaptureModal({
       const { data: versao, error: vErr } = await query.maybeSingle();
       console.log("[Sign] versao", { versao, vErr });
       if (vErr) throw new Error("Versão: " + vErr.message);
-      if (!versao) throw new Error("Versão não encontrada (id=" + versaoId + ")");
+      if (!versao) throw new Error("Nenhuma versão ativa encontrada para o documento");
 
       // 2. Download do arquivo
       const url = await documentVersionRepository.getDownloadUrl(versao.file_path);
