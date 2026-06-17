@@ -214,7 +214,16 @@ export default function AssinadorPage() {
   );
 }
 
-function DownloadCard({ icon, os, arch, href }: { icon: React.ReactNode; os: string; arch: string; href: string }) {
+function DownloadCard({ icon, os, arch, href, disabled }: { icon: React.ReactNode; os: string; arch: string; href: string; disabled?: boolean }) {
+  if (disabled) {
+    return (
+      <div className="block border rounded-md p-4 opacity-60 cursor-not-allowed">
+        <div className="flex items-center gap-2 mb-1">{icon}<span className="font-medium">{os}</span></div>
+        <div className="text-xs text-muted-foreground">{arch}</div>
+        <div className="text-xs text-muted-foreground mt-2">Em breve</div>
+      </div>
+    );
+  }
   return (
     <a
       href={href}
