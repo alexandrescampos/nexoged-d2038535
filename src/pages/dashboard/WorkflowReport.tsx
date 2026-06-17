@@ -232,6 +232,7 @@ export default function WorkflowReport({ mode = "all" }: { mode?: Mode } = {}) {
           </TabsList>
         )}
 
+        {showApprovals && (
         <TabsContent value="approvals">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between pb-2">
