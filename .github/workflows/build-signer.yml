@@ -55,8 +55,7 @@ jobs:
         shell: pwsh
         run: |
           $python = (Get-Command python).Source
-          "npm_config_python=$python" >> $env:GITHUB_ENV
-          "npm_config_msvs_version=2022" >> $env:GITHUB_ENV
+          "NODE_GYP_FORCE_PYTHON=$python" >> $env:GITHUB_ENV
           "GYP_MSVS_VERSION=2022" >> $env:GITHUB_ENV
 
 
