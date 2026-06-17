@@ -32,6 +32,7 @@ import {
   Bar,
   Legend,
 } from "recharts";
+import { MyWorkflowTasksWidget } from "@/components/dashboard/ged/MyWorkflowTasksWidget";
 
 interface MonthlyPoint {
   label: string;
