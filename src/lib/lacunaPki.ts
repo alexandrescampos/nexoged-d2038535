@@ -35,7 +35,7 @@ export function initPki(): Promise<void> {
   const pki = getPki();
   initPromise = new Promise((resolve, reject) => {
     pki.init({
-      ready: () => resolve(),
+      ready: () => resolve(undefined),
       notInstalled: (status: any, message: string) => {
         reject(new Error(`web-pki-not-installed:${status}:${message}`));
       },
