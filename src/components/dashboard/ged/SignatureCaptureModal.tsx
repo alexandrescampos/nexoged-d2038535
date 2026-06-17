@@ -190,7 +190,8 @@ export function SignatureCaptureModal({
       onConfirm({ hashEvidencia: docHash, certificado });
       reset();
     } catch (e: any) {
-      toast.error("Erro ao assinar: " + (e?.message || e));
+      console.error("[Sign] error", e);
+      toast.error("Erro ao assinar: " + (e?.message || JSON.stringify(e)));
     }
   };
 
