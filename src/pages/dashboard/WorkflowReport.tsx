@@ -215,7 +215,7 @@ export default function WorkflowReport({ mode = "all" }: { mode?: Mode } = {}) {
       </Card>
 
       {/* KPIs */}
-      <div className={`grid grid-cols-2 md:grid-cols-${kpiCards.length} gap-2`}>
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2">
         {kpiCards.map((k) => (
           <div key={k.label} className={`${k.c} text-white p-3 rounded-md`}>
             <p className="text-[10px] uppercase font-bold opacity-90">{k.label}</p>
