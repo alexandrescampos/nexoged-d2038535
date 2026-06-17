@@ -280,6 +280,15 @@ export const gedRepository = {
       }
     }
 
+    // Aplica política do tipo de documento (gera etapas de aprovação e assinantes)
+    if (document?.document_type_id) {
+      try {
+        await supabase.rpc("apply_document_type_policy", { p_document_id: document.id });
+      } catch (e) {
+        console.error("Falha ao aplicar política do tipo de documento:", e);
+      }
+    }
+
     return document;
   },
 
