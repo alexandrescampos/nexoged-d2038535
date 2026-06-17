@@ -32,7 +32,7 @@ import {
   Bar,
   Legend,
 } from "recharts";
-import { MyWorkflowTasksWidget } from "@/components/dashboard/ged/MyWorkflowTasksWidget";
+
 
 interface MonthlyPoint {
   label: string;
@@ -277,8 +277,6 @@ export default function OrgDashboard() {
 
 
 
-        {/* Minhas pendências de workflow (Fase 4) */}
-        <MyWorkflowTasksWidget />
 
         {/* Monthly uploads - Full Width (Matches the screenshot layout) */}
         <Card className="border-none shadow-sm overflow-hidden">
