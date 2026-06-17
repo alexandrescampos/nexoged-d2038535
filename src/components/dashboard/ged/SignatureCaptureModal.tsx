@@ -132,18 +132,27 @@ export function SignatureCaptureModal({
       toast.error("Selecione um certificado");
       return;
     }
-    if (!documentId || !versaoId) {
+    if (!documentId) {
       toast.error("Documento sem versão para assinar");
       return;
     }
     try {
       console.log("[Sign] start", { documentId, versaoId, selectedThumb });
-      // 1. Buscar file_path da versão
-      const { data: versao, error: vErr } = await supabase
+      // 1. Buscar file_path da versão (fallback: última versão do documento)
+      let query = supabase
         .from("ged_document_versions")
-        .select("file_path, file_name")
-        .eq("id", versaoId)
-        .maybeSingle();
+        .select("id, file_path, file_name")
+        .eq("document_id", documentId);
+      if (versaoId) {
+        query = query.eq("id", versaoId);
+      } else {
+        query = query
+          .neq("status", "CANCELADA")
+          .order("version_major", { ascending: false })
+          .order("version_minor", { ascending: false })
+          .limit(1);
+      }
+      const { data: versao, error: vErr } = await query.maybeSingle();
       console.log("[Sign] versao", { versao, vErr });
       if (vErr) throw new Error("Versão: " + vErr.message);
       if (!versao) throw new Error("Versão não encontrada (id=" + versaoId + ")");
