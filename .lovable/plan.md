@@ -1,52 +1,20 @@
-# Fase 3 — Execução de Fluxos (Aprovações e Assinaturas)
+**Problema real identificado**
+- O backend já criou o fluxo para o documento enviado: há **2 aprovações** e **2 assinaturas** para `Contrato_Bussola_NEXO_Representacao_Comercial_V2_assinado`.
+- A tela mostra “ainda não possui fluxo aplicado” porque as consultas do frontend estão falhando com `PGRST200`.
+- O erro acontece porque `policyExecutionRepository.ts` usa joins automáticos como `aprovador:aprovador_id(full_name)` e `assinante:assinante_id(full_name)`, mas essas colunas não têm relacionamento/foreign key cadastrado no schema exposto pela API.
+- Do I know what the issue is? **Sim**: os dados existem, mas o frontend não consegue carregá-los por causa dos relacionamentos automáticos inválidos nas consultas.
 
-Objetivo: tornar as políticas e fluxos da Fase 2 **operacionais** — usuários conseguem submeter, aprovar/rejeitar e assinar documentos diretamente do GED, com as RPCs já existentes do banco.
-
-## Entregas
-
-### 1. Repository de execução (`policyExecutionRepository.ts`)
-Wrappers tipados para as RPCs já criadas no banco:
-- `applyDocumentTypePolicy(documentId)` → instancia etapas de aprovação e signatários conforme o tipo do documento.
-- `submitForApproval(documentId)` → muda status para `AGUARDANDO_APROVACAO`.
-- `approveStep(approvalId, comentario?)` / `rejectStep(approvalId, motivo)`.
-- `signDocument(signatureId, evidencia)` → grava assinatura + carimbo de tempo.
-- `archiveDocument(documentId)`.
-- `listApprovals(documentId)` / `listSignatures(documentId)` com join no perfil/usuário responsável.
-
-### 2. Hook `useDocumentWorkflow(documentId)`
-- Queries: `approvals`, `signatures`, `currentApprovalStep`, `currentSignerSlot`.
-- Mutations com `toast` e invalidação de `["ged-documents"]` + workflow queries.
-- Helpers: `canCurrentUserApprove`, `canCurrentUserSign`, `nextActionLabel`.
-
-### 3. Dialog de Detalhes do Documento (`DocumentDetailDialog.tsx`)
-Novo componente acionado ao clicar em um documento na listagem. Estrutura com tabs:
-- **Visão Geral** — metadados, tipo, pasta, tags, status, botão "Submeter para aprovação".
-- **Aprovações** — timeline das etapas (`documento_aprovacao` ordenadas), badge de status, comentário, botões **Aprovar** / **Rejeitar** visíveis somente ao perfil responsável da etapa atual.
-- **Assinaturas** — lista ordenada de signatários (`documento_assinatura`), badge (Pendente/Assinado), botão **Assinar** que abre `SignatureCaptureModal` exigindo evidência conforme `tipo_assinatura` (senha / Gov.br / certificado ICP — mock para SIMPLES, placeholders para AVANCADA/QUALIFICADA).
-- **Histórico** — usa `ged_audit_log` já existente.
-
-### 4. Integração na listagem (`Documents.tsx`)
-- Linha/cartão do documento abre `DocumentDetailDialog`.
-- Filtros de status já existem; adicionar **chips rápidos** para `AGUARDANDO_APROVACAO` e `AGUARDANDO_ASSINATURA`.
-- Badge na coluna Status com cores: amarelo (aguardando aprovação), azul (aguardando assinatura), verde (assinado/arquivado), vermelho (rejeitado).
-
-### 5. Criação de documento com política aplicada
-- `useGED.uploadDocument` passa a chamar `create_document_with_policy` (RPC já existente) quando o tipo possui política/fluxo, garantindo que as instâncias `documento_aprovacao` e `documento_assinatura` sejam criadas no upload.
-
-## Fora do escopo (vai para Fase 4)
-- Dashboard com cards "Minhas Aprovações" / "Minhas Assinaturas".
-- Página `WorkflowReport` consolidada com export.
-- Itens de menu na sidebar para pendências do usuário.
-- Notificações por e-mail.
-
-## Detalhes técnicos
-- Todas as ações server-side via RPCs `SECURITY DEFINER` já existentes — sem novas migrations.
-- Tipos `Aprovacao` e `Assinatura` adicionados em `policyFlowRepository.ts` (ou novo `policyExecutionRepository.ts`).
-- `SignatureCaptureModal` valida `tipo_assinatura`:
-  - `SIMPLES`: confirmação por senha do usuário logado.
-  - `AVANCADA`: token Gov.br (campo texto, validação placeholder).
-  - `QUALIFICADA`: upload de certificado .pfx (placeholder até integração ICP).
-- Reuso de `useAuth().profile.id` para checar `perfil_responsavel_id` / `perfil_assinante_id`.
-
-## Próxima fase (Fase 4 — resumo)
-Dashboard de pendências do usuário + relatório consolidado de workflows + notificações. É a **última fase planejada** do módulo de fluxos.
+**Plano de correção**
+1. Alterar `src/repository/policyExecutionRepository.ts` para não depender de joins automáticos inexistentes.
+2. Buscar `documento_aprovacao` e `documento_assinatura` com selects simples.
+3. Enriquecer os resultados em consultas separadas:
+   - perfis em `perfil` para mostrar `perfil_nome`;
+   - usuários em `profiles` para mostrar `aprovador_nome` e `assinante_nome`;
+   - documentos em `ged_documents` para relatórios/listas, mapeando `title` para o campo esperado pela UI.
+4. Aplicar o mesmo padrão nas listas:
+   - detalhe do documento;
+   - “Minhas Aprovações”;
+   - “Minhas Assinaturas”;
+   - relatórios de aprovação/assinatura.
+5. Manter a lógica de criação/aplicação do fluxo como está, pois o banco já confirmou que ela está funcionando.
+6. Validar depois que as abas “Aprovações” e “Assinaturas” passam a mostrar os registros existentes no documento atual.
