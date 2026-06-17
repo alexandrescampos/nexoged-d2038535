@@ -55,11 +55,10 @@ jobs:
         shell: pwsh
         run: |
           $python = (Get-Command python).Source
-          npm config set python "$python"
-          npm config set msvs_version 2022
           "npm_config_python=$python" >> $env:GITHUB_ENV
           "npm_config_msvs_version=2022" >> $env:GITHUB_ENV
           "GYP_MSVS_VERSION=2022" >> $env:GITHUB_ENV
+
 
       - name: Install dependencies
         run: npm ci
