@@ -352,6 +352,7 @@ export default function WorkflowReport({ mode = "all" }: { mode?: Mode } = {}) {
             </CardContent>
           </Card>
         </TabsContent>
+        )}
       </Tabs>
     </div>
   );
