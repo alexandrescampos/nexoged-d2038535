@@ -120,6 +120,10 @@ export function useGED(folderId: string | null = null, filterFavorites: boolean 
       queryClient.invalidateQueries({ queryKey: ["ged-documents"] });
       queryClient.invalidateQueries({ queryKey: ["ged-documents-total"] });
       queryClient.invalidateQueries({ queryKey: ["organization-usage"] });
+      queryClient.invalidateQueries({ queryKey: ["my-pending-approvals"] });
+      queryClient.invalidateQueries({ queryKey: ["my-pending-signatures"] });
+      queryClient.invalidateQueries({ queryKey: ["wf-report-approvals"] });
+      queryClient.invalidateQueries({ queryKey: ["wf-report-signatures"] });
       toast.success("Documento excluído com sucesso!");
     },
     onError: (error: any) => {
