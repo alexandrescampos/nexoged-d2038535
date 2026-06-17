@@ -6,9 +6,9 @@
   "private": true,
   "scripts": {
     "start": "electron .",
-    "package:win": "electron-packager . NexoGED-Assinador --platform=win32 --arch=x64 --out=dist --overwrite --asar --icon=assets/icon.ico --ignore=^/dist",
-    "package:mac": "electron-packager . NexoGED-Assinador --platform=darwin --arch=x64 --out=dist --overwrite --asar --icon=assets/icon.icns --ignore=^/dist",
-    "package:linux": "electron-packager . NexoGED-Assinador --platform=linux --arch=x64 --out=dist --overwrite --asar --ignore=^/dist"
+    "package:win": "electron-packager . NexoGED-Assinador --platform=win32 --arch=x64 --out=dist --overwrite --icon=assets/icon.ico --ignore=^/dist",
+    "package:mac": "electron-packager . NexoGED-Assinador --platform=darwin --arch=x64 --out=dist --overwrite --icon=assets/icon.icns --ignore=^/dist",
+    "package:linux": "electron-packager . NexoGED-Assinador --platform=linux --arch=x64 --out=dist --overwrite --ignore=^/dist"
   },
   "dependencies": {
     "fastify": "^4.28.1",
