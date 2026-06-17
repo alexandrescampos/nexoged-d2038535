@@ -6,8 +6,9 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Shield, KeyRound, FileBadge2, Loader2, ExternalLink, RefreshCw } from "lucide-react";
+import { Shield, KeyRound, FileBadge2, Loader2, ExternalLink, RefreshCw, Download } from "lucide-react";
 import { toast } from "sonner";
+import { Link } from "react-router-dom";
 import type { TipoAssinatura } from "@/repository/policyFlowRepository";
 import {
   initPki,
@@ -16,9 +17,12 @@ import {
   signHash,
   sha256Hex,
   resetPki,
-  WEB_PKI_INSTALL_URL,
+  getPairToken,
+  setPairToken,
+  describeBridgeError,
+  SIGNER_INSTALL_URL,
   type PkiCertificate,
-} from "@/lib/lacunaPki";
+} from "@/lib/signerBridge";
 import { documentVersionRepository } from "@/repository/documentVersionRepository";
 import { supabase } from "@/integrations/supabase/client";
 
