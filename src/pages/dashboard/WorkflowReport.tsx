@@ -40,7 +40,7 @@ function downloadCsv(filename: string, csv: string) {
 
 export default function WorkflowReport({ mode = "all" }: { mode?: Mode } = {}) {
   const navigate = useNavigate();
-  const { organization } = useAuth();
+  const { organization, profile } = useAuth();
   const [startDate, setStartDate] = useState<Date>(subDays(new Date(), 30));
   const [endDate, setEndDate] = useState<Date>(new Date());
   const [apprStatus, setApprStatus] = useState("TODOS");
@@ -48,19 +48,34 @@ export default function WorkflowReport({ mode = "all" }: { mode?: Mode } = {}) {
   const [search, setSearch] = useState("");
 
   const orgId = organization?.id;
+  const userId = profile?.id;
+  const isMyApprovals = mode === "approvals";
+  const isMySignatures = mode === "signatures";
   const fromIso = startDate.toISOString();
   const toIso = endDate.toISOString();
 
+  const perfisQ = useQuery({
+    queryKey: ["user-perfis", userId],
+    queryFn: () => policyExecutionRepository.getUserPerfilIds(userId!),
+    enabled: !!userId && (isMyApprovals || isMySignatures),
+  });
+
+  const perfilIds = perfisQ.data || [];
+
   const approvalsQ = useQuery({
-    queryKey: ["wf-report-approvals", orgId, fromIso, toIso],
-    queryFn: () => policyExecutionRepository.listAllWorkflowApprovals(orgId!, fromIso, toIso),
-    enabled: !!orgId,
+    queryKey: isMyApprovals ? ["my-pending-approvals", perfilIds] : ["wf-report-approvals", orgId, fromIso, toIso],
+    queryFn: () => isMyApprovals
+      ? policyExecutionRepository.listMyPendingApprovals(perfilIds)
+      : policyExecutionRepository.listAllWorkflowApprovals(orgId!, fromIso, toIso),
+    enabled: mode !== "signatures" && (isMyApprovals ? perfisQ.isSuccess : !!orgId),
   });
 
   const signaturesQ = useQuery({
-    queryKey: ["wf-report-signatures", orgId, fromIso, toIso],
-    queryFn: () => policyExecutionRepository.listAllWorkflowSignatures(orgId!, fromIso, toIso),
-    enabled: !!orgId,
+    queryKey: isMySignatures ? ["my-pending-signatures", perfilIds] : ["wf-report-signatures", orgId, fromIso, toIso],
+    queryFn: () => isMySignatures
+      ? policyExecutionRepository.listMyPendingSignatures(perfilIds)
+      : policyExecutionRepository.listAllWorkflowSignatures(orgId!, fromIso, toIso),
+    enabled: mode !== "approvals" && (isMySignatures ? perfisQ.isSuccess : !!orgId),
   });
 
   const filteredApprovals = useMemo(() => {
