@@ -8,7 +8,7 @@ import { Separator } from "@/components/ui/separator";
 import { useDocumentWorkflow } from "@/hooks/useDocumentWorkflow";
 import { SignatureCaptureModal } from "./SignatureCaptureModal";
 import { CheckCircle2, XCircle, Clock, Send, Archive, PenLine, FileText } from "lucide-react";
-import { formatBrazilDateTime } from "@/lib/timezone";
+import { formatBrasiliaDateTime } from "@/lib/timezone";
 import type { DocumentoAssinatura } from "@/repository/policyExecutionRepository";
 
 interface Props {
@@ -92,8 +92,8 @@ export function DocumentDetailDialog({ doc, onOpenChange }: Props) {
               <div className="grid grid-cols-2 gap-3 text-sm">
                 <Info label="Tipo" value={doc.document_type_data?.name || doc.document_type || "—"} />
                 <Info label="Sigilo" value={doc.sigilo || "—"} />
-                <Info label="Criado em" value={doc.created_at ? formatBrazilDateTime(doc.created_at) : "—"} />
-                <Info label="Atualizado em" value={doc.updated_at ? formatBrazilDateTime(doc.updated_at) : "—"} />
+                <Info label="Criado em" value={doc.created_at ? formatBrasiliaDateTime(doc.created_at) : "—"} />
+                <Info label="Atualizado em" value={doc.updated_at ? formatBrasiliaDateTime(doc.updated_at) : "—"} />
                 <Info label="Páginas" value={String(doc.page_count ?? "—")} />
                 <Info label="Versões" value={String(doc.versions_count ?? "—")} />
               </div>
@@ -158,7 +158,7 @@ export function DocumentDetailDialog({ doc, onOpenChange }: Props) {
                     <div className="text-xs text-muted-foreground">
                       Responsável: <strong>{a.perfil_nome || "—"}</strong>
                       {a.aprovador_nome && (
-                        <> · Por: {a.aprovador_nome} · {a.decidido_em && formatBrazilDateTime(a.decidido_em)}</>
+                        <> · Por: {a.aprovador_nome} · {a.decidido_em && formatBrasiliaDateTime(a.decidido_em)}</>
                       )}
                     </div>
                     {a.comentario && <p className="text-xs italic">"{a.comentario}"</p>}
@@ -222,7 +222,7 @@ export function DocumentDetailDialog({ doc, onOpenChange }: Props) {
                     </div>
                     {s.assinante_nome && (
                       <div className="text-xs text-muted-foreground">
-                        Por: {s.assinante_nome} · {s.assinado_em && formatBrazilDateTime(s.assinado_em)}
+                        Por: {s.assinante_nome} · {s.assinado_em && formatBrasiliaDateTime(s.assinado_em)}
                       </div>
                     )}
                     {enabled && (
