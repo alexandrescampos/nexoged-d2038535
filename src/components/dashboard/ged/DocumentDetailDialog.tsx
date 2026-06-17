@@ -235,6 +235,16 @@ export function DocumentDetailDialog({ doc, onOpenChange }: Props) {
                         <PenLine className="h-4 w-4" /> Assinar
                       </Button>
                     )}
+                    {!enabled && s.status === "PENDENTE" && !hasPendingApprovals && !isCurrent && canSign(s) && (
+                      <p className="text-xs text-amber-600">
+                        Aguardando assinatura anterior (ordem {(signatures[nextSignatureIdx]?.ordem) ?? "?"}) para liberar.
+                      </p>
+                    )}
+                    {!enabled && s.status === "PENDENTE" && hasPendingApprovals && canSign(s) && (
+                      <p className="text-xs text-amber-600">
+                        Aguardando conclusão das aprovações para liberar a assinatura.
+                      </p>
+                    )}
                   </div>
                 );
               })}
