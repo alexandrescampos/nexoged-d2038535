@@ -290,7 +290,9 @@ export default function WorkflowReport({ mode = "all" }: { mode?: Mode } = {}) {
             </CardContent>
           </Card>
         </TabsContent>
+        )}
 
+        {showSignatures && (
         <TabsContent value="signatures">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between pb-2">
