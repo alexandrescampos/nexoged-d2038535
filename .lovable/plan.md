@@ -1,143 +1,52 @@
-# Módulo: Políticas de Assinatura e Workflow por Tipo de Documento
+# Fase 3 — Execução de Fluxos (Aprovações e Assinaturas)
 
-Módulo corporativo grande. Proponho **4 fases sequenciais** para garantir qualidade e permitir validação intermediária. Cada fase é autossuficiente e o sistema continua funcional ao final de cada uma.
+Objetivo: tornar as políticas e fluxos da Fase 2 **operacionais** — usuários conseguem submeter, aprovar/rejeitar e assinar documentos diretamente do GED, com as RPCs já existentes do banco.
 
----
+## Entregas
 
-## Visão geral
+### 1. Repository de execução (`policyExecutionRepository.ts`)
+Wrappers tipados para as RPCs já criadas no banco:
+- `applyDocumentTypePolicy(documentId)` → instancia etapas de aprovação e signatários conforme o tipo do documento.
+- `submitForApproval(documentId)` → muda status para `AGUARDANDO_APROVACAO`.
+- `approveStep(approvalId, comentario?)` / `rejectStep(approvalId, motivo)`.
+- `signDocument(signatureId, evidencia)` → grava assinatura + carimbo de tempo.
+- `archiveDocument(documentId)`.
+- `listApprovals(documentId)` / `listSignatures(documentId)` com join no perfil/usuário responsável.
 
-O Tipo de Documento passa a ser o "controlador" do comportamento documental. Ao criar um documento, herdamos automaticamente:
+### 2. Hook `useDocumentWorkflow(documentId)`
+- Queries: `approvals`, `signatures`, `currentApprovalStep`, `currentSignerSlot`.
+- Mutations com `toast` e invalidação de `["ged-documents"]` + workflow queries.
+- Helpers: `canCurrentUserApprove`, `canCurrentUserSign`, `nextActionLabel`.
 
-```text
-Tipo Documento
-   ├─ Política de Assinatura  → tipo, qtd mínima, ordem, carimbo, certificado
-   ├─ Fluxo de Aprovação      → etapas (Elaborador → Jurídico → Diretoria …)
-   ├─ Fluxo de Assinatura     → assinantes ordenados (Diretor → Cliente …)
-   ├─ Nível de Sigilo padrão
-   ├─ OCR obrigatório
-   ├─ PDF/A obrigatório
-   └─ Dias de retenção
-```
+### 3. Dialog de Detalhes do Documento (`DocumentDetailDialog.tsx`)
+Novo componente acionado ao clicar em um documento na listagem. Estrutura com tabs:
+- **Visão Geral** — metadados, tipo, pasta, tags, status, botão "Submeter para aprovação".
+- **Aprovações** — timeline das etapas (`documento_aprovacao` ordenadas), badge de status, comentário, botões **Aprovar** / **Rejeitar** visíveis somente ao perfil responsável da etapa atual.
+- **Assinaturas** — lista ordenada de signatários (`documento_assinatura`), badge (Pendente/Assinado), botão **Assinar** que abre `SignatureCaptureModal` exigindo evidência conforme `tipo_assinatura` (senha / Gov.br / certificado ICP — mock para SIMPLES, placeholders para AVANCADA/QUALIFICADA).
+- **Histórico** — usa `ged_audit_log` já existente.
 
-O status do documento avança por essa máquina:
+### 4. Integração na listagem (`Documents.tsx`)
+- Linha/cartão do documento abre `DocumentDetailDialog`.
+- Filtros de status já existem; adicionar **chips rápidos** para `AGUARDANDO_APROVACAO` e `AGUARDANDO_ASSINATURA`.
+- Badge na coluna Status com cores: amarelo (aguardando aprovação), azul (aguardando assinatura), verde (assinado/arquivado), vermelho (rejeitado).
 
-```text
-RASCUNHO → EM_REVISAO → AGUARDANDO_APROVACAO → APROVADO
-        → AGUARDANDO_ASSINATURA → ASSINADO → ARQUIVADO
-                                                (ou CANCELADO em qualquer ponto)
-```
+### 5. Criação de documento com política aplicada
+- `useGED.uploadDocument` passa a chamar `create_document_with_policy` (RPC já existente) quando o tipo possui política/fluxo, garantindo que as instâncias `documento_aprovacao` e `documento_assinatura` sejam criadas no upload.
 
----
-
-## Fase 1 — Banco de dados e políticas
-
-### 1.1 Estender `ged_document_types`
-Adicionar colunas:
-- `politica_assinatura_id UUID` (FK)
-- `fluxo_aprovacao_id UUID` (FK)
-- `nivel_sigilo_padrao ged_sigilo` (default `INTERNO`)
-- `ocr_obrigatorio BOOLEAN DEFAULT false`
-- `pdfa_obrigatorio BOOLEAN DEFAULT false`
-- `dias_retencao INT`
-- `ativo BOOLEAN DEFAULT true`
-
-### 1.2 Nova tabela `politica_assinatura`
-Campos: `id`, `organization_id`, `nome`, `descricao`, `assinatura_obrigatoria`, `tipo_assinatura` (enum NENHUMA / SIMPLES / AVANCADA / QUALIFICADA), `quantidade_minima_assinaturas`, `permite_coassinatura`, `ordem_assinatura`, `carimbo_tempo`, `certificado_obrigatorio`, `ativo`.
-
-### 1.3 Fluxo de Aprovação
-- `fluxo_aprovacao` (id, organization_id, nome, descricao, ativo)
-- `fluxo_aprovacao_etapa` (id, fluxo_id, ordem, nome_etapa, perfil_responsavel_id, aprovacao_obrigatoria)
-
-### 1.4 Fluxo de Assinatura por Tipo
-- `fluxo_assinatura` (id, tipo_documento_id, ordem, perfil_assinante_id, assinatura_obrigatoria, tipo_assinatura)
-
-### 1.5 Instâncias por documento
-- `documento_aprovacao` (id, documento_id, fluxo_id, etapa_id, ordem, status, aprovador_id, decidido_em, comentario)
-- `documento_assinatura` (id, documento_id, ordem, perfil_assinante_id, assinante_id, tipo_assinatura, status, assinado_em, hash, certificado_info)
-
-### 1.6 Status do documento
-Adicionar valores ao enum/status de `ged_documents`: `AGUARDANDO_APROVACAO`, `APROVADO`, `AGUARDANDO_ASSINATURA`, `ASSINADO`, `ARQUIVADO`. (Mantém RASCUNHO, EM_REVISAO, CANCELADO já existentes.)
-
-### 1.7 RPCs (toda lógica server-side)
-- `create_document_with_policy(...)` — herda política/sigilo/OCR do tipo e instancia aprovações + assinaturas.
-- `submit_for_approval(doc_id)` — gera as etapas em `documento_aprovacao`.
-- `approve_step(etapa_id, comentario)` / `reject_step(...)` — avança ou bloqueia o fluxo.
-- `sign_document(doc_id, tipo, evidencia)` — valida que `tipo_assinatura` cumpre o exigido pela política (QUALIFICADA exige ICP-Brasil; AVANCADA permite Gov.br/MFA/OTP; SIMPLES permite login).
-- `archive_document(doc_id)` — bloqueia se assinatura obrigatória não cumprida.
-
-### 1.8 RLS e GRANTs
-RLS por `organization_id` em todas as novas tabelas; GRANT a `authenticated` e `service_role`.
-
-### 1.9 Auditoria
-Cada RPC grava em `ged_audit_log` com ações: `type_policy_changed`, `approval_submitted`, `approval_approved`, `approval_rejected`, `document_signed`, `document_archived`, `document_cancelled`.
-
----
-
-## Fase 2 — Tela administrativa (cadastro de Tipos e Políticas)
-
-Em `Administração → Tipos de Documento`:
-
-1. **Aba Política de Assinatura** — selecionar política existente ou criar nova (form com todos os campos da seção 1.2). Preview textual: "Documentos deste tipo exigirão 2 assinaturas QUALIFICADAS com certificado ICP-Brasil obrigatório."
-2. **Aba Fluxo de Aprovação** — seleciona fluxo + visualiza etapas; permite criar fluxo novo com editor de etapas (drag-and-drop de ordem).
-3. **Aba Fluxo de Assinatura** — editor de assinantes por ordem (perfil + obrigatório).
-4. **Aba Configurações Documentais** — toggles para OCR, PDF/A, sigilo padrão, dias de retenção.
-
-Páginas novas:
-- `src/pages/dashboard/SignaturePolicies.tsx`
-- `src/pages/dashboard/ApprovalFlows.tsx`
-- Refatorar `DocumentTypesSettings.tsx` em abas.
-
----
-
-## Fase 3 — Execução do fluxo no documento
-
-1. **Criação de documento** chama `create_document_with_policy` — usuário não precisa configurar nada, herda tudo do tipo.
-2. **Aba "Aprovações"** no diálogo de documento — lista etapas, botões Aprovar/Reprovar (visíveis para o perfil responsável da etapa atual).
-3. **Aba "Assinaturas"** no diálogo de documento — lista assinantes, botão "Assinar" abre modal pedindo o tipo de evidência exigido pela política:
-   - QUALIFICADA → upload do certificado A1/A3 ou integração ICP-Brasil
-   - AVANCADA → Gov.br / código MFA / OTP
-   - SIMPLES → confirmar senha
-4. **Botão "Arquivar"** habilitado apenas quando todos os requisitos forem cumpridos.
-5. **Badges de status** atualizados em toda a listagem de documentos.
-
----
-
-## Fase 4 — Dashboard e relatórios
-
-Estender `dashboard_indicators`:
-- `docs_by_type` (gráfico)
-- `docs_pending_approval`
-- `docs_pending_signature`
-- `docs_signed`
-- `flows_in_progress`
-
-Adicionar 5 cards em `Dashboard.tsx` + gráfico de "Documentos por Tipo".
-
-Relatório dedicado em `src/pages/dashboard/WorkflowReport.tsx` com filtros (tipo, status, período, responsável).
-
----
+## Fora do escopo (vai para Fase 4)
+- Dashboard com cards "Minhas Aprovações" / "Minhas Assinaturas".
+- Página `WorkflowReport` consolidada com export.
+- Itens de menu na sidebar para pendências do usuário.
+- Notificações por e-mail.
 
 ## Detalhes técnicos
+- Todas as ações server-side via RPCs `SECURITY DEFINER` já existentes — sem novas migrations.
+- Tipos `Aprovacao` e `Assinatura` adicionados em `policyFlowRepository.ts` (ou novo `policyExecutionRepository.ts`).
+- `SignatureCaptureModal` valida `tipo_assinatura`:
+  - `SIMPLES`: confirmação por senha do usuário logado.
+  - `AVANCADA`: token Gov.br (campo texto, validação placeholder).
+  - `QUALIFICADA`: upload de certificado .pfx (placeholder até integração ICP).
+- Reuso de `useAuth().profile.id` para checar `perfil_responsavel_id` / `perfil_assinante_id`.
 
-- **Enum `tipo_assinatura`**: `NENHUMA | SIMPLES | AVANCADA | QUALIFICADA`. Validação server-side em `sign_document`.
-- **Imutabilidade**: documentos com status `ASSINADO` ou `ARQUIVADO` são protegidos por trigger (similar ao `protect_signed_versions` existente).
-- **Reaproveitamento**: o módulo de versões já implementado fica integrado — toda assinatura é vinculada à versão atual (`current_version_id`), garantindo que a evidência aponte para o arquivo exato.
-- **Permissões novas** (adicionar ao enum `ged_permission`): `gerenciar_politicas`, `gerenciar_fluxos`, `aprovar_etapa`, `assinar_documento_qualificado`.
-- **ICP-Brasil / Gov.br**: nesta entrega ficam como *placeholders* — o RPC valida o `tipo_assinatura` e armazena a evidência, mas a integração com provedores externos (ITI, Gov.br OAuth) é tratada em iteração futura.
-
----
-
-## Entrega
-
-Sugestão de divisão:
-
-| Resposta | Conteúdo |
-|---|---|
-| Após este plano | Fase 1 (banco + RPCs + RLS) |
-| Próxima | Fase 2 (telas administrativas) |
-| Próxima | Fase 3 (execução do fluxo no documento) |
-| Próxima | Fase 4 (dashboard e relatórios) |
-
-Posso ajustar (entregar tudo de uma vez = resposta muito grande, ou em fases menores). 
-
-**Aprovar este plano para começar pela Fase 1?**
+## Próxima fase (Fase 4 — resumo)
+Dashboard de pendências do usuário + relatório consolidado de workflows + notificações. É a **última fase planejada** do módulo de fluxos.
