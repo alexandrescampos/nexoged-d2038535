@@ -157,19 +157,20 @@ export default function AssinadorPage() {
             icon={<MonitorSmartphone className="h-5 w-5" />}
             os="Windows"
             arch="10 / 11 · x64"
-            href="/downloads/NexoGED-Assinador-win32-x64.zip"
+            href="#"
+            disabled
           />
           <DownloadCard
             icon={<Apple className="h-5 w-5" />}
             os="macOS"
             arch="11+ · Intel/Apple Silicon"
-            href="/downloads/NexoGED-Assinador-darwin-x64.zip"
+            href={darwinAsset.url}
           />
           <DownloadCard
             icon={<Terminal className="h-5 w-5" />}
             os="Linux"
-            arch="x64 · tar.gz"
-            href="/downloads/NexoGED-Assinador-linux-x64.tar.gz"
+            arch="x64 · zip"
+            href={linuxAsset.url}
           />
         </CardContent>
       </Card>
