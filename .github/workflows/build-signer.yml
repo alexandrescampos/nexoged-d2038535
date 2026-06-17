@@ -63,7 +63,7 @@ jobs:
         run: npm ci
 
       - name: Package (${{ matrix.platform }})
-        run: npx @electron/packager . NexoGED-Assinador --platform=${{ matrix.platform }} --arch=x64 --out=dist --overwrite --asar --ignore=^/dist
+        run: npx @electron/packager . NexoGED-Assinador --platform=${{ matrix.platform }} --arch=x64 --out=dist --overwrite --ignore=^/dist
 
       - name: Zip artifact (Windows)
         if: matrix.platform == 'win32'
