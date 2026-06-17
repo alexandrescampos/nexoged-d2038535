@@ -6,6 +6,8 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Download, Shield, CheckCircle2, XCircle, Loader2, MonitorSmartphone, Apple, Terminal } from "lucide-react";
 import { toast } from "sonner";
+import linuxAsset from "../../../public/downloads/NexoGED-Assinador-linux-x64.zip.asset.json";
+import darwinAsset from "../../../public/downloads/NexoGED-Assinador-darwin-x64.zip.asset.json";
 import {
   initPki,
   listCertificates,
