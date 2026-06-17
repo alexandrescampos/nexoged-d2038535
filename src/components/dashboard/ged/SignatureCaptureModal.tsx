@@ -100,11 +100,10 @@ export function SignatureCaptureModal({
     }
   };
 
-  const refreshCerts = async () => {
+  const refreshCerts = async (throwOnUnpaired = false) => {
     setLoadingCerts(true);
     try {
       const list = await listCertificates();
-      // Apenas válidos hoje
       const today = new Date();
       const valid = list.filter((c: any) => {
         const end = c.validityEnd ? new Date(c.validityEnd) : null;
@@ -113,10 +112,21 @@ export function SignatureCaptureModal({
       setCerts(valid);
       if (valid.length === 1) setSelectedThumb(valid[0].thumbprint);
     } catch (e: any) {
-      toast.error("Falha ao listar certificados: " + (e?.message || e));
+      if (throwOnUnpaired) throw e;
+      toast.error("Falha ao listar certificados: " + describeBridgeError(e));
     } finally {
       setLoadingCerts(false);
     }
+  };
+
+  const handlePair = async () => {
+    const t = pairInput.trim();
+    if (!/^\d{6}$/.test(t)) {
+      toast.error("Cole o código de 6 dígitos exibido na bandeja do assinador");
+      return;
+    }
+    setPairToken(t);
+    await loadPki();
   };
 
   useEffect(() => {
