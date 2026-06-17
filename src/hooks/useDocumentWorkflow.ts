@@ -35,6 +35,12 @@ export function useDocumentWorkflow(documentId: string | null) {
     qc.invalidateQueries({ queryKey: ["doc-approvals", documentId] });
     qc.invalidateQueries({ queryKey: ["doc-signatures", documentId] });
     qc.invalidateQueries({ queryKey: ["ged-documents"] });
+    qc.invalidateQueries({ queryKey: ["my-pending-approvals"] });
+    qc.invalidateQueries({ queryKey: ["my-pending-signatures"] });
+    qc.invalidateQueries({ queryKey: ["org-pending-approvals"] });
+    qc.invalidateQueries({ queryKey: ["org-pending-signatures"] });
+    qc.invalidateQueries({ queryKey: ["workflow-approvals"] });
+    qc.invalidateQueries({ queryKey: ["workflow-signatures"] });
   };
 
   const submit = useMutation({
