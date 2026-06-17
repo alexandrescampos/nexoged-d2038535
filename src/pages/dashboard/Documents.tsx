@@ -374,6 +374,18 @@ export default function DocumentsPage() {
     }
   }, [searchParams, setSearchParams]);
 
+  // Phase 4: open workflow dialog when ?docId= is provided (deep link from dashboard widget / report)
+  useEffect(() => {
+    const docId = searchParams.get("docId");
+    if (!docId) return;
+    (async () => {
+      const { data } = await supabase.from("ged_documents").select("*").eq("id", docId).maybeSingle();
+      if (data) setWorkflowDoc(data);
+      searchParams.delete("docId");
+      setSearchParams(searchParams);
+    })();
+  }, [searchParams, setSearchParams]);
+
   const getFileIcon = (mime: string) => {
     if (mime?.includes("pdf")) return <FileText className="h-6 w-6 text-red-500" />;
     if (mime?.includes("spreadsheet") || mime?.includes("excel")) return <FileSpreadsheet className="h-6 w-6 text-green-600" />;

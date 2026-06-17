@@ -123,4 +123,54 @@ export const policyExecutionRepository = {
     if (error) throw error;
     return (data || []).map((r: any) => r.perfil_id);
   },
+
+  async listMyPendingApprovals(perfilIds: string[]) {
+    if (perfilIds.length === 0) return [];
+    const { data, error } = await supabase
+      .from("documento_aprovacao")
+      .select("id, documento_id, ordem, nome_etapa, created_at, perfil_responsavel_id, documento:documento_id(id, nome, codigo, status, organization_id)")
+      .eq("status", "PENDENTE")
+      .in("perfil_responsavel_id", perfilIds)
+      .order("created_at", { ascending: false });
+    if (error) throw error;
+    return data || [];
+  },
+
+  async listMyPendingSignatures(perfilIds: string[]) {
+    if (perfilIds.length === 0) return [];
+    const { data, error } = await supabase
+      .from("documento_assinatura")
+      .select("id, documento_id, ordem, tipo_assinatura, created_at, perfil_assinante_id, documento:documento_id(id, nome, codigo, status, organization_id)")
+      .eq("status", "PENDENTE")
+      .in("perfil_assinante_id", perfilIds)
+      .order("created_at", { ascending: false });
+    if (error) throw error;
+    return data || [];
+  },
+
+  async listAllWorkflowApprovals(orgId: string, from?: string, to?: string) {
+    let q = supabase
+      .from("documento_aprovacao")
+      .select("id, documento_id, ordem, nome_etapa, status, comentario, decidido_em, created_at, aprovador:aprovador_id(full_name), perfil:perfil_responsavel_id(perfil_nome), documento:documento_id(id, nome, codigo, status)")
+      .eq("organization_id", orgId)
+      .order("created_at", { ascending: false });
+    if (from) q = q.gte("created_at", from);
+    if (to) q = q.lte("created_at", to);
+    const { data, error } = await q;
+    if (error) throw error;
+    return data || [];
+  },
+
+  async listAllWorkflowSignatures(orgId: string, from?: string, to?: string) {
+    let q = supabase
+      .from("documento_assinatura")
+      .select("id, documento_id, ordem, tipo_assinatura, status, assinado_em, created_at, assinante:assinante_id(full_name), perfil:perfil_assinante_id(perfil_nome), documento:documento_id(id, nome, codigo, status)")
+      .eq("organization_id", orgId)
+      .order("created_at", { ascending: false });
+    if (from) q = q.gte("created_at", from);
+    if (to) q = q.lte("created_at", to);
+    const { data, error } = await q;
+    if (error) throw error;
+    return data || [];
+  },
 };
