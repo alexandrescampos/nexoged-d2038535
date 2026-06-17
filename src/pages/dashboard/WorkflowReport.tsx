@@ -38,7 +38,7 @@ function downloadCsv(filename: string, csv: string) {
   URL.revokeObjectURL(url);
 }
 
-export default function WorkflowReport() {
+export default function WorkflowReport({ mode = "all" }: { mode?: Mode } = {}) {
   const navigate = useNavigate();
   const { organization } = useAuth();
   const [startDate, setStartDate] = useState<Date>(subDays(new Date(), 30));
