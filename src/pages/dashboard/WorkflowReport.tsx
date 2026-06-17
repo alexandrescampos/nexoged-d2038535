@@ -247,6 +247,17 @@ export default function WorkflowReport({ mode = "all" }: { mode?: Mode } = {}) {
             onChange={(e) => setSearch(e.target.value)}
             className="max-w-xs"
           />
+          {canViewAllOrg && (
+            <label className="flex items-center gap-2 text-sm ml-auto cursor-pointer">
+              <input
+                type="checkbox"
+                checked={viewAllOrg}
+                onChange={(e) => setViewAllOrg(e.target.checked)}
+                className="h-4 w-4"
+              />
+              Ver todas pendências da organização (admin)
+            </label>
+          )}
         </CardContent>
       </Card>
 
