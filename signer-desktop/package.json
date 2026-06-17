@@ -11,13 +11,8 @@
     "package:linux": "electron-packager . NexoGED-Assinador --platform=linux --arch=x64 --out=dist --overwrite --ignore=^/dist"
   },
   "dependencies": {
-    "fastify": "^4.28.1",
     "node-forge": "^1.3.1",
-    "pkcs11js": "^2.1.6",
-    "toad-cache": "3.7.0"
-  },
-  "overrides": {
-    "toad-cache": "3.7.0"
+    "pkcs11js": "^2.1.6"
   },
   "devDependencies": {
     "electron": "^32.0.0",
