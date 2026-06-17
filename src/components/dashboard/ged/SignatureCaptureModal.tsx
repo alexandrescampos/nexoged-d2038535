@@ -137,27 +137,35 @@ export function SignatureCaptureModal({
       return;
     }
     try {
+      console.log("[Sign] start", { documentId, versaoId, selectedThumb });
       // 1. Buscar file_path da versão
       const { data: versao, error: vErr } = await supabase
         .from("ged_document_versions")
         .select("file_path, file_name")
         .eq("id", versaoId)
         .maybeSingle();
-      if (vErr || !versao) throw new Error("Versão não encontrada");
+      console.log("[Sign] versao", { versao, vErr });
+      if (vErr) throw new Error("Versão: " + vErr.message);
+      if (!versao) throw new Error("Versão não encontrada (id=" + versaoId + ")");
 
       // 2. Download do arquivo
       const url = await documentVersionRepository.getDownloadUrl(versao.file_path);
+      console.log("[Sign] signed url ok");
       const fileRes = await fetch(url);
-      if (!fileRes.ok) throw new Error("Falha ao baixar arquivo");
+      if (!fileRes.ok) throw new Error("Falha download HTTP " + fileRes.status);
       const buffer = await fileRes.arrayBuffer();
+      console.log("[Sign] file bytes", buffer.byteLength);
 
       // 3. SHA-256 do conteúdo
       const docHash = await sha256Hex(buffer);
+      console.log("[Sign] hash", docHash);
 
       // 4. Ler certificado + assinar hash via token
       const cert = certs.find((c) => c.thumbprint === selectedThumb)!;
       const certBase64 = await readCertificate(selectedThumb);
+      console.log("[Sign] cert read ok, length", certBase64?.length);
       const signatureB64 = await signHash(selectedThumb, docHash);
+      console.log("[Sign] signature ok, length", signatureB64?.length);
 
       // 5. Payload de evidência
       const certificado = {
@@ -182,7 +190,8 @@ export function SignatureCaptureModal({
       onConfirm({ hashEvidencia: docHash, certificado });
       reset();
     } catch (e: any) {
-      toast.error("Erro ao assinar: " + (e?.message || e));
+      console.error("[Sign] error", e);
+      toast.error("Erro ao assinar: " + (e?.message || JSON.stringify(e)));
     }
   };
 
