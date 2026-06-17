@@ -53,6 +53,7 @@ import AccessControlPage from "./pages/dashboard/AccessControl";
 import DocumentTypesPage from "./pages/dashboard/DocumentTypes";
 import SignaturePoliciesPage from "./pages/dashboard/SignaturePolicies";
 import ApprovalFlowsPage from "./pages/dashboard/ApprovalFlows";
+import WorkflowReportPage from "./pages/dashboard/WorkflowReport";
 import FavoritesPage from "./pages/dashboard/Favorites";
 import RecentPage from "./pages/dashboard/Recent";
 import ExpirationReportPage from "./pages/dashboard/ExpirationReport";
