@@ -89,7 +89,8 @@ const menuGroups: MenuGroup[] = [
       { title: "Favoritos", url: "/dashboard/favorites", icon: Star, userAllowed: true },
       { title: "Últimos Acessos", url: "/dashboard/recent", icon: Clock, userAllowed: true },
       { title: "Vencimentos", url: "/dashboard/expiration-report", icon: Calendar, userAllowed: true },
-      { title: "Meus Fluxos", url: "/dashboard/workflow-report", icon: Workflow, userAllowed: true },
+      { title: "Minhas Aprovações", url: "/dashboard/my-approvals", icon: CheckCircle2, userAllowed: true },
+      { title: "Minhas Assinaturas", url: "/dashboard/my-signatures", icon: PenLine, userAllowed: true },
     ],
   },
   {
