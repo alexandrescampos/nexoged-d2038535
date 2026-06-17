@@ -1099,6 +1099,7 @@ export default function DocumentsPage() {
                           {doc.is_favorite ? 'Remover Favorito' : 'Favoritar'}
                         </DropdownMenuItem>
                         <DropdownMenuItem className="gap-2" onClick={() => setVersionsDoc({ id: doc.id, title: doc.title })}><History className="h-4 w-4" /> Versões</DropdownMenuItem>
+                        <DropdownMenuItem className="gap-2" onClick={() => setWorkflowDoc(doc)}><GitBranch className="h-4 w-4" /> Fluxo do Documento</DropdownMenuItem>
                         {canUserDelete(doc) && (
                           <>
                             <DropdownMenuSeparator />
