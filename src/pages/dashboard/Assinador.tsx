@@ -6,6 +6,8 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Download, Shield, CheckCircle2, XCircle, Loader2, MonitorSmartphone, Apple, Terminal } from "lucide-react";
 import { toast } from "sonner";
+import linuxAsset from "../../../public/downloads/NexoGED-Assinador-linux-x64.zip.asset.json";
+import darwinAsset from "../../../public/downloads/NexoGED-Assinador-darwin-x64.zip.asset.json";
 import {
   initPki,
   listCertificates,
@@ -155,19 +157,20 @@ export default function AssinadorPage() {
             icon={<MonitorSmartphone className="h-5 w-5" />}
             os="Windows"
             arch="10 / 11 · x64"
-            href="/downloads/NexoGED-Assinador-win32-x64.zip"
+            href="#"
+            disabled
           />
           <DownloadCard
             icon={<Apple className="h-5 w-5" />}
             os="macOS"
             arch="11+ · Intel/Apple Silicon"
-            href="/downloads/NexoGED-Assinador-darwin-x64.zip"
+            href={darwinAsset.url}
           />
           <DownloadCard
             icon={<Terminal className="h-5 w-5" />}
             os="Linux"
-            arch="x64 · tar.gz"
-            href="/downloads/NexoGED-Assinador-linux-x64.tar.gz"
+            arch="x64 · zip"
+            href={linuxAsset.url}
           />
         </CardContent>
       </Card>
@@ -211,7 +214,16 @@ export default function AssinadorPage() {
   );
 }
 
-function DownloadCard({ icon, os, arch, href }: { icon: React.ReactNode; os: string; arch: string; href: string }) {
+function DownloadCard({ icon, os, arch, href, disabled }: { icon: React.ReactNode; os: string; arch: string; href: string; disabled?: boolean }) {
+  if (disabled) {
+    return (
+      <div className="block border rounded-md p-4 opacity-60 cursor-not-allowed">
+        <div className="flex items-center gap-2 mb-1">{icon}<span className="font-medium">{os}</span></div>
+        <div className="text-xs text-muted-foreground">{arch}</div>
+        <div className="text-xs text-muted-foreground mt-2">Em breve</div>
+      </div>
+    );
+  }
   return (
     <a
       href={href}
