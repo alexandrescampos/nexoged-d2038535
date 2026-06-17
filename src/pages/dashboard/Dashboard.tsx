@@ -277,6 +277,9 @@ export default function OrgDashboard() {
 
 
 
+        {/* Minhas pendências de workflow (Fase 4) */}
+        <MyWorkflowTasksWidget />
+
         {/* Monthly uploads - Full Width (Matches the screenshot layout) */}
         <Card className="border-none shadow-sm overflow-hidden">
           <CardHeader className="bg-white border-b border-slate-50 pb-2">
