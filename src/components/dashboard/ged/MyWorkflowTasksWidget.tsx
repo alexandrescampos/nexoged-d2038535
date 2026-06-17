@@ -21,7 +21,7 @@ export function MyWorkflowTasksWidget() {
             Minhas Aprovações Pendentes
             <Badge variant="secondary">{approvals.length}</Badge>
           </CardTitle>
-          <Button size="sm" variant="ghost" onClick={() => navigate("/dashboard/workflow-report")}>
+          <Button size="sm" variant="ghost" onClick={() => navigate("/dashboard/my-approvals")}>
             Ver tudo <ArrowRight className="h-3 w-3 ml-1" />
           </Button>
         </CardHeader>
@@ -59,7 +59,7 @@ export function MyWorkflowTasksWidget() {
             Minhas Assinaturas Pendentes
             <Badge variant="secondary">{signatures.length}</Badge>
           </CardTitle>
-          <Button size="sm" variant="ghost" onClick={() => navigate("/dashboard/workflow-report")}>
+          <Button size="sm" variant="ghost" onClick={() => navigate("/dashboard/my-signatures")}>
             Ver tudo <ArrowRight className="h-3 w-3 ml-1" />
           </Button>
         </CardHeader>

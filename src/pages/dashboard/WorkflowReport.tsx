@@ -13,9 +13,11 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Skeleton } from "@/components/ui/skeleton";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
-import { Calendar as CalendarIcon, Download, ExternalLink, Workflow } from "lucide-react";
+import { Calendar as CalendarIcon, Download, ExternalLink, Workflow, CheckCircle2, PenLine } from "lucide-react";
 import { policyExecutionRepository } from "@/repository/policyExecutionRepository";
 import { formatBrasiliaDate } from "@/lib/timezone";
+
+type Mode = "approvals" | "signatures" | "all";
 
 const APPR_STATUS = ["TODOS", "PENDENTE", "APROVADA", "REPROVADA"];
 const SIGN_STATUS = ["TODOS", "PENDENTE", "ASSINADA", "RECUSADA"];
@@ -36,7 +38,7 @@ function downloadCsv(filename: string, csv: string) {
   URL.revokeObjectURL(url);
 }
 
-export default function WorkflowReport() {
+export default function WorkflowReport({ mode = "all" }: { mode?: Mode } = {}) {
   const navigate = useNavigate();
   const { organization } = useAuth();
   const [startDate, setStartDate] = useState<Date>(subDays(new Date(), 30));
@@ -140,14 +142,43 @@ export default function WorkflowReport() {
     return <Badge className={`${map[status] || "bg-slate-500"} text-white`}>{status}</Badge>;
   };
 
+  const showApprovals = mode === "approvals" || mode === "all";
+  const showSignatures = mode === "signatures" || mode === "all";
+  const title =
+    mode === "approvals" ? "Aprovações" : mode === "signatures" ? "Assinaturas" : "Relatório de Fluxos";
+  const subtitle =
+    mode === "approvals"
+      ? "Acompanhamento de aprovações de documentos"
+      : mode === "signatures"
+      ? "Acompanhamento de assinaturas de documentos"
+      : "Visão consolidada de aprovações e assinaturas";
+  const HeaderIcon = mode === "approvals" ? CheckCircle2 : mode === "signatures" ? PenLine : Workflow;
+
+  const kpiCards = [
+    ...(showApprovals
+      ? [
+          { label: "Aprov. Pendentes", v: kpis.apprPend, c: "bg-amber-500" },
+          { label: "Aprovadas", v: kpis.apprOk, c: "bg-emerald-600" },
+          { label: "Reprovadas", v: kpis.apprRej, c: "bg-red-600" },
+        ]
+      : []),
+    ...(showSignatures
+      ? [
+          { label: "Assin. Pendentes", v: kpis.signPend, c: "bg-amber-500" },
+          { label: "Assinadas", v: kpis.signOk, c: "bg-emerald-600" },
+          { label: "Recusadas", v: kpis.signRej, c: "bg-red-600" },
+        ]
+      : []),
+  ];
+
   return (
     <div className="space-y-4 animate-fade-in">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold flex items-center gap-2">
-            <Workflow className="h-6 w-6" /> Relatório de Fluxos
+            <HeaderIcon className="h-6 w-6" /> {title}
           </h1>
-          <p className="text-sm text-muted-foreground">Visão consolidada de aprovações e assinaturas</p>
+          <p className="text-sm text-muted-foreground">{subtitle}</p>
         </div>
       </div>
 
@@ -184,15 +215,8 @@ export default function WorkflowReport() {
       </Card>
 
       {/* KPIs */}
-      <div className="grid grid-cols-2 md:grid-cols-6 gap-2">
-        {[
-          { label: "Aprov. Pendentes", v: kpis.apprPend, c: "bg-amber-500" },
-          { label: "Aprovadas", v: kpis.apprOk, c: "bg-emerald-600" },
-          { label: "Reprovadas", v: kpis.apprRej, c: "bg-red-600" },
-          { label: "Assin. Pendentes", v: kpis.signPend, c: "bg-amber-500" },
-          { label: "Assinadas", v: kpis.signOk, c: "bg-emerald-600" },
-          { label: "Recusadas", v: kpis.signRej, c: "bg-red-600" },
-        ].map((k) => (
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2">
+        {kpiCards.map((k) => (
           <div key={k.label} className={`${k.c} text-white p-3 rounded-md`}>
             <p className="text-[10px] uppercase font-bold opacity-90">{k.label}</p>
             <p className="text-2xl font-bold mt-1">{k.v}</p>
@@ -200,12 +224,15 @@ export default function WorkflowReport() {
         ))}
       </div>
 
-      <Tabs defaultValue="approvals">
-        <TabsList>
-          <TabsTrigger value="approvals">Aprovações</TabsTrigger>
-          <TabsTrigger value="signatures">Assinaturas</TabsTrigger>
-        </TabsList>
+      <Tabs defaultValue={showApprovals ? "approvals" : "signatures"}>
+        {mode === "all" && (
+          <TabsList>
+            <TabsTrigger value="approvals">Aprovações</TabsTrigger>
+            <TabsTrigger value="signatures">Assinaturas</TabsTrigger>
+          </TabsList>
+        )}
 
+        {showApprovals && (
         <TabsContent value="approvals">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between pb-2">
@@ -263,7 +290,9 @@ export default function WorkflowReport() {
             </CardContent>
           </Card>
         </TabsContent>
+        )}
 
+        {showSignatures && (
         <TabsContent value="signatures">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between pb-2">
@@ -323,6 +352,7 @@ export default function WorkflowReport() {
             </CardContent>
           </Card>
         </TabsContent>
+        )}
       </Tabs>
     </div>
   );
