@@ -15,7 +15,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar } from "@/components/ui/calendar";
 import { Calendar as CalendarIcon, Download, ExternalLink, Workflow } from "lucide-react";
 import { policyExecutionRepository } from "@/repository/policyExecutionRepository";
-import { formatBrazilDate } from "@/lib/timezone";
+import { formatBrasiliaDate } from "@/lib/timezone";
 
 const APPR_STATUS = ["TODOS", "PENDENTE", "APROVADA", "REPROVADA"];
 const SIGN_STATUS = ["TODOS", "PENDENTE", "ASSINADA", "RECUSADA"];
@@ -105,7 +105,7 @@ export default function WorkflowReport() {
         a.perfil?.perfil_nome,
         a.status,
         a.aprovador?.full_name,
-        a.decidido_em ? formatBrazilDate(a.decidido_em) : "",
+        a.decidido_em ? formatBrasiliaDate(a.decidido_em) : "",
         a.comentario,
       ]),
     ];
@@ -123,7 +123,7 @@ export default function WorkflowReport() {
         s.perfil?.perfil_nome,
         s.status,
         s.assinante?.full_name,
-        s.assinado_em ? formatBrazilDate(s.assinado_em) : "",
+        s.assinado_em ? formatBrasiliaDate(s.assinado_em) : "",
       ]),
     ];
     downloadCsv(`assinaturas-${format(new Date(), "yyyy-MM-dd")}.csv`, toCsv(rows));
@@ -246,7 +246,7 @@ export default function WorkflowReport() {
                         <TableCell>{a.perfil?.perfil_nome || "-"}</TableCell>
                         <TableCell>{statusBadge(a.status)}</TableCell>
                         <TableCell>{a.aprovador?.full_name || "-"}</TableCell>
-                        <TableCell>{a.decidido_em ? formatBrazilDate(a.decidido_em) : "-"}</TableCell>
+                        <TableCell>{a.decidido_em ? formatBrasiliaDate(a.decidido_em) : "-"}</TableCell>
                         <TableCell>
                           <Button size="icon" variant="ghost" onClick={() => navigate(`/dashboard/documents?docId=${a.documento_id}`)}>
                             <ExternalLink className="h-4 w-4" />
@@ -306,7 +306,7 @@ export default function WorkflowReport() {
                         <TableCell>{s.perfil?.perfil_nome || "-"}</TableCell>
                         <TableCell>{statusBadge(s.status)}</TableCell>
                         <TableCell>{s.assinante?.full_name || "-"}</TableCell>
-                        <TableCell>{s.assinado_em ? formatBrazilDate(s.assinado_em) : "-"}</TableCell>
+                        <TableCell>{s.assinado_em ? formatBrasiliaDate(s.assinado_em) : "-"}</TableCell>
                         <TableCell>
                           <Button size="icon" variant="ghost" onClick={() => navigate(`/dashboard/documents?docId=${s.documento_id}`)}>
                             <ExternalLink className="h-4 w-4" />
