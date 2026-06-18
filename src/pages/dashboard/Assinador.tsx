@@ -156,6 +156,15 @@ export default function AssinadorPage() {
               <Button onClick={handlePair}>Parear</Button>
             </div>
           </div>
+
+          <div className="flex gap-2 pt-2">
+            <Button variant="outline" size="sm" onClick={check}>Verificar novamente</Button>
+            {getPairToken() && (
+              <Button variant="ghost" size="sm" onClick={() => { clearPairToken(); setPair(""); check(); }}>
+                Remover pareamento
+              </Button>
+            )}
+          </div>
         </CardContent>
       </Card>
 
