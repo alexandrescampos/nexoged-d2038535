@@ -14,7 +14,9 @@ import {
   initPki,
   listCertificates,
   getPairToken,
+  getBridgePort,
   setPairToken,
+  setBridgePort,
   clearPairToken,
   describeBridgeError,
 } from "@/lib/signerBridge";
@@ -27,6 +29,7 @@ export default function AssinadorPage() {
   const [platform, setPlatform] = useState<string>("");
   const [errMsg, setErrMsg] = useState<string>("");
   const [pair, setPair] = useState<string>(getPairToken() || "");
+  const [port, setPort] = useState<string>(getBridgePort());
   const [certCount, setCertCount] = useState<number | null>(null);
 
   const check = async () => {
@@ -63,9 +66,29 @@ export default function AssinadorPage() {
   const handlePair = async () => {
     const t = pair.trim();
     if (!/^\d{6}$/.test(t)) { toast.error("Cole o código de 6 dígitos"); return; }
+    try {
+      setBridgePort(port);
+    } catch {
+      toast.error("Use uma porta válida: 59123, 59124 ou 59125");
+      return;
+    }
     setPairToken(t);
-    await check();
-    if (status === "ok") toast.success("Pareado com sucesso");
+    setStatus("checking");
+    setErrMsg("");
+    try {
+      const h = await initPki();
+      setVersion(h.version);
+      setPlatform(h.platform);
+      const list = await listCertificates();
+      setCertCount(list.length);
+      setStatus("ok");
+      toast.success("Pareado com sucesso");
+    } catch (e: any) {
+      const message = describeBridgeError(e);
+      setStatus(String(e?.message || "").includes("bridge-unpaired") ? "unpaired" : "error");
+      setErrMsg(message);
+      toast.error(message);
+    }
   };
 
   return (
@@ -128,7 +151,7 @@ export default function AssinadorPage() {
           {status === "missing" && (
             <Alert variant="destructive">
               <AlertDescription className="flex items-center gap-2">
-                <XCircle className="h-4 w-4" /> Assinador não está em execução (ou o navegador não consegue alcançar 127.0.0.1). Baixe/abra o app abaixo.
+                <XCircle className="h-4 w-4" /> Assinador não está em execução ou o navegador bloqueou o acesso a 127.0.0.1:{port}. Confirme a porta exibida no app desktop.
               </AlertDescription>
             </Alert>
           )}
@@ -142,15 +165,25 @@ export default function AssinadorPage() {
           <div className="space-y-2 pt-2 border-t">
             <p className="text-sm font-medium">Código de pareamento (6 dígitos)</p>
             <p className="text-xs text-muted-foreground">
-              Pegue o código na janela inicial do app desktop ou no menu da bandeja do sistema (botão direito no ícone).
+              Informe a mesma porta e o código exibidos na janela do app desktop.
             </p>
-            <div className="flex items-center gap-2 max-w-xs">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:max-w-md">
+              <Input
+                value={port}
+                onChange={(e) => setPort(e.target.value.replace(/\D/g, "").slice(0, 5))}
+                placeholder="59123"
+                inputMode="numeric"
+                maxLength={5}
+                aria-label="Porta do assinador"
+                className="font-mono text-center sm:w-28"
+              />
               <Input
                 value={pair}
                 onChange={(e) => setPair(e.target.value.replace(/\D/g, "").slice(0, 6))}
                 placeholder="000000"
                 inputMode="numeric"
                 maxLength={6}
+                aria-label="Código de pareamento"
                 className="font-mono tracking-widest text-center text-lg"
               />
               <Button onClick={handlePair}>Parear</Button>
