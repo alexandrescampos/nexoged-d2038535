@@ -37,6 +37,22 @@ function getStoredPairToken(): string | null {
   try { return localStorage.getItem(PAIR_KEY); } catch { return null; }
 }
 
+function getStoredEndpoint(): string | null {
+  try { return localStorage.getItem(ENDPOINT_KEY); } catch { return null; }
+}
+
+export function getBridgePort(): string {
+  const endpoint = cachedEndpoint || getStoredEndpoint() || `http://127.0.0.1:${BRIDGE_PORTS[0]}`;
+  return endpoint.split(":").pop() || String(BRIDGE_PORTS[0]);
+}
+
+export function setBridgePort(port: string | number) {
+  const normalized = Number(String(port).replace(/\D/g, ""));
+  if (!BRIDGE_PORTS.includes(normalized)) throw new Error("invalid-bridge-port");
+  cachedEndpoint = `http://127.0.0.1:${normalized}`;
+  try { localStorage.setItem(ENDPOINT_KEY, cachedEndpoint); } catch {}
+}
+
 export function setPairToken(token: string) {
   try { localStorage.setItem(PAIR_KEY, token.trim()); } catch {}
 }
@@ -75,7 +91,7 @@ export async function initPki(): Promise<BridgeHealth> {
     if (h) return h;
     cachedEndpoint = null;
   }
-  const stored = (() => { try { return localStorage.getItem(ENDPOINT_KEY); } catch { return null; } })();
+  const stored = getStoredEndpoint();
   const ports = stored ? [Number(stored.split(":").pop()), ...BRIDGE_PORTS] : BRIDGE_PORTS;
   for (const p of ports) {
     if (!p) continue;
