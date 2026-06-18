@@ -128,7 +128,7 @@ export default function AssinadorPage() {
           {status === "missing" && (
             <Alert variant="destructive">
               <AlertDescription className="flex items-center gap-2">
-                <XCircle className="h-4 w-4" /> Assinador não está em execução. Baixe e instale abaixo.
+                <XCircle className="h-4 w-4" /> Assinador não está em execução (ou o navegador não consegue alcançar 127.0.0.1). Baixe/abra o app abaixo.
               </AlertDescription>
             </Alert>
           )}
@@ -137,7 +137,27 @@ export default function AssinadorPage() {
               <AlertDescription>{errMsg || "Erro desconhecido."}</AlertDescription>
             </Alert>
           )}
-          <div className="flex gap-2">
+
+          {/* Campo de pareamento sempre visível para permitir colar o código a qualquer momento */}
+          <div className="space-y-2 pt-2 border-t">
+            <p className="text-sm font-medium">Código de pareamento (6 dígitos)</p>
+            <p className="text-xs text-muted-foreground">
+              Pegue o código na janela inicial do app desktop ou no menu da bandeja do sistema (botão direito no ícone).
+            </p>
+            <div className="flex items-center gap-2 max-w-xs">
+              <Input
+                value={pair}
+                onChange={(e) => setPair(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                placeholder="000000"
+                inputMode="numeric"
+                maxLength={6}
+                className="font-mono tracking-widest text-center text-lg"
+              />
+              <Button onClick={handlePair}>Parear</Button>
+            </div>
+          </div>
+
+          <div className="flex gap-2 pt-2">
             <Button variant="outline" size="sm" onClick={check}>Verificar novamente</Button>
             {getPairToken() && (
               <Button variant="ghost" size="sm" onClick={() => { clearPairToken(); setPair(""); check(); }}>
