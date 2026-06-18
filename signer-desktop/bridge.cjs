@@ -14,6 +14,7 @@ const ORIGIN_ALLOWLIST = [
   /^https?:\/\/127\.0\.0\.1(:\d+)?$/,
   /^https:\/\/nexoged\.lovable\.app$/,
   /^https:\/\/nexoged\.tecnologianexo\.com\.br$/,
+  /^https:\/\/[a-z0-9-]+\.lovableproject\.com$/,
   /^https:\/\/[a-z0-9-]+\.lovable\.app$/,
   /^https:\/\/id-preview--[a-z0-9-]+\.lovable\.app$/,
 ];
@@ -33,6 +34,7 @@ async function start({ getPairToken, confirmSign }) {
       headers.Vary = "Origin";
       headers["Access-Control-Allow-Headers"] = "Content-Type, X-Pair-Token";
       headers["Access-Control-Allow-Methods"] = "GET, POST, OPTIONS";
+      headers["Access-Control-Allow-Private-Network"] = "true";
     }
     res.writeHead(statusCode, headers);
     res.end(payload === undefined ? "" : JSON.stringify(payload));

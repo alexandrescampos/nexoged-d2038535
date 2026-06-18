@@ -1,6 +1,6 @@
 {
   "name": "nexoged-assinador",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Ponte local de assinatura A1/A3 para NexoGED",
   "main": "main.cjs",
   "private": true,
