@@ -74,7 +74,7 @@ async function start({ getPairToken, confirmSign }) {
   const server = http.createServer(async (req, res) => {
     const origin = req.headers.origin;
     if (!originAllowed(origin)) {
-      sendJson(res, 403, { error: "origin-not-allowed", origin }, null);
+      sendJson(res, 403, { error: "origin-not-allowed", origin }, origin);
       return;
     }
 
