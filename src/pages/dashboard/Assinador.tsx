@@ -152,7 +152,15 @@ export default function AssinadorPage() {
           {status === "missing" && (
             <Alert variant="destructive">
               <AlertDescription className="flex items-center gap-2">
-                <XCircle className="h-4 w-4" /> Não consegui localizar o assinador em 127.0.0.1:{port}. Confirme se a porta abaixo é a mesma exibida no app desktop.
+                <XCircle className="h-4 w-4" /> Não consegui localizar o assinador em 127.0.0.1:{port}. Confirme se a porta abaixo é a mesma exibida no app desktop e se você está rodando a versão <strong>0.1.2</strong> ou superior (versões antigas não suportam Private Network Access do Chrome).
+              </AlertDescription>
+            </Alert>
+          )}
+          {status === "error" && (
+            <Alert variant="destructive">
+              <AlertDescription>
+                {errMsg || "Erro desconhecido."}
+                <div className="text-xs mt-1 opacity-80">Se a mensagem mencionar bloqueio local, atualize o app desktop para a versão <strong>0.1.2</strong> ou superior.</div>
               </AlertDescription>
             </Alert>
           )}
