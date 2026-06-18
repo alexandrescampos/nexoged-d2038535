@@ -164,11 +164,6 @@ export default function AssinadorPage() {
               </AlertDescription>
             </Alert>
           )}
-          {status === "error" && (
-            <Alert variant="destructive">
-              <AlertDescription>{errMsg || "Erro desconhecido."}</AlertDescription>
-            </Alert>
-          )}
 
           {/* Campo de pareamento sempre visível para permitir colar o código a qualquer momento */}
           <div className="space-y-2 pt-2 border-t">
