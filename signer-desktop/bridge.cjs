@@ -25,16 +25,21 @@ function originAllowed(origin) {
 }
 
 async function start({ getPairToken, confirmSign }) {
-  function sendJson(res, statusCode, payload, origin) {
+  function sendJson(res, statusCode, payload, origin, req) {
     const headers = {
       "Content-Type": "application/json; charset=utf-8",
     };
+    // CORS + PNA — emite sempre que houver Origin, independente do método.
+    // Chrome exige Access-Control-Allow-Private-Network também na resposta
+    // ao preflight quando a página HTTPS chama 127.0.0.1.
     if (origin) {
       headers["Access-Control-Allow-Origin"] = origin;
       headers.Vary = "Origin";
-      headers["Access-Control-Allow-Headers"] = "Content-Type, X-Pair-Token";
+      const reqHeaders = req?.headers["access-control-request-headers"];
+      headers["Access-Control-Allow-Headers"] = reqHeaders || "Content-Type, X-Pair-Token";
       headers["Access-Control-Allow-Methods"] = "GET, POST, OPTIONS";
       headers["Access-Control-Allow-Private-Network"] = "true";
+      headers["Access-Control-Max-Age"] = "600";
     }
     res.writeHead(statusCode, headers);
     res.end(payload === undefined ? "" : JSON.stringify(payload));
@@ -66,7 +71,7 @@ async function start({ getPairToken, confirmSign }) {
     const expected = getPairToken();
     const sent = req.headers["x-pair-token"];
     if (!expected || !sent || sent !== expected) {
-      sendJson(res, 401, { error: "unpaired" }, origin);
+      sendJson(res, 401, { error: "unpaired" }, origin, req);
       return false;
     }
     return true;
@@ -74,12 +79,12 @@ async function start({ getPairToken, confirmSign }) {
   const server = http.createServer(async (req, res) => {
     const origin = req.headers.origin;
     if (!originAllowed(origin)) {
-      sendJson(res, 403, { error: "origin-not-allowed", origin }, origin);
+      sendJson(res, 403, { error: "origin-not-allowed", origin }, origin, req);
       return;
     }
 
     if (req.method === "OPTIONS") {
-      sendJson(res, 204, undefined, origin);
+      sendJson(res, 204, undefined, origin, req);
       return;
     }
 
@@ -91,9 +96,10 @@ async function start({ getPairToken, confirmSign }) {
           ok: true,
           version: require("./package.json").version,
           platform: process.platform,
-        }, origin);
+        }, origin, req);
         return;
       }
+
 
       if (req.method === "GET" && path === "/certs") {
         if (!requirePair(req, res, origin)) return;
