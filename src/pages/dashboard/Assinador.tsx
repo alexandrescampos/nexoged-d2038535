@@ -43,16 +43,16 @@ export default function AssinadorPage() {
         const list = await listCertificates();
         setCertCount(list.length);
         setStatus("ok");
-      } catch (e: any) {
-        if (String(e?.message || "").includes("bridge-unpaired")) {
+      } catch (e: unknown) {
+        if (String((e as { message?: unknown })?.message || "").includes("bridge-unpaired")) {
           setStatus("unpaired");
         } else {
           setStatus("error");
           setErrMsg(describeBridgeError(e));
         }
       }
-    } catch (e: any) {
-      if (String(e?.message || "").includes("bridge-not-running")) {
+    } catch (e: unknown) {
+      if (String((e as { message?: unknown })?.message || "").includes("bridge-not-running")) {
         setStatus("missing");
       } else {
         setStatus("error");
@@ -83,9 +83,9 @@ export default function AssinadorPage() {
       setCertCount(list.length);
       setStatus("ok");
       toast.success("Pareado com sucesso");
-    } catch (e: any) {
+    } catch (e: unknown) {
       const message = describeBridgeError(e);
-      setStatus(String(e?.message || "").includes("bridge-unpaired") ? "unpaired" : "error");
+      setStatus(String((e as { message?: unknown })?.message || "").includes("bridge-unpaired") ? "unpaired" : "error");
       setErrMsg(message);
       toast.error(message);
     }
