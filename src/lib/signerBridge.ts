@@ -19,7 +19,7 @@ export interface PkiCertificate {
     cpf?: string;
     cnpj?: string;
     responsavel?: string;
-    [k: string]: any;
+    [k: string]: unknown;
   };
   serialNumber?: string;
   source?: "A1-OS" | "A3-PKCS11";
@@ -50,15 +50,15 @@ export function setBridgePort(port: string | number) {
   const normalized = Number(String(port).replace(/\D/g, ""));
   if (!BRIDGE_PORTS.includes(normalized)) throw new Error("invalid-bridge-port");
   cachedEndpoint = `http://127.0.0.1:${normalized}`;
-  try { localStorage.setItem(ENDPOINT_KEY, cachedEndpoint); } catch {}
+  try { localStorage.setItem(ENDPOINT_KEY, cachedEndpoint); } catch { /* localStorage unavailable */ }
 }
 
 export function setPairToken(token: string) {
-  try { localStorage.setItem(PAIR_KEY, token.trim()); } catch {}
+  try { localStorage.setItem(PAIR_KEY, token.trim()); } catch { /* localStorage unavailable */ }
 }
 
 export function clearPairToken() {
-  try { localStorage.removeItem(PAIR_KEY); } catch {}
+  try { localStorage.removeItem(PAIR_KEY); } catch { /* localStorage unavailable */ }
 }
 
 export function getPairToken(): string | null {
@@ -98,7 +98,7 @@ export async function initPki(): Promise<BridgeHealth> {
     const h = await probe(p);
     if (h) {
       cachedEndpoint = `http://127.0.0.1:${p}`;
-      try { localStorage.setItem(ENDPOINT_KEY, cachedEndpoint); } catch {}
+      try { localStorage.setItem(ENDPOINT_KEY, cachedEndpoint); } catch { /* localStorage unavailable */ }
       return h;
     }
   }
@@ -168,7 +168,7 @@ export const SIGNER_INSTALL_URL = "/dashboard/assinador";
 
 /** Mensagens user-friendly por código de erro do bridge. */
 export function describeBridgeError(err: unknown): string {
-  const msg = String((err as any)?.message || err || "");
+  const msg = String((err as { message?: unknown })?.message || err || "");
   if (msg.includes("bridge-not-running")) return "O app NexoGED Assinador não está em execução nesta máquina.";
   if (msg.includes("bridge-unpaired")) return "Assinador detectado, mas não pareado. Cole o código de 6 dígitos exibido na bandeja do sistema.";
   if (msg.includes("bridge-origin-blocked")) return "Este domínio não está autorizado no assinador. Verifique a allowlist do app desktop.";
