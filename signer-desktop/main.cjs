@@ -103,15 +103,57 @@ app.whenReady().then(async () => {
     return;
   }
 
-  // Tray
-  const iconPath = path.join(__dirname, "assets", process.platform === "win32" ? "tray.ico" : "tray.png");
-  let image = nativeImage.createFromPath(iconPath);
-  if (image.isEmpty()) {
-    // fallback 16x16 transparent
-    image = nativeImage.createEmpty();
+  // Tray — usa tray.png em todas as plataformas (Electron suporta PNG no Windows).
+  // Fallback para icon.png se tray.png não existir.
+  const candidates = [
+    path.join(__dirname, "assets", "tray.png"),
+    path.join(__dirname, "assets", "icon.png"),
+  ];
+  let image = nativeImage.createEmpty();
+  for (const p of candidates) {
+    const img = nativeImage.createFromPath(p);
+    if (!img.isEmpty()) { image = img; break; }
+  }
+  // No Windows o ícone da bandeja deve ser 16x16.
+  if (process.platform === "win32" && !image.isEmpty()) {
+    image = image.resize({ width: 16, height: 16 });
   }
   tray = new Tray(image);
   refreshTray();
+
+  // Notificação inicial para o usuário saber que o app subiu e ver o código.
+  try {
+    tray.displayBalloon?.({
+      title: "NexoGED Assinador iniciado",
+      content: `Porta 127.0.0.1:${bridgePort}\nCódigo de pareamento: ${pairToken}\nClique com o botão direito no ícone da bandeja.`,
+    });
+  } catch {}
+
+  // Abre uma janela informativa na primeira execução para garantir que o usuário veja.
+  try {
+    const win = new BrowserWindow({
+      width: 460, height: 280, resizable: false, minimizable: true, maximizable: false,
+      title: "NexoGED Assinador",
+      webPreferences: { contextIsolation: true, nodeIntegration: false },
+    });
+    win.setMenu(null);
+    const html = `<!doctype html><html><head><meta charset="utf-8"><title>NexoGED Assinador</title>
+      <style>
+        body{font-family:-apple-system,Segoe UI,Roboto,Arial,sans-serif;margin:0;padding:24px;background:#0F172A;color:#fff}
+        h1{font-size:18px;margin:0 0 8px}
+        .code{font-family:Consolas,monospace;font-size:32px;letter-spacing:8px;background:#1A2332;padding:12px 16px;border-radius:8px;text-align:center;margin:16px 0;border:1px solid #1565C0}
+        p{font-size:13px;color:#cbd5e1;margin:6px 0;line-height:1.5}
+        small{color:#94a3b8}
+      </style></head>
+      <body>
+        <h1>✅ Assinador em execução</h1>
+        <p>Porta local: <strong>127.0.0.1:${bridgePort}</strong></p>
+        <p>Cole este código no campo de pareamento do navegador:</p>
+        <div class="code">${pairToken}</div>
+        <small>Você pode fechar esta janela — o app continua rodando na bandeja do sistema.</small>
+      </body></html>`;
+    win.loadURL("data:text/html;charset=utf-8," + encodeURIComponent(html));
+  } catch {}
 
   // macOS: não sair quando a última janela fecha
   app.on("window-all-closed", (e) => e.preventDefault());
