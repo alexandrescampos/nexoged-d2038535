@@ -31,6 +31,15 @@ export interface BridgeHealth {
   platform: "win32" | "darwin" | "linux";
 }
 
+type BridgeProbeErrorReason = "http-error" | "timeout" | "network-or-cors" | "invalid-response";
+
+interface BridgeProbeError {
+  port: number;
+  reason: BridgeProbeErrorReason;
+  status?: number;
+  message?: string;
+}
+
 let cachedEndpoint: string | null = null;
 
 function getStoredPairToken(): string | null {
@@ -65,7 +74,7 @@ export function getPairToken(): string | null {
   return getStoredPairToken();
 }
 
-async function probe(port: number): Promise<BridgeHealth | null> {
+async function probe(port: number): Promise<{ health: BridgeHealth | null; error?: BridgeProbeError }> {
   try {
     const r = await fetch(`http://127.0.0.1:${port}/health`, {
       method: "GET",
@@ -73,12 +82,20 @@ async function probe(port: number): Promise<BridgeHealth | null> {
       // 1.5s budget per port
       signal: AbortSignal.timeout(1500),
     });
-    if (!r.ok) return null;
+    if (!r.ok) return { health: null, error: { port, reason: "http-error", status: r.status } };
     const j = await r.json();
-    if (j && j.ok) return j as BridgeHealth;
-    return null;
-  } catch {
-    return null;
+    if (j && j.ok) return { health: j as BridgeHealth };
+    return { health: null, error: { port, reason: "invalid-response" } };
+  } catch (e: unknown) {
+    const name = String((e as { name?: unknown })?.name || "");
+    return {
+      health: null,
+      error: {
+        port,
+        reason: name === "TimeoutError" ? "timeout" : "network-or-cors",
+        message: String((e as { message?: unknown })?.message || e || ""),
+      },
+    };
   }
 }
 
@@ -87,21 +104,27 @@ export async function initPki(): Promise<BridgeHealth> {
   // tenta endpoint cacheado primeiro
   if (cachedEndpoint) {
     const port = Number(cachedEndpoint.split(":").pop());
-    const h = await probe(port);
-    if (h) return h;
+    const result = await probe(port);
+    if (result.health) return result.health;
     cachedEndpoint = null;
   }
   const stored = getStoredEndpoint();
   const ports = stored ? [Number(stored.split(":").pop()), ...BRIDGE_PORTS] : BRIDGE_PORTS;
+  const errors: BridgeProbeError[] = [];
   for (const p of ports) {
     if (!p) continue;
-    const h = await probe(p);
-    if (h) {
+    const result = await probe(p);
+    if (result.health) {
       cachedEndpoint = `http://127.0.0.1:${p}`;
       try { localStorage.setItem(ENDPOINT_KEY, cachedEndpoint); } catch { /* localStorage unavailable */ }
-      return h;
+      return result.health;
     }
+    if (result.error) errors.push(result.error);
   }
+  const firstNetworkOrCors = errors.find((e) => e.reason === "network-or-cors");
+  if (firstNetworkOrCors) throw new Error(`bridge-local-blocked:${firstNetworkOrCors.port}:${firstNetworkOrCors.message || "failed-to-fetch"}`);
+  const firstHttp = errors.find((e) => e.reason === "http-error");
+  if (firstHttp) throw new Error(`bridge-http-error:${firstHttp.port}:${firstHttp.status}`);
   throw new Error("bridge-not-running");
 }
 
@@ -169,6 +192,8 @@ export const SIGNER_INSTALL_URL = "/dashboard/assinador";
 /** Mensagens user-friendly por código de erro do bridge. */
 export function describeBridgeError(err: unknown): string {
   const msg = String((err as { message?: unknown })?.message || err || "");
+  if (msg.includes("bridge-local-blocked")) return "O app NexoGED Assinador está aberto, mas o navegador bloqueou a conexão local com 127.0.0.1. Atualize o assinador para a nova versão e permita acesso à rede local se o navegador solicitar.";
+  if (msg.includes("bridge-http-error")) return "O navegador chegou até a porta local, mas o assinador recusou a requisição. Atualize o app NexoGED Assinador e tente novamente.";
   if (msg.includes("bridge-not-running")) return "O app NexoGED Assinador não está em execução nesta máquina.";
   if (msg.includes("bridge-unpaired")) return "Assinador detectado, mas não pareado. Cole o código de 6 dígitos exibido na bandeja do sistema.";
   if (msg.includes("bridge-origin-blocked")) return "Este domínio não está autorizado no assinador. Verifique a allowlist do app desktop.";
