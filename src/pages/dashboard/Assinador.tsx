@@ -52,7 +52,8 @@ export default function AssinadorPage() {
         }
       }
     } catch (e: unknown) {
-      if (String((e as { message?: unknown })?.message || "").includes("bridge-not-running")) {
+      const rawMessage = String((e as { message?: unknown })?.message || "");
+      if (rawMessage.includes("bridge-not-running")) {
         setStatus("missing");
       } else {
         setStatus("error");
@@ -151,7 +152,7 @@ export default function AssinadorPage() {
           {status === "missing" && (
             <Alert variant="destructive">
               <AlertDescription className="flex items-center gap-2">
-                <XCircle className="h-4 w-4" /> Assinador não está em execução ou o navegador bloqueou o acesso a 127.0.0.1:{port}. Confirme a porta exibida no app desktop.
+                <XCircle className="h-4 w-4" /> Não consegui localizar o assinador em 127.0.0.1:{port}. Confirme se a porta abaixo é a mesma exibida no app desktop.
               </AlertDescription>
             </Alert>
           )}
