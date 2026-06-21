@@ -8,6 +8,7 @@ const { app, Tray, Menu, dialog, nativeImage, clipboard, BrowserWindow, ipcMain 
 const path = require("path");
 const crypto = require("crypto");
 const startBridge = require("./bridge.cjs");
+const appVersion = require("./package.json").version;
 
 let tray = null;
 let pairToken = null;
@@ -147,6 +148,7 @@ app.whenReady().then(async () => {
       </style></head>
       <body>
         <h1>✅ Assinador em execução</h1>
+        <p>Versão: <strong>${appVersion}</strong></p>
         <p>Porta local: <strong>127.0.0.1:${bridgePort}</strong></p>
         <p>Cole este código no campo de pareamento do navegador:</p>
         <div class="code">${pairToken}</div>
