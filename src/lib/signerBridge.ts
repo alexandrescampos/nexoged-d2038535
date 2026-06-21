@@ -33,6 +33,10 @@ export interface BridgeHealth {
 
 type BridgeProbeErrorReason = "http-error" | "timeout" | "network-or-cors" | "invalid-response";
 
+type LoopbackRequestInit = RequestInit & {
+  targetAddressSpace?: "loopback";
+};
+
 interface BridgeProbeError {
   port: number;
   reason: BridgeProbeErrorReason;
@@ -41,6 +45,15 @@ interface BridgeProbeError {
 }
 
 let cachedEndpoint: string | null = null;
+
+function fetchLoopback(input: string, init: RequestInit = {}): Promise<Response> {
+  const requestInit: LoopbackRequestInit = {
+    ...init,
+    mode: "cors",
+    targetAddressSpace: "loopback",
+  };
+  return fetch(input, requestInit);
+}
 
 function getStoredPairToken(): string | null {
   try { return localStorage.getItem(PAIR_KEY); } catch { return null; }
@@ -76,7 +89,7 @@ export function getPairToken(): string | null {
 
 async function probe(port: number): Promise<{ health: BridgeHealth | null; error?: BridgeProbeError }> {
   try {
-    const r = await fetch(`http://127.0.0.1:${port}/health`, {
+    const r = await fetchLoopback(`http://127.0.0.1:${port}/health`, {
       method: "GET",
       cache: "no-store",
       // 1.5s budget per port
@@ -138,7 +151,7 @@ async function bridgeFetch(path: string, init?: RequestInit): Promise<Response> 
   const headers = new Headers(init?.headers || {});
   headers.set("Content-Type", "application/json");
   if (token) headers.set("X-Pair-Token", token);
-  const r = await fetch(`${cachedEndpoint}${path}`, { ...init, headers });
+  const r = await fetchLoopback(`${cachedEndpoint}${path}`, { ...init, headers });
   if (r.status === 401) throw new Error("bridge-unpaired");
   if (r.status === 403) throw new Error("bridge-origin-blocked");
   return r;
@@ -192,8 +205,8 @@ export const SIGNER_INSTALL_URL = "/dashboard/assinador";
 /** Mensagens user-friendly por código de erro do bridge. */
 export function describeBridgeError(err: unknown): string {
   const msg = String((err as { message?: unknown })?.message || err || "");
-  if (msg.includes("bridge-local-blocked")) return "O app NexoGED Assinador está aberto, mas o navegador bloqueou a conexão local com 127.0.0.1. Atualize o assinador para a nova versão e permita acesso à rede local se o navegador solicitar.";
-  if (msg.includes("bridge-http-error")) return "O navegador chegou até a porta local, mas o assinador recusou a requisição. Atualize o app NexoGED Assinador e tente novamente.";
+  if (msg.includes("bridge-local-blocked")) return "O app NexoGED Assinador está aberto, mas o navegador bloqueou a conexão local com 127.0.0.1. Feche totalmente versões antigas na bandeja, abra a versão 0.1.3 ou superior e permita acesso à rede local se o navegador solicitar.";
+  if (msg.includes("bridge-http-error")) return "O navegador chegou até a porta local, mas o assinador recusou a requisição. Feche o assinador pela bandeja, abra a versão 0.1.3 ou superior e tente novamente.";
   if (msg.includes("bridge-not-running")) return "O app NexoGED Assinador não está em execução nesta máquina.";
   if (msg.includes("bridge-unpaired")) return "Assinador detectado, mas não pareado. Cole o código de 6 dígitos exibido na bandeja do sistema.";
   if (msg.includes("bridge-origin-blocked")) return "Este domínio não está autorizado no assinador. Verifique a allowlist do app desktop.";
