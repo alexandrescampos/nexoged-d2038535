@@ -39,6 +39,7 @@ async function start({ getPairToken, confirmSign }) {
       headers["Access-Control-Allow-Headers"] = reqHeaders || "Content-Type, X-Pair-Token";
       headers["Access-Control-Allow-Methods"] = "GET, POST, OPTIONS";
       headers["Access-Control-Allow-Private-Network"] = "true";
+      headers["Access-Control-Allow-Credentials"] = "false";
       headers["Access-Control-Max-Age"] = "600";
     }
     res.writeHead(statusCode, headers);
