@@ -1120,6 +1120,11 @@ export default function DocumentsPage() {
                       <div className="flex items-center gap-2">
                         <p className="font-semibold text-sm truncate">{doc.title}</p>
                         {doc.is_favorite && <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />}
+                        {doc.has_signatures && (
+                          <Badge variant="default" className="gap-1 text-[9px] px-1.5 py-0 h-4 bg-emerald-600 hover:bg-emerald-600">
+                            <PenLine className="h-2.5 w-2.5" /> Assinado
+                          </Badge>
+                        )}
                       </div>
                       <div className="flex items-center justify-center gap-2 mt-1">
                         <Badge variant="secondary" className="text-[10px] h-4 py-0 font-mono">
