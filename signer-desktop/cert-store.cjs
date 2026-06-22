@@ -35,7 +35,7 @@ const PS_UTF8_PREFIX = `
 
 // === Windows ===
 async function listWin() {
-  const ps = `
+  const ps = PS_UTF8_PREFIX + `
     $ErrorActionPreference='Stop'
     $certs = Get-ChildItem Cert:\\CurrentUser\\My | Where-Object { $_.HasPrivateKey -eq $true }
     $arr = @()
@@ -58,7 +58,7 @@ async function listWin() {
 }
 
 async function readWin(thumbprint) {
-  const ps = `
+  const ps = PS_UTF8_PREFIX + `
     $c = Get-Item -LiteralPath Cert:\\CurrentUser\\My\\${thumbprint}
     [System.Convert]::ToBase64String($c.RawData)
   `;
