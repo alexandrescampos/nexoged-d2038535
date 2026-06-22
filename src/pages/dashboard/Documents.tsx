@@ -1629,6 +1629,30 @@ export default function DocumentsPage() {
         versaoId={signDoc?.versionId || null}
       />
 
+      <BulkSignDialog
+        open={bulkSignOpen}
+        onOpenChange={(o) => {
+          setBulkSignOpen(o);
+          if (!o) {
+            setSelectedIds(new Set());
+            setSelectionMode(false);
+          }
+        }}
+        documents={(documents as any[])
+          .filter((d) => selectedIds.has(d.id))
+          .map<BulkSignDoc>((d) => ({ id: d.id, title: d.title, mime_type: d.mime_type, file_name: d.file_name }))}
+      />
+
+      {selectionMode && selectedIds.size > 0 && (
+        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 bg-background border shadow-lg rounded-full px-4 py-2 flex items-center gap-3">
+          <span className="text-sm font-medium">{selectedIds.size} selecionado(s)</span>
+          <Button variant="ghost" size="sm" onClick={() => setSelectedIds(new Set())}>Limpar</Button>
+          <Button size="sm" className="gap-2" onClick={() => setBulkSignOpen(true)}>
+            <PenLine className="h-4 w-4" /> Assinar digitalmente
+          </Button>
+        </div>
+      )}
+
       {/* Modal de Edição */}
       <Dialog open={!!documentToEdit} onOpenChange={(open) => { if (!open) { setDocumentToEdit(null); setEditCustomFields({}); } }}>
         <DialogContent className="sm:max-w-[720px] max-h-[calc(100vh-2rem)] overflow-y-auto">
