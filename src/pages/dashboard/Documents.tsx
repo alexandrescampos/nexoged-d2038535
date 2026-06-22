@@ -951,6 +951,32 @@ export default function DocumentsPage() {
                       }}
                       className="cursor-grab active:cursor-grabbing group"
                     >
+                      {selectionMode && (
+                        <TableCell onClick={(e) => e.stopPropagation()}>
+                          {isPdfDoc(doc) ? (
+                            <Checkbox
+                              aria-label={`Selecionar ${doc.title}`}
+                              checked={selectedIds.has(doc.id)}
+                              onCheckedChange={(c) => {
+                                setSelectedIds((prev) => {
+                                  const next = new Set(prev);
+                                  if (c) next.add(doc.id); else next.delete(doc.id);
+                                  return next;
+                                });
+                              }}
+                            />
+                          ) : (
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <span className="inline-block"><Checkbox disabled aria-label="Apenas PDFs" /></span>
+                                </TooltipTrigger>
+                                <TooltipContent className="text-xs">Apenas PDFs podem ser assinados</TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+                          )}
+                        </TableCell>
+                      )}
                       <TableCell>{getFileIcon(doc.mime_type)}</TableCell>
                       <TableCell className="font-medium max-w-[220px]">
                         <div className="flex items-center gap-2 min-w-0">
