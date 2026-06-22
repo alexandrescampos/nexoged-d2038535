@@ -470,6 +470,33 @@ export default function DocumentsPage() {
   const handleDownloadFile = async (doc: any) => {
     try {
       const { url, fileName } = await getDownloadUrl(doc.id);
+      const isPdf = (doc.mime_type || "").toLowerCase().includes("pdf")
+        || (fileName || "").toLowerCase().endsWith(".pdf");
+      const signatures = Array.isArray(doc.signatures) ? doc.signatures : [];
+
+      // If it's a signed PDF, stamp it before download
+      if (isPdf && signatures.length > 0) {
+        try {
+          const res = await fetch(url);
+          const buf = await res.arrayBuffer();
+          const { stampSignedPdf } = await import("@/lib/pdfSignedStamp");
+          const stamped = await stampSignedPdf(buf, signatures, doc.title || fileName || "Documento");
+          const blob = new Blob([stamped as BlobPart], { type: "application/pdf" });
+          const blobUrl = URL.createObjectURL(blob);
+          const link = document.createElement('a');
+          const baseName = (fileName || doc.file_name || doc.title || "documento").replace(/\.pdf$/i, "");
+          link.href = blobUrl;
+          link.download = `${baseName}-assinado.pdf`;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          setTimeout(() => URL.revokeObjectURL(blobUrl), 5000);
+          return;
+        } catch (stampErr) {
+          console.error("Falha ao carimbar PDF assinado, baixando original:", stampErr);
+        }
+      }
+
       const link = document.createElement('a');
       link.href = url;
       link.download = fileName || doc.file_name || doc.title;
@@ -875,6 +902,20 @@ export default function DocumentsPage() {
                         <div className="flex items-center gap-2 min-w-0">
                           <span className="truncate">{doc.title}</span>
                           {doc.is_favorite && <Star className="h-3 w-3 fill-yellow-400 text-yellow-400 flex-shrink-0" />}
+                          {doc.has_signatures && (
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Badge variant="default" className="gap-1 text-[9px] px-1.5 py-0 h-4 cursor-help bg-emerald-600 hover:bg-emerald-600">
+                                    <PenLine className="h-2.5 w-2.5" /> Assinado
+                                  </Badge>
+                                </TooltipTrigger>
+                                <TooltipContent className="text-xs">
+                                  {doc.signatures?.length || 0} assinatura(s). Ao baixar, o PDF inclui carimbo e manifesto.
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+                          )}
                           {doc.custom_field_values?.length > 0 && (
                             <TooltipProvider>
                               <Tooltip>
@@ -1079,6 +1120,11 @@ export default function DocumentsPage() {
                       <div className="flex items-center gap-2">
                         <p className="font-semibold text-sm truncate">{doc.title}</p>
                         {doc.is_favorite && <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />}
+                        {doc.has_signatures && (
+                          <Badge variant="default" className="gap-1 text-[9px] px-1.5 py-0 h-4 bg-emerald-600 hover:bg-emerald-600">
+                            <PenLine className="h-2.5 w-2.5" /> Assinado
+                          </Badge>
+                        )}
                       </div>
                       <div className="flex items-center justify-center gap-2 mt-1">
                         <Badge variant="secondary" className="text-[10px] h-4 py-0 font-mono">

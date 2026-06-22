@@ -31,7 +31,8 @@ export const gedRepository = {
         *,
         versions:ged_document_versions(mime_type, version_number, file_name, file_size, created_by),
         document_type_data:ged_document_types(*, associated_fields:ged_document_type_custom_fields(custom_field:custom_fields(*))),
-        custom_field_values:ged_document_custom_field_values(*, field_data:custom_fields(*))
+        custom_field_values:ged_document_custom_field_values(*, field_data:custom_fields(*)),
+        signatures:documento_assinatura(id, assinante_id, tipo_assinatura, assinado_em, hash_evidencia, certificado_info)
       `, { count: "exact" });
     
     if (params.organizationId) {
@@ -144,6 +145,7 @@ export const gedRepository = {
     const formattedData = (data || []).map(doc => {
       const versions = (doc as any).versions || [];
       const latestVersion = [...versions].sort((a, b) => (b.version_number || 0) - (a.version_number || 0))[0];
+      const signatures = (doc as any).signatures || [];
 
       return {
         ...doc,
@@ -153,12 +155,33 @@ export const gedRepository = {
         file_size: latestVersion?.file_size,
         mime_type: latestVersion?.mime_type || 'application/octet-stream',
         custom_field_values: doc.custom_field_values || [],
+        signatures,
+        has_signatures: signatures.length > 0,
         document_type_data: doc.document_type_data ? {
           ...doc.document_type_data,
           associated_fields: (doc.document_type_data as any).associated_fields?.map((af: any) => af.custom_field)
         } : null
       };
     });
+
+    // Resolve signer names
+    const signerIds = Array.from(new Set(
+      formattedData.flatMap((d: any) => (d.signatures || []).map((s: any) => s.assinante_id).filter(Boolean))
+    ));
+    if (signerIds.length > 0) {
+      const { data: signers } = await supabase
+        .from("profiles")
+        .select("id, full_name, email")
+        .in("id", signerIds);
+      const signerMap = new Map((signers || []).map((s: any) => [s.id, s]));
+      formattedData.forEach((d: any) => {
+        d.signatures = (d.signatures || []).map((s: any) => ({
+          ...s,
+          signer_name: signerMap.get(s.assinante_id)?.full_name || null,
+          signer_email: signerMap.get(s.assinante_id)?.email || null,
+        }));
+      });
+    }
 
     // Fetch uploader names
     const creatorIds = Array.from(new Set(formattedData.map((d: any) => d.created_by).filter(Boolean)));
