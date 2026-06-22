@@ -116,6 +116,12 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 
+function isPdfDoc(d: any): boolean {
+  const m = (d?.mime_type || "").toLowerCase();
+  const n = (d?.file_name || d?.title || "").toLowerCase();
+  return m.includes("pdf") || n.endsWith(".pdf");
+}
+
 function getFileTypeLabel(mime?: string, name?: string): string {
   const ext = (name?.split(".").pop() || "").toLowerCase();
   const m = (mime || "").toLowerCase();
