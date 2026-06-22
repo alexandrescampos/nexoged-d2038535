@@ -1637,6 +1637,8 @@ export default function DocumentsPage() {
           if (!o) {
             setSelectedIds(new Set());
             setSelectionMode(false);
+            queryClient.invalidateQueries({ queryKey: ["documents"] });
+            queryClient.invalidateQueries({ queryKey: ["document-versions"] });
           }
         }}
         documents={(documents as any[])
