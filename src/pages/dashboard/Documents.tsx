@@ -397,6 +397,53 @@ export default function DocumentsPage() {
     return <FileCode className="h-6 w-6 text-gray-500" />;
   };
 
+  const openSignAdhoc = async (doc: any) => {
+    try {
+      const { data, error } = await supabase
+        .from("ged_document_versions")
+        .select("id, mime_type")
+        .eq("document_id", doc.id)
+        .neq("status", "CANCELADA")
+        .order("version_number", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (error) throw error;
+      if (!data) {
+        toastSonner.error("Nenhuma versão ativa encontrada para o documento");
+        return;
+      }
+      const mime = (data.mime_type || "").toLowerCase();
+      if (!mime.includes("pdf")) {
+        toastSonner.error("Apenas documentos PDF podem ser assinados digitalmente");
+        return;
+      }
+      setSignDoc({ id: doc.id, title: doc.title, versionId: data.id });
+    } catch (e: any) {
+      toastSonner.error(e?.message || "Erro ao preparar assinatura");
+    }
+  };
+
+  const handleAdhocSignConfirm = async (payload: { hashEvidencia: string; certificado?: any }) => {
+    if (!signDoc) return;
+    setIsSigningAdhoc(true);
+    try {
+      const { error } = await supabase.rpc("sign_document_adhoc", {
+        p_documento_id: signDoc.id,
+        p_versao_id: signDoc.versionId || null,
+        p_hash: payload.hashEvidencia,
+        p_certificado: payload.certificado || null,
+        p_intent: payload.certificado?.intent || null,
+      });
+      if (error) throw error;
+      toastSonner.success("Documento assinado digitalmente");
+      setSignDoc(null);
+    } catch (e: any) {
+      toastSonner.error("Erro ao registrar assinatura: " + (e?.message || ""));
+    } finally {
+      setIsSigningAdhoc(false);
+    }
+  };
+
   const handleViewFile = async (documentId: string) => {
     try {
       const { url } = await getDownloadUrl(documentId);
