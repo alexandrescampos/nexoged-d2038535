@@ -23,7 +23,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { UsageIndicator } from "@/components/dashboard/UsageIndicator";
 import { GedTreeView } from "@/components/dashboard/ged/GedTreeView";
 import { useOrganizationStructure } from "@/hooks/useOrganizationStructure";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useDocumentPermissions } from "@/hooks/useDocumentPermissions";
 import { supabase } from "@/integrations/supabase/client";
 import { MultiFileUploader } from "@/components/dashboard/ged/MultiFileUploader";
@@ -288,6 +288,7 @@ export default function DocumentsPage() {
     pageSize,
     setPageSize
   } = useGED(currentFolder, false, false, searchParams.get("status"));
+  const queryClient = useQueryClient();
   const isSearching = (searchTerm ?? "").trim().length > 0;
   const isFiltering = isSearching || selectedTags.length > 0;
   // Hide folder rows while searching/filtering so results are documents-only across all folders
@@ -1636,6 +1637,8 @@ export default function DocumentsPage() {
           if (!o) {
             setSelectedIds(new Set());
             setSelectionMode(false);
+            queryClient.invalidateQueries({ queryKey: ["documents"] });
+            queryClient.invalidateQueries({ queryKey: ["document-versions"] });
           }
         }}
         documents={(documents as any[])
