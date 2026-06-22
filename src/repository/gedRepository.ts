@@ -31,7 +31,8 @@ export const gedRepository = {
         *,
         versions:ged_document_versions(mime_type, version_number, file_name, file_size, created_by),
         document_type_data:ged_document_types(*, associated_fields:ged_document_type_custom_fields(custom_field:custom_fields(*))),
-        custom_field_values:ged_document_custom_field_values(*, field_data:custom_fields(*))
+        custom_field_values:ged_document_custom_field_values(*, field_data:custom_fields(*)),
+        signatures:documento_assinatura(id, assinante_id, tipo_assinatura, assinado_em, hash_evidencia, certificado_info)
       `, { count: "exact" });
     
     if (params.organizationId) {
