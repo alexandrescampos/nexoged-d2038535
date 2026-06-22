@@ -66,7 +66,9 @@ import {
 import { CustomFieldsForm } from "@/components/dashboard/ged/CustomFieldsForm";
 import { ShareDocumentDialog } from "@/components/dashboard/ged/ShareDocumentDialog";
 import { DocumentDetailDialog } from "@/components/dashboard/ged/DocumentDetailDialog";
-import { GitBranch } from "lucide-react";
+import { SignatureCaptureModal } from "@/components/dashboard/ged/SignatureCaptureModal";
+import { GitBranch, PenLine } from "lucide-react";
+import { toast as toastSonner } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -222,6 +224,8 @@ export default function DocumentsPage() {
   const [versionsDoc, setVersionsDoc] = useState<{ id: string; title: string } | null>(null);
   const [shareDoc, setShareDoc] = useState<{ id: string; title: string } | null>(null);
   const [workflowDoc, setWorkflowDoc] = useState<any | null>(null);
+  const [signDoc, setSignDoc] = useState<{ id: string; title: string; versionId?: string } | null>(null);
+  const [isSigningAdhoc, setIsSigningAdhoc] = useState(false);
   const [editCustomFields, setEditCustomFields] = useState<Record<string, any>>({});
   const [selectedUploadFolderId, setSelectedUploadUploadFolderId] = useState<string | null>(null);
   const [isFolderSelectOpen, setIsFolderSelectOpen] = useState(false);
@@ -391,6 +395,53 @@ export default function DocumentsPage() {
     if (mime?.includes("spreadsheet") || mime?.includes("excel")) return <FileSpreadsheet className="h-6 w-6 text-green-600" />;
     if (mime?.includes("image")) return <FileImage className="h-6 w-6 text-blue-500" />;
     return <FileCode className="h-6 w-6 text-gray-500" />;
+  };
+
+  const openSignAdhoc = async (doc: any) => {
+    try {
+      const { data, error } = await supabase
+        .from("ged_document_versions")
+        .select("id, mime_type")
+        .eq("document_id", doc.id)
+        .neq("status", "CANCELADA")
+        .order("version_number", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (error) throw error;
+      if (!data) {
+        toastSonner.error("Nenhuma versão ativa encontrada para o documento");
+        return;
+      }
+      const mime = (data.mime_type || "").toLowerCase();
+      if (!mime.includes("pdf")) {
+        toastSonner.error("Apenas documentos PDF podem ser assinados digitalmente");
+        return;
+      }
+      setSignDoc({ id: doc.id, title: doc.title, versionId: data.id });
+    } catch (e: any) {
+      toastSonner.error(e?.message || "Erro ao preparar assinatura");
+    }
+  };
+
+  const handleAdhocSignConfirm = async (payload: { hashEvidencia: string; certificado?: any }) => {
+    if (!signDoc) return;
+    setIsSigningAdhoc(true);
+    try {
+      const { error } = await supabase.rpc("sign_document_adhoc", {
+        p_documento_id: signDoc.id,
+        p_versao_id: signDoc.versionId || null,
+        p_hash: payload.hashEvidencia,
+        p_certificado: payload.certificado || null,
+        p_intent: payload.certificado?.intent || null,
+      });
+      if (error) throw error;
+      toastSonner.success("Documento assinado digitalmente");
+      setSignDoc(null);
+    } catch (e: any) {
+      toastSonner.error("Erro ao registrar assinatura: " + (e?.message || ""));
+    } finally {
+      setIsSigningAdhoc(false);
+    }
   };
 
   const handleViewFile = async (documentId: string) => {
@@ -952,6 +1003,9 @@ export default function DocumentsPage() {
                               <DropdownMenuItem className="gap-2" onClick={() => setVersionsDoc({ id: doc.id, title: doc.title })}><History className="h-4 w-4" /> Versões</DropdownMenuItem>
                               <DropdownMenuItem className="gap-2" disabled={!doc.has_file} onClick={() => setShareDoc({ id: doc.id, title: doc.title })}><Share2 className="h-4 w-4" /> Compartilhar link</DropdownMenuItem>
                               <DropdownMenuItem className="gap-2" onClick={() => setWorkflowDoc(doc)}><GitBranch className="h-4 w-4" /> Fluxo do Documento</DropdownMenuItem>
+                              <DropdownMenuItem className="gap-2" disabled={!doc.has_file} onClick={() => openSignAdhoc(doc)}>
+                                <PenLine className="h-4 w-4" /> Assinar Digitalmente
+                              </DropdownMenuItem>
                                {canUserDelete(doc) && (
                                  <>
                                   <DropdownMenuSeparator />
@@ -1112,6 +1166,9 @@ export default function DocumentsPage() {
                         </DropdownMenuItem>
                         <DropdownMenuItem className="gap-2" onClick={() => setVersionsDoc({ id: doc.id, title: doc.title })}><History className="h-4 w-4" /> Versões</DropdownMenuItem>
                         <DropdownMenuItem className="gap-2" onClick={() => setWorkflowDoc(doc)}><GitBranch className="h-4 w-4" /> Fluxo do Documento</DropdownMenuItem>
+                        <DropdownMenuItem className="gap-2" disabled={!doc.has_file} onClick={() => openSignAdhoc(doc)}>
+                          <PenLine className="h-4 w-4" /> Assinar Digitalmente
+                        </DropdownMenuItem>
                         {canUserDelete(doc) && (
                           <>
                             <DropdownMenuSeparator />
@@ -1420,6 +1477,16 @@ export default function DocumentsPage() {
       <ShareDocumentDialog document={shareDoc} onClose={() => setShareDoc(null)} />
 
       <DocumentDetailDialog doc={workflowDoc} onOpenChange={(o) => { if (!o) setWorkflowDoc(null); }} />
+
+      <SignatureCaptureModal
+        open={!!signDoc}
+        onOpenChange={(o) => { if (!o) setSignDoc(null); }}
+        tipo={"QUALIFICADA" as any}
+        onConfirm={handleAdhocSignConfirm}
+        isSigning={isSigningAdhoc}
+        documentId={signDoc?.id}
+        versaoId={signDoc?.versionId || null}
+      />
 
       {/* Modal de Edição */}
       <Dialog open={!!documentToEdit} onOpenChange={(open) => { if (!open) { setDocumentToEdit(null); setEditCustomFields({}); } }}>
