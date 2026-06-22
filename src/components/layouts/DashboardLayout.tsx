@@ -91,6 +91,7 @@ const menuGroups: MenuGroup[] = [
       { title: "Vencimentos", url: "/dashboard/expiration-report", icon: Calendar, userAllowed: true },
       { title: "Minhas Aprovações", url: "/dashboard/my-approvals", icon: CheckCircle2, userAllowed: true },
       { title: "Minhas Assinaturas", url: "/dashboard/my-signatures", icon: PenLine, userAllowed: true },
+      { title: "Assinador", url: "/dashboard/assinador", icon: PenLine, userAllowed: true },
     ],
   },
   {
