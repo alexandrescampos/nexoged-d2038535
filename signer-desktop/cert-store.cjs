@@ -67,7 +67,7 @@ async function readWin(thumbprint) {
 
 async function signWin(thumbprint, hashHex) {
   // Usa RSACryptoServiceProvider para assinar o hash já calculado.
-  const ps = `
+  const ps = PS_UTF8_PREFIX + `
     $c = Get-Item -LiteralPath Cert:\\CurrentUser\\My\\${thumbprint}
     $rsa = [System.Security.Cryptography.X509Certificates.RSACertificateExtensions]::GetRSAPrivateKey($c)
     if($null -eq $rsa){ throw "no-private-key" }
