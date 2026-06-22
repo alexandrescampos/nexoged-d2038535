@@ -9,17 +9,29 @@ const crypto = require("crypto");
 function run(cmd, args, { input } = {}) {
   return new Promise((resolve, reject) => {
     const p = spawn(cmd, args, { windowsHide: true });
-    let out = "", err = "";
-    p.stdout.on("data", (d) => (out += d.toString()));
-    p.stderr.on("data", (d) => (err += d.toString()));
+    const outChunks = [];
+    const errChunks = [];
+    p.stdout.on("data", (d) => outChunks.push(d));
+    p.stderr.on("data", (d) => errChunks.push(d));
     p.on("error", reject);
     p.on("close", (code) => {
+      // Always decode as UTF-8 (we force PowerShell to emit UTF-8 below).
+      const out = Buffer.concat(outChunks).toString("utf8");
+      const err = Buffer.concat(errChunks).toString("utf8");
       if (code === 0) resolve(out);
       else reject(new Error(err.trim() || `exit ${code}`));
     });
     if (input) p.stdin.end(input);
   });
 }
+
+// Prefix that forces PowerShell to write UTF-8 instead of the console's
+// OEM/ANSI code page (which mangles cedilla/accented characters in Subject DNs).
+const PS_UTF8_PREFIX = `
+  $OutputEncoding = [System.Text.UTF8Encoding]::new($false)
+  [Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false)
+  $PSDefaultParameterValues['*:Encoding'] = 'utf8'
+`;
 
 // === Windows ===
 async function listWin() {
