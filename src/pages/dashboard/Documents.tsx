@@ -1478,6 +1478,16 @@ export default function DocumentsPage() {
 
       <DocumentDetailDialog doc={workflowDoc} onOpenChange={(o) => { if (!o) setWorkflowDoc(null); }} />
 
+      <SignatureCaptureModal
+        open={!!signDoc}
+        onOpenChange={(o) => { if (!o) setSignDoc(null); }}
+        tipo={"QUALIFICADA" as any}
+        onConfirm={handleAdhocSignConfirm}
+        isSigning={isSigningAdhoc}
+        documentId={signDoc?.id}
+        versaoId={signDoc?.versionId || null}
+      />
+
       {/* Modal de Edição */}
       <Dialog open={!!documentToEdit} onOpenChange={(open) => { if (!open) { setDocumentToEdit(null); setEditCustomFields({}); } }}>
         <DialogContent className="sm:max-w-[720px] max-h-[calc(100vh-2rem)] overflow-y-auto">
