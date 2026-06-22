@@ -926,6 +926,7 @@ export default function DocumentsPage() {
                         moveItem({ type: 'DOCUMENT', id, targetId: folder.past_id });
                       }}
                     >
+                      {selectionMode && <TableCell></TableCell>}
                       <TableCell><Folder className="h-6 w-6 text-amber-500 fill-amber-500/20" /></TableCell>
                       <TableCell className="font-medium">{folder.past_nm_pasta}</TableCell>
                       <TableCell><Badge variant="outline" className="text-[10px]">PASTA</Badge></TableCell>
