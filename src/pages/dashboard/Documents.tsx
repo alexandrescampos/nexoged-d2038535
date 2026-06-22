@@ -474,41 +474,45 @@ export default function DocumentsPage() {
         || (fileName || "").toLowerCase().endsWith(".pdf");
       const signatures = Array.isArray(doc.signatures) ? doc.signatures : [];
 
-      // If it's a signed PDF, stamp it before download
+      // Always fetch as blob so the browser performs a real download
+      // (signed Storage URLs don't set Content-Disposition: attachment,
+      // so a plain <a target="_blank"> just opens the PDF in the viewer).
+      const res = await fetch(url);
+      if (!res.ok) throw new Error(`Falha ao baixar (HTTP ${res.status})`);
+
+      let blob: Blob;
+      let downloadName = fileName || doc.file_name || doc.title || "documento";
+
       if (isPdf && signatures.length > 0) {
         try {
-          const res = await fetch(url);
           const buf = await res.arrayBuffer();
           const { stampSignedPdf } = await import("@/lib/pdfSignedStamp");
-          const stamped = await stampSignedPdf(buf, signatures, doc.title || fileName || "Documento");
-          const blob = new Blob([stamped as BlobPart], { type: "application/pdf" });
-          const blobUrl = URL.createObjectURL(blob);
-          const link = document.createElement('a');
-          const baseName = (fileName || doc.file_name || doc.title || "documento").replace(/\.pdf$/i, "");
-          link.href = blobUrl;
-          link.download = `${baseName}-assinado.pdf`;
-          document.body.appendChild(link);
-          link.click();
-          document.body.removeChild(link);
-          setTimeout(() => URL.revokeObjectURL(blobUrl), 5000);
-          return;
+          const stamped = await stampSignedPdf(buf, signatures, doc.title || downloadName);
+          blob = new Blob([stamped as BlobPart], { type: "application/pdf" });
+          const base = downloadName.replace(/\.pdf$/i, "");
+          downloadName = `${base}-assinado.pdf`;
         } catch (stampErr) {
           console.error("Falha ao carimbar PDF assinado, baixando original:", stampErr);
+          blob = await (await fetch(url)).blob();
         }
+      } else {
+        blob = await res.blob();
       }
 
+      const blobUrl = URL.createObjectURL(blob);
       const link = document.createElement('a');
-      link.href = url;
-      link.download = fileName || doc.file_name || doc.title;
-      link.target = '_blank';
+      link.href = blobUrl;
+      link.download = downloadName;
+      link.rel = "noopener";
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
+      setTimeout(() => URL.revokeObjectURL(blobUrl), 5000);
     } catch (error: any) {
       console.error("Erro ao baixar arquivo:", error);
-      const isPermissionError = 
-        error?.message?.includes("JWT") || 
-        error?.code === "PGRST301" || 
+      const isPermissionError =
+        error?.message?.includes("JWT") ||
+        error?.code === "PGRST301" ||
         error?.message?.includes("permission denied") ||
         error?.status === 403;
 
