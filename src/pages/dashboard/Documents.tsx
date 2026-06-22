@@ -470,6 +470,33 @@ export default function DocumentsPage() {
   const handleDownloadFile = async (doc: any) => {
     try {
       const { url, fileName } = await getDownloadUrl(doc.id);
+      const isPdf = (doc.mime_type || "").toLowerCase().includes("pdf")
+        || (fileName || "").toLowerCase().endsWith(".pdf");
+      const signatures = Array.isArray(doc.signatures) ? doc.signatures : [];
+
+      // If it's a signed PDF, stamp it before download
+      if (isPdf && signatures.length > 0) {
+        try {
+          const res = await fetch(url);
+          const buf = await res.arrayBuffer();
+          const { stampSignedPdf } = await import("@/lib/pdfSignedStamp");
+          const stamped = await stampSignedPdf(buf, signatures, doc.title || fileName || "Documento");
+          const blob = new Blob([stamped], { type: "application/pdf" });
+          const blobUrl = URL.createObjectURL(blob);
+          const link = document.createElement('a');
+          const baseName = (fileName || doc.file_name || doc.title || "documento").replace(/\.pdf$/i, "");
+          link.href = blobUrl;
+          link.download = `${baseName}-assinado.pdf`;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          setTimeout(() => URL.revokeObjectURL(blobUrl), 5000);
+          return;
+        } catch (stampErr) {
+          console.error("Falha ao carimbar PDF assinado, baixando original:", stampErr);
+        }
+      }
+
       const link = document.createElement('a');
       link.href = url;
       link.download = fileName || doc.file_name || doc.title;
