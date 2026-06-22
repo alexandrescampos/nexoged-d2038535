@@ -228,6 +228,9 @@ export default function DocumentsPage() {
   const [workflowDoc, setWorkflowDoc] = useState<any | null>(null);
   const [signDoc, setSignDoc] = useState<{ id: string; title: string; versionId?: string } | null>(null);
   const [isSigningAdhoc, setIsSigningAdhoc] = useState(false);
+  const [selectionMode, setSelectionMode] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [bulkSignOpen, setBulkSignOpen] = useState(false);
   const [editCustomFields, setEditCustomFields] = useState<Record<string, any>>({});
   const [selectedUploadFolderId, setSelectedUploadUploadFolderId] = useState<string | null>(null);
   const [isFolderSelectOpen, setIsFolderSelectOpen] = useState(false);
