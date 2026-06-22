@@ -587,6 +587,20 @@ export default function DocumentsPage() {
           <Button variant="outline" size="sm" className="hidden sm:flex">
             <History className="mr-2 h-4 w-4" /> Histórico
           </Button>
+          <Button
+            variant={selectionMode ? "default" : "outline"}
+            size="sm"
+            className="gap-2"
+            onClick={() => {
+              setSelectionMode((v) => {
+                if (v) setSelectedIds(new Set());
+                return !v;
+              });
+            }}
+          >
+            <CheckSquare className="h-4 w-4" />
+            <span className="hidden sm:inline">{selectionMode ? "Sair da seleção" : "Selecionar"}</span>
+          </Button>
           <Button size="sm" onClick={() => setIsUploadOpen(true)} className="gap-2">
             <Upload className="h-4 w-4" />
             <span className="hidden sm:inline">Upload</span>
