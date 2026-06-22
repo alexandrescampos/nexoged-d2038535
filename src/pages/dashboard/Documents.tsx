@@ -288,6 +288,7 @@ export default function DocumentsPage() {
     pageSize,
     setPageSize
   } = useGED(currentFolder, false, false, searchParams.get("status"));
+  const queryClient = useQueryClient();
   const isSearching = (searchTerm ?? "").trim().length > 0;
   const isFiltering = isSearching || selectedTags.length > 0;
   // Hide folder rows while searching/filtering so results are documents-only across all folders
