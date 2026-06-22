@@ -902,6 +902,20 @@ export default function DocumentsPage() {
                         <div className="flex items-center gap-2 min-w-0">
                           <span className="truncate">{doc.title}</span>
                           {doc.is_favorite && <Star className="h-3 w-3 fill-yellow-400 text-yellow-400 flex-shrink-0" />}
+                          {doc.has_signatures && (
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Badge variant="default" className="gap-1 text-[9px] px-1.5 py-0 h-4 cursor-help bg-emerald-600 hover:bg-emerald-600">
+                                    <PenLine className="h-2.5 w-2.5" /> Assinado
+                                  </Badge>
+                                </TooltipTrigger>
+                                <TooltipContent className="text-xs">
+                                  {doc.signatures?.length || 0} assinatura(s). Ao baixar, o PDF inclui carimbo e manifesto.
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+                          )}
                           {doc.custom_field_values?.length > 0 && (
                             <TooltipProvider>
                               <Tooltip>
