@@ -88,16 +88,15 @@ const menuGroups: MenuGroup[] = [
     items: [
       { title: "Favoritos", url: "/dashboard/favorites", icon: Star, userAllowed: true },
       { title: "Últimos Acessos", url: "/dashboard/recent", icon: Clock, userAllowed: true },
-      { title: "Vencimentos", url: "/dashboard/expiration-report", icon: Calendar, userAllowed: true },
-      { title: "Minhas Aprovações", url: "/dashboard/my-approvals", icon: CheckCircle2, userAllowed: true },
-      { title: "Minhas Assinaturas", url: "/dashboard/my-signatures", icon: PenLine, userAllowed: true },
-      { title: "Assinador", url: "/dashboard/assinador", icon: PenLine, userAllowed: true },
     ],
   },
   {
     label: "Gestão",
     items: [
       { title: "Documentos", url: "/dashboard/documents", icon: FileText, userAllowed: true },
+      { title: "Vencimentos", url: "/dashboard/expiration-report", icon: Calendar, userAllowed: true },
+      { title: "Minhas Aprovações", url: "/dashboard/my-approvals", icon: CheckCircle2, userAllowed: true },
+      { title: "Minhas Assinaturas", url: "/dashboard/my-signatures", icon: PenLine, userAllowed: true },
       { title: "Tipos de Documento", url: "/dashboard/document-types", icon: Settings2, adminOnly: true },
       { title: "Políticas de Assinatura", url: "/dashboard/signature-policies", icon: ShieldCheck, adminOnly: true },
       { title: "Fluxos de Aprovação", url: "/dashboard/approval-flows", icon: Workflow, adminOnly: true },
@@ -113,6 +112,7 @@ const menuGroups: MenuGroup[] = [
     label: "Configurações",
     items: [
       { title: "Configurações", url: "/dashboard/settings", icon: Settings, hideForUser: true },
+      { title: "Assinador", url: "/dashboard/assinador", icon: PenLine, userAllowed: true },
       { title: "Google Drive", url: "/dashboard/integrations/google-drive", icon: Cloud, adminOnly: true },
       { title: "Sobre", url: "/dashboard/about", icon: Info },
     ],
