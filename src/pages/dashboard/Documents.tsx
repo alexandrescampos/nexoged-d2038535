@@ -1191,8 +1191,23 @@ export default function DocumentsPage() {
                   e.dataTransfer.setData("type", "DOCUMENT");
                   e.dataTransfer.effectAllowed = "move";
                 }}
-                className="transition-all hover:bg-accent/50 group cursor-grab active:cursor-grabbing"
+                className="relative transition-all hover:bg-accent/50 group cursor-grab active:cursor-grabbing"
               >
+                {selectionMode && isPdfDoc(doc) && (
+                  <div className="absolute top-2 left-2 z-10" onClick={(e) => e.stopPropagation()}>
+                    <Checkbox
+                      aria-label={`Selecionar ${doc.title}`}
+                      checked={selectedIds.has(doc.id)}
+                      onCheckedChange={(c) => {
+                        setSelectedIds((prev) => {
+                          const next = new Set(prev);
+                          if (c) next.add(doc.id); else next.delete(doc.id);
+                          return next;
+                        });
+                      }}
+                    />
+                  </div>
+                )}
                 <CardContent className="p-4 flex flex-col items-center gap-3 text-center h-full justify-between">
                   <div className="flex flex-col items-center gap-2">
                     {getFileIcon(doc.mime_type)}
