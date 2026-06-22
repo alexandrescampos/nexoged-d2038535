@@ -9,11 +9,15 @@ const crypto = require("crypto");
 function run(cmd, args, { input } = {}) {
   return new Promise((resolve, reject) => {
     const p = spawn(cmd, args, { windowsHide: true });
-    let out = "", err = "";
-    p.stdout.on("data", (d) => (out += d.toString()));
-    p.stderr.on("data", (d) => (err += d.toString()));
+    const outChunks = [];
+    const errChunks = [];
+    p.stdout.on("data", (d) => outChunks.push(d));
+    p.stderr.on("data", (d) => errChunks.push(d));
     p.on("error", reject);
     p.on("close", (code) => {
+      // Always decode as UTF-8 (we force PowerShell to emit UTF-8 below).
+      const out = Buffer.concat(outChunks).toString("utf8");
+      const err = Buffer.concat(errChunks).toString("utf8");
       if (code === 0) resolve(out);
       else reject(new Error(err.trim() || `exit ${code}`));
     });
@@ -21,9 +25,17 @@ function run(cmd, args, { input } = {}) {
   });
 }
 
+// Prefix that forces PowerShell to write UTF-8 instead of the console's
+// OEM/ANSI code page (which mangles cedilla/accented characters in Subject DNs).
+const PS_UTF8_PREFIX = `
+  $OutputEncoding = [System.Text.UTF8Encoding]::new($false)
+  [Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false)
+  $PSDefaultParameterValues['*:Encoding'] = 'utf8'
+`;
+
 // === Windows ===
 async function listWin() {
-  const ps = `
+  const ps = PS_UTF8_PREFIX + `
     $ErrorActionPreference='Stop'
     $certs = Get-ChildItem Cert:\\CurrentUser\\My | Where-Object { $_.HasPrivateKey -eq $true }
     $arr = @()
@@ -46,7 +58,7 @@ async function listWin() {
 }
 
 async function readWin(thumbprint) {
-  const ps = `
+  const ps = PS_UTF8_PREFIX + `
     $c = Get-Item -LiteralPath Cert:\\CurrentUser\\My\\${thumbprint}
     [System.Convert]::ToBase64String($c.RawData)
   `;
@@ -55,7 +67,7 @@ async function readWin(thumbprint) {
 
 async function signWin(thumbprint, hashHex) {
   // Usa RSACryptoServiceProvider para assinar o hash já calculado.
-  const ps = `
+  const ps = PS_UTF8_PREFIX + `
     $c = Get-Item -LiteralPath Cert:\\CurrentUser\\My\\${thumbprint}
     $rsa = [System.Security.Cryptography.X509Certificates.RSACertificateExtensions]::GetRSAPrivateKey($c)
     if($null -eq $rsa){ throw "no-private-key" }
