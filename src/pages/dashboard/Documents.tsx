@@ -1166,6 +1166,9 @@ export default function DocumentsPage() {
                         </DropdownMenuItem>
                         <DropdownMenuItem className="gap-2" onClick={() => setVersionsDoc({ id: doc.id, title: doc.title })}><History className="h-4 w-4" /> Versões</DropdownMenuItem>
                         <DropdownMenuItem className="gap-2" onClick={() => setWorkflowDoc(doc)}><GitBranch className="h-4 w-4" /> Fluxo do Documento</DropdownMenuItem>
+                        <DropdownMenuItem className="gap-2" disabled={!doc.has_file} onClick={() => openSignAdhoc(doc)}>
+                          <PenLine className="h-4 w-4" /> Assinar Digitalmente
+                        </DropdownMenuItem>
                         {canUserDelete(doc) && (
                           <>
                             <DropdownMenuSeparator />
