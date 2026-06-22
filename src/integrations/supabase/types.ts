@@ -3089,6 +3089,16 @@ export type Database = {
         }
         Returns: undefined
       }
+      sign_document_adhoc: {
+        Args: {
+          p_certificado: Json
+          p_documento_id: string
+          p_hash: string
+          p_intent?: string
+          p_versao_id: string
+        }
+        Returns: string
+      }
       submit_for_approval: {
         Args: { p_document_id: string }
         Returns: undefined
