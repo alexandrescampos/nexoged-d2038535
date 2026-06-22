@@ -67,7 +67,9 @@ import { CustomFieldsForm } from "@/components/dashboard/ged/CustomFieldsForm";
 import { ShareDocumentDialog } from "@/components/dashboard/ged/ShareDocumentDialog";
 import { DocumentDetailDialog } from "@/components/dashboard/ged/DocumentDetailDialog";
 import { SignatureCaptureModal } from "@/components/dashboard/ged/SignatureCaptureModal";
-import { GitBranch, PenLine } from "lucide-react";
+import { BulkSignDialog, type BulkSignDoc } from "@/components/dashboard/documents/BulkSignDialog";
+import { Checkbox } from "@/components/ui/checkbox";
+import { GitBranch, PenLine, CheckSquare } from "lucide-react";
 import { toast as toastSonner } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -113,6 +115,12 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+
+function isPdfDoc(d: any): boolean {
+  const m = (d?.mime_type || "").toLowerCase();
+  const n = (d?.file_name || d?.title || "").toLowerCase();
+  return m.includes("pdf") || n.endsWith(".pdf");
+}
 
 function getFileTypeLabel(mime?: string, name?: string): string {
   const ext = (name?.split(".").pop() || "").toLowerCase();
@@ -226,6 +234,9 @@ export default function DocumentsPage() {
   const [workflowDoc, setWorkflowDoc] = useState<any | null>(null);
   const [signDoc, setSignDoc] = useState<{ id: string; title: string; versionId?: string } | null>(null);
   const [isSigningAdhoc, setIsSigningAdhoc] = useState(false);
+  const [selectionMode, setSelectionMode] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [bulkSignOpen, setBulkSignOpen] = useState(false);
   const [editCustomFields, setEditCustomFields] = useState<Record<string, any>>({});
   const [selectedUploadFolderId, setSelectedUploadUploadFolderId] = useState<string | null>(null);
   const [isFolderSelectOpen, setIsFolderSelectOpen] = useState(false);
@@ -582,6 +593,20 @@ export default function DocumentsPage() {
           <Button variant="outline" size="sm" className="hidden sm:flex">
             <History className="mr-2 h-4 w-4" /> Histórico
           </Button>
+          <Button
+            variant={selectionMode ? "default" : "outline"}
+            size="sm"
+            className="gap-2"
+            onClick={() => {
+              setSelectionMode((v) => {
+                if (v) setSelectedIds(new Set());
+                return !v;
+              });
+            }}
+          >
+            <CheckSquare className="h-4 w-4" />
+            <span className="hidden sm:inline">{selectionMode ? "Sair da seleção" : "Selecionar"}</span>
+          </Button>
           <Button size="sm" onClick={() => setIsUploadOpen(true)} className="gap-2">
             <Upload className="h-4 w-4" />
             <span className="hidden sm:inline">Upload</span>
@@ -832,6 +857,30 @@ export default function DocumentsPage() {
               <Table>
                 <TableHeader>
                   <TableRow>
+                    {selectionMode && (
+                      <TableHead className="w-[36px]">
+                        <Checkbox
+                          aria-label="Selecionar PDFs da página"
+                          checked={(() => {
+                            const pageIds = sortedDocuments
+                              .filter((d: any) => isPdfDoc(d))
+                              .map((d: any) => d.id);
+                            return pageIds.length > 0 && pageIds.every((id) => selectedIds.has(id));
+                          })()}
+                          onCheckedChange={(c) => {
+                            const pageIds = sortedDocuments
+                              .filter((d: any) => isPdfDoc(d))
+                              .map((d: any) => d.id);
+                            setSelectedIds((prev) => {
+                              const next = new Set(prev);
+                              if (c) pageIds.forEach((id) => next.add(id));
+                              else pageIds.forEach((id) => next.delete(id));
+                              return next;
+                            });
+                          }}
+                        />
+                      </TableHead>
+                    )}
                     <TableHead className="w-[80px]">Arquivo</TableHead>
                     <SortableTableHead field="title" sortField={sortField} sortDirection={sortDirection} onSort={handleSort}>
                       Título
@@ -877,6 +926,7 @@ export default function DocumentsPage() {
                         moveItem({ type: 'DOCUMENT', id, targetId: folder.past_id });
                       }}
                     >
+                      {selectionMode && <TableCell></TableCell>}
                       <TableCell><Folder className="h-6 w-6 text-amber-500 fill-amber-500/20" /></TableCell>
                       <TableCell className="font-medium">{folder.past_nm_pasta}</TableCell>
                       <TableCell><Badge variant="outline" className="text-[10px]">PASTA</Badge></TableCell>
@@ -901,6 +951,32 @@ export default function DocumentsPage() {
                       }}
                       className="cursor-grab active:cursor-grabbing group"
                     >
+                      {selectionMode && (
+                        <TableCell onClick={(e) => e.stopPropagation()}>
+                          {isPdfDoc(doc) ? (
+                            <Checkbox
+                              aria-label={`Selecionar ${doc.title}`}
+                              checked={selectedIds.has(doc.id)}
+                              onCheckedChange={(c) => {
+                                setSelectedIds((prev) => {
+                                  const next = new Set(prev);
+                                  if (c) next.add(doc.id); else next.delete(doc.id);
+                                  return next;
+                                });
+                              }}
+                            />
+                          ) : (
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <span className="inline-block"><Checkbox disabled aria-label="Apenas PDFs" /></span>
+                                </TooltipTrigger>
+                                <TooltipContent className="text-xs">Apenas PDFs podem ser assinados</TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+                          )}
+                        </TableCell>
+                      )}
                       <TableCell>{getFileIcon(doc.mime_type)}</TableCell>
                       <TableCell className="font-medium max-w-[220px]">
                         <div className="flex items-center gap-2 min-w-0">
@@ -1115,8 +1191,23 @@ export default function DocumentsPage() {
                   e.dataTransfer.setData("type", "DOCUMENT");
                   e.dataTransfer.effectAllowed = "move";
                 }}
-                className="transition-all hover:bg-accent/50 group cursor-grab active:cursor-grabbing"
+                className="relative transition-all hover:bg-accent/50 group cursor-grab active:cursor-grabbing"
               >
+                {selectionMode && isPdfDoc(doc) && (
+                  <div className="absolute top-2 left-2 z-10" onClick={(e) => e.stopPropagation()}>
+                    <Checkbox
+                      aria-label={`Selecionar ${doc.title}`}
+                      checked={selectedIds.has(doc.id)}
+                      onCheckedChange={(c) => {
+                        setSelectedIds((prev) => {
+                          const next = new Set(prev);
+                          if (c) next.add(doc.id); else next.delete(doc.id);
+                          return next;
+                        });
+                      }}
+                    />
+                  </div>
+                )}
                 <CardContent className="p-4 flex flex-col items-center gap-3 text-center h-full justify-between">
                   <div className="flex flex-col items-center gap-2">
                     {getFileIcon(doc.mime_type)}
@@ -1537,6 +1628,30 @@ export default function DocumentsPage() {
         documentId={signDoc?.id}
         versaoId={signDoc?.versionId || null}
       />
+
+      <BulkSignDialog
+        open={bulkSignOpen}
+        onOpenChange={(o) => {
+          setBulkSignOpen(o);
+          if (!o) {
+            setSelectedIds(new Set());
+            setSelectionMode(false);
+          }
+        }}
+        documents={(documents as any[])
+          .filter((d) => selectedIds.has(d.id))
+          .map<BulkSignDoc>((d) => ({ id: d.id, title: d.title, mime_type: d.mime_type, file_name: d.file_name }))}
+      />
+
+      {selectionMode && selectedIds.size > 0 && (
+        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 bg-background border shadow-lg rounded-full px-4 py-2 flex items-center gap-3">
+          <span className="text-sm font-medium">{selectedIds.size} selecionado(s)</span>
+          <Button variant="ghost" size="sm" onClick={() => setSelectedIds(new Set())}>Limpar</Button>
+          <Button size="sm" className="gap-2" onClick={() => setBulkSignOpen(true)}>
+            <PenLine className="h-4 w-4" /> Assinar digitalmente
+          </Button>
+        </div>
+      )}
 
       {/* Modal de Edição */}
       <Dialog open={!!documentToEdit} onOpenChange={(open) => { if (!open) { setDocumentToEdit(null); setEditCustomFields({}); } }}>
