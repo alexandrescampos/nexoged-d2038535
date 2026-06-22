@@ -851,6 +851,30 @@ export default function DocumentsPage() {
               <Table>
                 <TableHeader>
                   <TableRow>
+                    {selectionMode && (
+                      <TableHead className="w-[36px]">
+                        <Checkbox
+                          aria-label="Selecionar PDFs da página"
+                          checked={(() => {
+                            const pageIds = sortedDocuments
+                              .filter((d: any) => isPdfDoc(d))
+                              .map((d: any) => d.id);
+                            return pageIds.length > 0 && pageIds.every((id) => selectedIds.has(id));
+                          })()}
+                          onCheckedChange={(c) => {
+                            const pageIds = sortedDocuments
+                              .filter((d: any) => isPdfDoc(d))
+                              .map((d: any) => d.id);
+                            setSelectedIds((prev) => {
+                              const next = new Set(prev);
+                              if (c) pageIds.forEach((id) => next.add(id));
+                              else pageIds.forEach((id) => next.delete(id));
+                              return next;
+                            });
+                          }}
+                        />
+                      </TableHead>
+                    )}
                     <TableHead className="w-[80px]">Arquivo</TableHead>
                     <SortableTableHead field="title" sortField={sortField} sortDirection={sortDirection} onSort={handleSort}>
                       Título
