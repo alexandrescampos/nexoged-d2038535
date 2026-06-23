@@ -7,10 +7,11 @@ import { Badge } from "@/components/ui/badge";
 import { Download, Shield, CheckCircle2, XCircle, Loader2, MonitorSmartphone, Apple, Terminal } from "lucide-react";
 import { toast } from "sonner";
 import winSignerAsset from "@/assets/nexoged-assinador-win.zip.asset.json";
+import linuxSignerAsset from "@/assets/nexoged-assinador-linux.zip.asset.json";
 const RELEASE_BASE = "https://github.com/alexandrescampos/nexoged-d2038535/releases/latest/download";
 const WIN_URL = winSignerAsset.url;
 const MAC_URL = `${RELEASE_BASE}/NexoGED-Assinador-darwin-x64.zip`;
-const LINUX_URL = `${RELEASE_BASE}/NexoGED-Assinador-linux-x64.zip`;
+const LINUX_URL = linuxSignerAsset.url;
 import {
   initPki,
   listCertificates,
