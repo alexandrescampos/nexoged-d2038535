@@ -216,25 +216,33 @@ export default function AssinadorPage() {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2"><Download className="h-5 w-5" /> Baixar instalador</CardTitle>
-          <CardDescription>Escolha o sistema operacional. Os instaladores estarão disponíveis após o empacotamento.</CardDescription>
+          <CardDescription>
+            Versão mais recente: <Badge variant="secondary">v{SIGNER_VERSION}</Badge> · Escolha o sistema operacional abaixo.
+          </CardDescription>
         </CardHeader>
         <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-3">
           <DownloadCard
             icon={<MonitorSmartphone className="h-5 w-5" />}
             os="Windows"
             arch="10 / 11 · x64"
+            version={SIGNER_VERSION}
+            filename={WIN_FILENAME}
             href={WIN_URL}
           />
           <DownloadCard
             icon={<Apple className="h-5 w-5" />}
             os="macOS"
             arch="11+ · Intel/Apple Silicon"
+            version={SIGNER_VERSION}
+            filename={MAC_FILENAME}
             href={MAC_URL}
           />
           <DownloadCard
             icon={<Terminal className="h-5 w-5" />}
             os="Linux"
             arch="x64 · zip"
+            version={SIGNER_VERSION}
+            filename={LINUX_FILENAME}
             href={LINUX_URL}
           />
         </CardContent>
