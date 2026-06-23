@@ -8,9 +8,9 @@ import { Download, Shield, CheckCircle2, XCircle, Loader2, MonitorSmartphone, Ap
 import { toast } from "sonner";
 import winSignerAsset from "@/assets/nexoged-assinador-win.zip.asset.json";
 import linuxSignerAsset from "@/assets/nexoged-assinador-linux.zip.asset.json";
-const RELEASE_BASE = "https://github.com/alexandrescampos/nexoged-d2038535/releases/latest/download";
+import macSignerAsset from "@/assets/nexoged-assinador-mac.zip.asset.json";
 const WIN_URL = winSignerAsset.url;
-const MAC_URL = `${RELEASE_BASE}/NexoGED-Assinador-darwin-x64.zip`;
+const MAC_URL = macSignerAsset.url;
 const LINUX_URL = linuxSignerAsset.url;
 import {
   initPki,
