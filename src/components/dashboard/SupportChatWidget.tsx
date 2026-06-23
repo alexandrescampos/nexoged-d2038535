@@ -230,7 +230,7 @@ export function SupportChatWidget() {
       <div className="flex items-center justify-between px-4 py-3 bg-primary text-primary-foreground">
         <div className="flex items-center gap-2">
           <HelpCircle className="h-5 w-5" />
-          <span className="font-semibold text-sm">Nexo Assistente</span>
+          <span className="font-semibold text-sm">Nexa</span>
         </div>
         <div className="flex items-center gap-1">
           <Button
