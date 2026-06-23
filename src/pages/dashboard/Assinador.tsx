@@ -9,9 +9,14 @@ import { toast } from "sonner";
 import winSignerAsset from "@/assets/nexoged-assinador-win.zip.asset.json";
 import linuxSignerAsset from "@/assets/nexoged-assinador-linux.zip.asset.json";
 import macSignerAsset from "@/assets/nexoged-assinador-mac.zip.asset.json";
+// Versão atual publicada do app desktop (mantenha em sincronia com signer-desktop/package.json)
+const SIGNER_VERSION = "0.1.3";
 const WIN_URL = winSignerAsset.url;
 const MAC_URL = macSignerAsset.url;
 const LINUX_URL = linuxSignerAsset.url;
+const WIN_FILENAME = `NexoGED-Assinador-v${SIGNER_VERSION}-win-x64.zip`;
+const MAC_FILENAME = `NexoGED-Assinador-v${SIGNER_VERSION}-macos-x64.zip`;
+const LINUX_FILENAME = `NexoGED-Assinador-v${SIGNER_VERSION}-linux-x64.zip`;
 import {
   initPki,
   listCertificates,
@@ -211,25 +216,33 @@ export default function AssinadorPage() {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2"><Download className="h-5 w-5" /> Baixar instalador</CardTitle>
-          <CardDescription>Escolha o sistema operacional. Os instaladores estarão disponíveis após o empacotamento.</CardDescription>
+          <CardDescription>
+            Versão mais recente: <Badge variant="secondary">v{SIGNER_VERSION}</Badge> · Escolha o sistema operacional abaixo.
+          </CardDescription>
         </CardHeader>
         <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-3">
           <DownloadCard
             icon={<MonitorSmartphone className="h-5 w-5" />}
             os="Windows"
             arch="10 / 11 · x64"
+            version={SIGNER_VERSION}
+            filename={WIN_FILENAME}
             href={WIN_URL}
           />
           <DownloadCard
             icon={<Apple className="h-5 w-5" />}
             os="macOS"
             arch="11+ · Intel/Apple Silicon"
+            version={SIGNER_VERSION}
+            filename={MAC_FILENAME}
             href={MAC_URL}
           />
           <DownloadCard
             icon={<Terminal className="h-5 w-5" />}
             os="Linux"
             arch="x64 · zip"
+            version={SIGNER_VERSION}
+            filename={LINUX_FILENAME}
             href={LINUX_URL}
           />
         </CardContent>
@@ -274,7 +287,7 @@ export default function AssinadorPage() {
   );
 }
 
-function DownloadCard({ icon, os, arch, href, disabled }: { icon: React.ReactNode; os: string; arch: string; href: string; disabled?: boolean }) {
+function DownloadCard({ icon, os, arch, version, filename, href, disabled }: { icon: React.ReactNode; os: string; arch: string; version?: string; filename?: string; href: string; disabled?: boolean }) {
   if (disabled) {
     return (
       <div className="block border rounded-md p-4 opacity-60 cursor-not-allowed">
@@ -288,10 +301,16 @@ function DownloadCard({ icon, os, arch, href, disabled }: { icon: React.ReactNod
     <a
       href={href}
       className="block border rounded-md p-4 hover:bg-accent transition-colors"
-      download
+      download={filename}
     >
-      <div className="flex items-center gap-2 mb-1">{icon}<span className="font-medium">{os}</span></div>
+      <div className="flex items-center gap-2 mb-1">
+        {icon}<span className="font-medium">{os}</span>
+        {version && <Badge variant="secondary" className="ml-auto text-[10px]">v{version}</Badge>}
+      </div>
       <div className="text-xs text-muted-foreground">{arch}</div>
+      {filename && (
+        <div className="text-[11px] text-muted-foreground mt-1 font-mono break-all">{filename}</div>
+      )}
       <div className="text-xs text-primary mt-2 inline-flex items-center gap-1"><Download className="h-3 w-3" /> Baixar</div>
     </a>
   );
