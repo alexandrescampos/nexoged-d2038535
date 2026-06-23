@@ -1697,7 +1697,7 @@ export type Database = {
       }
       organization_google_drive_connections: {
         Row: {
-          access_token: string
+          access_token_enc: string | null
           connected_by: string | null
           created_at: string
           google_display_name: string | null
@@ -1706,14 +1706,14 @@ export type Database = {
           last_error: string | null
           last_used_at: string | null
           organization_id: string
-          refresh_token: string
+          refresh_token_enc: string | null
           scope: string
           status: string
           token_expires_at: string
           updated_at: string
         }
         Insert: {
-          access_token: string
+          access_token_enc?: string | null
           connected_by?: string | null
           created_at?: string
           google_display_name?: string | null
@@ -1722,14 +1722,14 @@ export type Database = {
           last_error?: string | null
           last_used_at?: string | null
           organization_id: string
-          refresh_token: string
+          refresh_token_enc?: string | null
           scope: string
           status?: string
           token_expires_at: string
           updated_at?: string
         }
         Update: {
-          access_token?: string
+          access_token_enc?: string | null
           connected_by?: string | null
           created_at?: string
           google_display_name?: string | null
@@ -1738,7 +1738,7 @@ export type Database = {
           last_error?: string | null
           last_used_at?: string | null
           organization_id?: string
-          refresh_token?: string
+          refresh_token_enc?: string | null
           scope?: string
           status?: string
           token_expires_at?: string
@@ -1771,7 +1771,7 @@ export type Database = {
       organization_integrations: {
         Row: {
           created_at: string
-          credentials: Json
+          credentials_enc: string | null
           id: string
           is_active: boolean
           organization_id: string
@@ -1780,7 +1780,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
-          credentials?: Json
+          credentials_enc?: string | null
           id?: string
           is_active?: boolean
           organization_id: string
@@ -1789,7 +1789,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
-          credentials?: Json
+          credentials_enc?: string | null
           id?: string
           is_active?: boolean
           organization_id?: string
@@ -2874,6 +2874,7 @@ export type Database = {
       }
     }
     Functions: {
+      _app_enc_key: { Args: never; Returns: string }
       apply_document_type_policy: {
         Args: { p_document_id: string }
         Returns: Json
@@ -2982,6 +2983,42 @@ export type Database = {
         }
         Returns: string
       }
+      gdrive_get_connection: {
+        Args: { p_org_id: string }
+        Returns: {
+          access_token: string
+          google_display_name: string
+          google_email: string
+          organization_id: string
+          refresh_token: string
+          scope: string
+          status: string
+          token_expires_at: string
+        }[]
+      }
+      gdrive_update_access_token: {
+        Args: {
+          p_access_token: string
+          p_org_id: string
+          p_token_expires_at: string
+        }
+        Returns: undefined
+      }
+      gdrive_upsert_connection: {
+        Args: {
+          p_access_token: string
+          p_connected_by: string
+          p_google_display_name: string
+          p_google_email: string
+          p_google_photo_url: string
+          p_org_id: string
+          p_refresh_token: string
+          p_scope: string
+          p_status: string
+          p_token_expires_at: string
+        }
+        Returns: undefined
+      }
       get_org_gdrive_status: { Args: { p_org_id: string }; Returns: Json }
       get_org_max_users: { Args: { _org_id: string }; Returns: number }
       get_org_user_count: { Args: { _org_id: string }; Returns: number }
@@ -3008,6 +3045,11 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      integrations_get_credentials: { Args: { p_id: string }; Returns: Json }
+      integrations_set_credentials: {
+        Args: { p_credentials: Json; p_id: string }
+        Returns: undefined
       }
       is_password_in_history: {
         Args: { p_new_password: string; p_user_id: string }
