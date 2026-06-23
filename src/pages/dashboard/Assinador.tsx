@@ -287,7 +287,7 @@ export default function AssinadorPage() {
   );
 }
 
-function DownloadCard({ icon, os, arch, href, disabled }: { icon: React.ReactNode; os: string; arch: string; href: string; disabled?: boolean }) {
+function DownloadCard({ icon, os, arch, version, filename, href, disabled }: { icon: React.ReactNode; os: string; arch: string; version?: string; filename?: string; href: string; disabled?: boolean }) {
   if (disabled) {
     return (
       <div className="block border rounded-md p-4 opacity-60 cursor-not-allowed">
@@ -301,10 +301,16 @@ function DownloadCard({ icon, os, arch, href, disabled }: { icon: React.ReactNod
     <a
       href={href}
       className="block border rounded-md p-4 hover:bg-accent transition-colors"
-      download
+      download={filename}
     >
-      <div className="flex items-center gap-2 mb-1">{icon}<span className="font-medium">{os}</span></div>
+      <div className="flex items-center gap-2 mb-1">
+        {icon}<span className="font-medium">{os}</span>
+        {version && <Badge variant="secondary" className="ml-auto text-[10px]">v{version}</Badge>}
+      </div>
       <div className="text-xs text-muted-foreground">{arch}</div>
+      {filename && (
+        <div className="text-[11px] text-muted-foreground mt-1 font-mono break-all">{filename}</div>
+      )}
       <div className="text-xs text-primary mt-2 inline-flex items-center gap-1"><Download className="h-3 w-3" /> Baixar</div>
     </a>
   );
