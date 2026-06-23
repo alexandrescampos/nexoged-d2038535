@@ -75,19 +75,18 @@ Deno.serve(async (req) => {
 
     const expiresAt = new Date(Date.now() + (expires_in ?? 3600) * 1000).toISOString();
 
-    await admin.from("organization_google_drive_connections").upsert({
-      organization_id: stateRow.organization_id,
-      connected_by: stateRow.user_id,
-      google_email: gUser.emailAddress ?? "unknown",
-      google_display_name: gUser.displayName ?? null,
-      google_photo_url: gUser.photoLink ?? null,
-      access_token,
-      refresh_token,
-      token_expires_at: expiresAt,
-      scope: scope ?? "https://www.googleapis.com/auth/drive.readonly",
-      status: "active",
-      last_error: null,
-    }, { onConflict: "organization_id" });
+    await admin.rpc("gdrive_upsert_connection", {
+      p_org_id: stateRow.organization_id,
+      p_connected_by: stateRow.user_id,
+      p_google_email: gUser.emailAddress ?? "unknown",
+      p_google_display_name: gUser.displayName ?? null,
+      p_google_photo_url: gUser.photoLink ?? null,
+      p_access_token: access_token,
+      p_refresh_token: refresh_token,
+      p_token_expires_at: expiresAt,
+      p_scope: scope ?? "https://www.googleapis.com/auth/drive.readonly",
+      p_status: "active",
+    });
 
     // Audit log
     await admin.from("user_audit_log").insert({

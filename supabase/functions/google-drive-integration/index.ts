@@ -14,9 +14,8 @@ const SUPABASE_ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY")!;
 const DRIVE_API = "https://www.googleapis.com/drive/v3";
 
 async function getValidAccessToken(admin: any, orgId: string): Promise<string> {
-  const { data: conn, error } = await admin
-    .from("organization_google_drive_connections")
-    .select("*").eq("organization_id", orgId).single();
+  const { data: rows, error } = await admin.rpc("gdrive_get_connection", { p_org_id: orgId });
+  const conn = Array.isArray(rows) ? rows[0] : rows;
   if (error || !conn) throw new Error("NOT_CONNECTED");
   if (conn.status !== "active") throw new Error("NOT_CONNECTED");
 
@@ -42,12 +41,11 @@ async function getValidAccessToken(admin: any, orgId: string): Promise<string> {
     throw new Error("REFRESH_FAILED");
   }
   const newExpires = new Date(Date.now() + (j.expires_in ?? 3600) * 1000).toISOString();
-  await admin.from("organization_google_drive_connections").update({
-    access_token: j.access_token,
-    token_expires_at: newExpires,
-    last_error: null,
-    status: "active",
-  }).eq("organization_id", orgId);
+  await admin.rpc("gdrive_update_access_token", {
+    p_org_id: orgId,
+    p_access_token: j.access_token,
+    p_token_expires_at: newExpires,
+  });
   return j.access_token;
 }
 
