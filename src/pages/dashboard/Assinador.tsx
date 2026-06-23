@@ -9,9 +9,14 @@ import { toast } from "sonner";
 import winSignerAsset from "@/assets/nexoged-assinador-win.zip.asset.json";
 import linuxSignerAsset from "@/assets/nexoged-assinador-linux.zip.asset.json";
 import macSignerAsset from "@/assets/nexoged-assinador-mac.zip.asset.json";
+// Versão atual publicada do app desktop (mantenha em sincronia com signer-desktop/package.json)
+const SIGNER_VERSION = "0.1.3";
 const WIN_URL = winSignerAsset.url;
 const MAC_URL = macSignerAsset.url;
 const LINUX_URL = linuxSignerAsset.url;
+const WIN_FILENAME = `NexoGED-Assinador-v${SIGNER_VERSION}-win-x64.zip`;
+const MAC_FILENAME = `NexoGED-Assinador-v${SIGNER_VERSION}-macos-x64.zip`;
+const LINUX_FILENAME = `NexoGED-Assinador-v${SIGNER_VERSION}-linux-x64.zip`;
 import {
   initPki,
   listCertificates,
