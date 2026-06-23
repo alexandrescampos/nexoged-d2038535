@@ -46,8 +46,8 @@ Deno.serve(async (req) => {
       });
     }
 
-    const { data: conn } = await admin.from("organization_google_drive_connections")
-      .select("refresh_token").eq("organization_id", orgId).single();
+    const { data: connRows } = await admin.rpc("gdrive_get_connection", { p_org_id: orgId });
+    const conn = Array.isArray(connRows) ? connRows[0] : connRows;
 
     if (conn?.refresh_token) {
       try {
