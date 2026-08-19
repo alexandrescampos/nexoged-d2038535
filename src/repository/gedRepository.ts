@@ -145,7 +145,13 @@ export const gedRepository = {
     const formattedData = (data || []).map(doc => {
       const versions = (doc as any).versions || [];
       const latestVersion = [...versions].sort((a, b) => (b.version_number || 0) - (a.version_number || 0))[0];
-      const signatures = (doc as any).signatures || [];
+      const allSignatures = (doc as any).signatures || [];
+      // Somente assinaturas efetivamente concluídas contam como "Assinado".
+      // Registros PENDENTE são criados automaticamente pela política/fluxo no upload.
+      const signatures = allSignatures.filter(
+        (s: any) => s?.status === "ASSINADA" && !!s?.assinado_em
+      );
+      const pendingSignaturesCount = allSignatures.length - signatures.length;
 
       return {
         ...doc,
@@ -156,6 +162,7 @@ export const gedRepository = {
         mime_type: latestVersion?.mime_type || 'application/octet-stream',
         custom_field_values: doc.custom_field_values || [],
         signatures,
+        pending_signatures_count: pendingSignaturesCount,
         has_signatures: signatures.length > 0,
         document_type_data: doc.document_type_data ? {
           ...doc.document_type_data,
