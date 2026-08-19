@@ -32,7 +32,7 @@ export const gedRepository = {
         versions:ged_document_versions(mime_type, version_number, file_name, file_size, created_by),
         document_type_data:ged_document_types(*, associated_fields:ged_document_type_custom_fields(custom_field:custom_fields(*))),
         custom_field_values:ged_document_custom_field_values(*, field_data:custom_fields(*)),
-        signatures:documento_assinatura(id, assinante_id, tipo_assinatura, assinado_em, hash_evidencia, certificado_info)
+        signatures:documento_assinatura(id, assinante_id, tipo_assinatura, status, assinado_em, hash_evidencia, certificado_info)
       `, { count: "exact" });
     
     if (params.organizationId) {
@@ -145,7 +145,13 @@ export const gedRepository = {
     const formattedData = (data || []).map(doc => {
       const versions = (doc as any).versions || [];
       const latestVersion = [...versions].sort((a, b) => (b.version_number || 0) - (a.version_number || 0))[0];
-      const signatures = (doc as any).signatures || [];
+      const allSignatures = (doc as any).signatures || [];
+      // Somente assinaturas efetivamente concluídas contam como "Assinado".
+      // Registros PENDENTE são criados automaticamente pela política/fluxo no upload.
+      const signatures = allSignatures.filter(
+        (s: any) => s?.status === "ASSINADA" && !!s?.assinado_em
+      );
+      const pendingSignaturesCount = allSignatures.length - signatures.length;
 
       return {
         ...doc,
@@ -156,6 +162,7 @@ export const gedRepository = {
         mime_type: latestVersion?.mime_type || 'application/octet-stream',
         custom_field_values: doc.custom_field_values || [],
         signatures,
+        pending_signatures_count: pendingSignaturesCount,
         has_signatures: signatures.length > 0,
         document_type_data: doc.document_type_data ? {
           ...doc.document_type_data,
