@@ -448,6 +448,15 @@ export default function DocumentsPage() {
       });
       if (error) throw error;
       toastSonner.success("Documento assinado digitalmente");
+      // Recarrega os dados para refletir a assinatura imediatamente
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["ged-documents"] }),
+        queryClient.invalidateQueries({ queryKey: ["ged-documents-total"] }),
+        queryClient.invalidateQueries({ queryKey: ["doc-signatures", signDoc.id] }),
+        queryClient.invalidateQueries({ queryKey: ["my-pending-signatures"] }),
+        queryClient.invalidateQueries({ queryKey: ["org-pending-signatures"] }),
+        queryClient.invalidateQueries({ queryKey: ["document-versions"] }),
+      ]);
       setSignDoc(null);
     } catch (e: any) {
       toastSonner.error("Erro ao registrar assinatura: " + (e?.message || ""));
