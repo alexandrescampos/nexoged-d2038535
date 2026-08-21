@@ -435,34 +435,18 @@ export default function DocumentsPage() {
     }
   };
 
-  const handleAdhocSignConfirm = async (payload: { hashEvidencia: string; certificado?: any }) => {
-    if (!signDoc) return;
-    setIsSigningAdhoc(true);
-    try {
-      const { error } = await supabase.rpc("sign_document_adhoc", {
-        p_documento_id: signDoc.id,
-        p_versao_id: signDoc.versionId || null,
-        p_hash: payload.hashEvidencia,
-        p_certificado: payload.certificado || null,
-        p_intent: payload.certificado?.intent || null,
-      });
-      if (error) throw error;
-      toastSonner.success("Documento assinado digitalmente");
-      // Recarrega os dados para refletir a assinatura imediatamente
-      await Promise.all([
-        queryClient.invalidateQueries({ queryKey: ["ged-documents"] }),
-        queryClient.invalidateQueries({ queryKey: ["ged-documents-total"] }),
-        queryClient.invalidateQueries({ queryKey: ["doc-signatures", signDoc.id] }),
-        queryClient.invalidateQueries({ queryKey: ["my-pending-signatures"] }),
-        queryClient.invalidateQueries({ queryKey: ["org-pending-signatures"] }),
-        queryClient.invalidateQueries({ queryKey: ["document-versions"] }),
-      ]);
-      setSignDoc(null);
-    } catch (e: any) {
-      toastSonner.error("Erro ao registrar assinatura: " + (e?.message || ""));
-    } finally {
-      setIsSigningAdhoc(false);
-    }
+  /** Recarrega os dados após uma assinatura concluída no servidor. */
+  const handleAdhocSigned = async () => {
+    const documentId = signDoc?.id;
+    await Promise.all([
+      queryClient.invalidateQueries({ queryKey: ["ged-documents"] }),
+      queryClient.invalidateQueries({ queryKey: ["ged-documents-total"] }),
+      queryClient.invalidateQueries({ queryKey: ["doc-signatures", documentId] }),
+      queryClient.invalidateQueries({ queryKey: ["my-pending-signatures"] }),
+      queryClient.invalidateQueries({ queryKey: ["org-pending-signatures"] }),
+      queryClient.invalidateQueries({ queryKey: ["document-versions"] }),
+    ]);
+    setSignDoc(null);
   };
 
   const handleViewFile = async (documentId: string) => {
