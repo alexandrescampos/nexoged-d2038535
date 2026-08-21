@@ -1632,11 +1632,9 @@ export default function DocumentsPage() {
       <SignatureCaptureModal
         open={!!signDoc}
         onOpenChange={(o) => { if (!o) setSignDoc(null); }}
-        tipo={"QUALIFICADA" as any}
-        onConfirm={handleAdhocSignConfirm}
-        isSigning={isSigningAdhoc}
+        tipo="QUALIFICADA"
         documentId={signDoc?.id}
-        versaoId={signDoc?.versionId || null}
+        onSigned={handleAdhocSigned}
       />
 
       <BulkSignDialog
