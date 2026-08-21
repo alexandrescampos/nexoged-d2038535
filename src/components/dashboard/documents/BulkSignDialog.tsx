@@ -1,21 +1,26 @@
-import { useEffect, useRef, useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { useEffect, useMemo, useState } from "react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Loader2, CheckCircle2, XCircle, ShieldAlert, ExternalLink, PenLine } from "lucide-react";
-import { toast } from "sonner";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { CheckCircle2, FileBadge2, Loader2, PenLine, ShieldAlert, XCircle } from "lucide-react";
 import { Link } from "react-router-dom";
-import {
-  initPki, listCertificates, readCertificate, signHash, sha256Hex,
-  describeBridgeError, type PkiCertificate,
-} from "@/lib/signerBridge";
-import { supabase } from "@/integrations/supabase/client";
-import { documentVersionRepository } from "@/repository/documentVersionRepository";
+import { toast } from "sonner";
+import { formatBrasiliaDateTime } from "@/lib/timezone";
+import { useDigitalCertificates, daysUntil } from "@/hooks/useDigitalCertificates";
+import { certificateRepository, describeSignError } from "@/repository/certificateRepository";
 
 export interface BulkSignDoc {
   id: string;
@@ -24,13 +29,12 @@ export interface BulkSignDoc {
   file_name?: string | null;
 }
 
-type ItemStatus = "pending" | "signing" | "done" | "error" | "skipped";
+type ItemStatus = "pending" | "done" | "error";
+
 interface BulkItem extends BulkSignDoc {
   status: ItemStatus;
   message?: string;
 }
-
-type PkiStatus = "checking" | "ready" | "unpaired" | "missing" | "error";
 
 interface Props {
   open: boolean;
@@ -39,300 +43,188 @@ interface Props {
   onFinished?: () => void;
 }
 
-export function BulkSignDialog({ open, onOpenChange, documents, onFinished }: Props) {
-  const pdfs = documents.filter((d) => {
-    const m = (d.mime_type || "").toLowerCase();
-    const n = (d.file_name || d.title || "").toLowerCase();
-    return m.includes("pdf") || n.endsWith(".pdf");
-  });
+const BATCH_SIZE = 10;
 
-  const [pkiStatus, setPkiStatus] = useState<PkiStatus>("checking");
-  const [pkiErr, setPkiErr] = useState("");
-  const [certs, setCerts] = useState<PkiCertificate[]>([]);
-  const [selectedThumb, setSelectedThumb] = useState<string>("");
+export function BulkSignDialog({ open, onOpenChange, documents, onFinished }: Props) {
+  const pdfs = useMemo(
+    () =>
+      documents.filter((d) => {
+        const mime = (d.mime_type || "").toLowerCase();
+        const name = (d.file_name || d.title || "").toLowerCase();
+        return mime.includes("pdf") || name.endsWith(".pdf");
+      }),
+    [documents],
+  );
+
+  const { certificates, isLoading } = useDigitalCertificates();
+  const usable = useMemo(() => certificates.filter((c) => daysUntil(c.valido_ate) >= 0), [certificates]);
+
+  const [selectedId, setSelectedId] = useState("");
   const [intent, setIntent] = useState("");
   const [items, setItems] = useState<BulkItem[]>([]);
   const [running, setRunning] = useState(false);
   const [finished, setFinished] = useState(false);
-  const cancelRef = useRef(false);
 
   useEffect(() => {
     if (!open) return;
-    setItems(pdfs.map((d) => ({ ...d, status: "pending" })));
+    setItems(pdfs.map((d) => ({ ...d, status: "pending" as ItemStatus })));
     setFinished(false);
     setRunning(false);
-    cancelRef.current = false;
-    loadPki();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open]);
+    setIntent("");
+    if (usable.length === 1) setSelectedId(usable[0].id);
+  }, [open, pdfs, usable]);
 
-  const loadPki = async () => {
-    setPkiStatus("checking");
-    setPkiErr("");
-    try {
-      await initPki();
-      try {
-        const list = await listCertificates();
-        const today = new Date();
-        const valid = list.filter((c) => !c.validityEnd || new Date(c.validityEnd) > today);
-        setCerts(valid);
-        if (valid.length === 1) setSelectedThumb(valid[0].thumbprint);
-        setPkiStatus("ready");
-      } catch (e: any) {
-        if (String(e?.message || "").includes("bridge-unpaired")) setPkiStatus("unpaired");
-        else { setPkiStatus("error"); setPkiErr(describeBridgeError(e)); }
-      }
-    } catch (e: any) {
-      if (String(e?.message || "").includes("bridge-not-running")) setPkiStatus("missing");
-      else { setPkiStatus("error"); setPkiErr(describeBridgeError(e)); }
-    }
-  };
-
-  const updateItem = (id: string, patch: Partial<BulkItem>) => {
-    setItems((prev) => prev.map((it) => (it.id === id ? { ...it, ...patch } : it)));
-  };
-
-  const signOne = async (doc: BulkItem, cert: PkiCertificate, certBase64: string) => {
-    // 1. última versão
-    const { data: versao, error: vErr } = await supabase
-      .from("ged_document_versions")
-      .select("id, file_path, file_name, mime_type")
-      .eq("document_id", doc.id)
-      .neq("status", "CANCELADA")
-      .order("version_number", { ascending: false })
-      .limit(1)
-      .maybeSingle();
-    if (vErr) throw new Error("Versão: " + vErr.message);
-    if (!versao) throw new Error("Sem versão ativa");
-    const mime = (versao.mime_type || "").toLowerCase();
-    const fname = (versao.file_name || "").toLowerCase();
-    if (!mime.includes("pdf") && !fname.endsWith(".pdf")) throw new Error("Não é PDF");
-
-    // 2. download + hash
-    const url = await documentVersionRepository.getDownloadUrl(versao.file_path);
-    const res = await fetch(url);
-    if (!res.ok) throw new Error("Download HTTP " + res.status);
-    const buf = await res.arrayBuffer();
-    const docHash = await sha256Hex(buf);
-
-    // 3. assinar via bridge
-    const signatureB64 = await signHash(cert.thumbprint, docHash);
-
-    // 4. RPC
-    const certificado = {
-      tipo: "ICP-Brasil A1/A3",
-      subjectName: cert.subjectName,
-      issuerName: cert.issuerName,
-      email: cert.email,
-      validityStart: cert.validityStart,
-      validityEnd: cert.validityEnd,
-      thumbprint: cert.thumbprint,
-      serialNumber: (cert as any).serialNumber,
-      pkiBrazil: cert.pkiBrazil,
-      certificateBase64: certBase64,
-      signature: signatureB64,
-      signatureAlgorithm: "SHA256withRSA",
-      documentHash: docHash,
-      documentHashAlgorithm: "SHA-256",
-      intent: intent || null,
-      signedAt: new Date().toISOString(),
-      bulk: true,
-    };
-    const { error } = await supabase.rpc("sign_document_adhoc", {
-      p_documento_id: doc.id,
-      p_versao_id: versao.id,
-      p_hash: docHash,
-      p_certificado: certificado as any,
-      p_intent: intent || null,
-    });
-    if (error) throw new Error(error.message);
-  };
+  const processed = items.filter((i) => i.status !== "pending").length;
+  const succeeded = items.filter((i) => i.status === "done").length;
+  const failed = items.filter((i) => i.status === "error").length;
+  const progress = items.length ? Math.round((processed / items.length) * 100) : 0;
 
   const handleStart = async () => {
-    if (!selectedThumb) { toast.error("Selecione um certificado"); return; }
-    const cert = certs.find((c) => c.thumbprint === selectedThumb);
-    if (!cert) return;
+    if (!selectedId || items.length === 0) return;
     setRunning(true);
-    cancelRef.current = false;
-    let certBase64 = "";
     try {
-      certBase64 = await readCertificate(selectedThumb);
-    } catch (e: any) {
-      toast.error("Falha ao ler certificado: " + describeBridgeError(e));
+      // Processa em lotes para respeitar o limite da função e dar feedback incremental
+      for (let i = 0; i < items.length; i += BATCH_SIZE) {
+        const batch = items.slice(i, i + BATCH_SIZE);
+        const results = await certificateRepository.signDocuments({
+          certificateId: selectedId,
+          documentIds: batch.map((b) => b.id),
+          intent: intent.trim() || undefined,
+        });
+        setItems((prev) =>
+          prev.map((item) => {
+            const result = results.find((r) => r.documentId === item.id);
+            if (!result) return item;
+            return result.ok
+              ? { ...item, status: "done" }
+              : { ...item, status: "error", message: describeSignError(result.error) };
+          }),
+        );
+      }
+      setFinished(true);
+      onFinished?.();
+    } catch (e) {
+      toast.error((e as Error).message || "Falha ao assinar os documentos");
+    } finally {
       setRunning(false);
-      return;
     }
-    for (const it of items) {
-      if (cancelRef.current) {
-        setItems((prev) => prev.map((x) => (x.status === "pending" ? { ...x, status: "skipped", message: "Cancelado" } : x)));
-        break;
-      }
-      if (it.status !== "pending") continue;
-      updateItem(it.id, { status: "signing" });
-      try {
-        await signOne(it, cert, certBase64);
-        updateItem(it.id, { status: "done" });
-      } catch (e: any) {
-        updateItem(it.id, { status: "error", message: e?.message || String(e) });
-      }
-    }
-    setRunning(false);
-    setFinished(true);
-    onFinished?.();
   };
 
-  const handleCancel = () => { cancelRef.current = true; };
-
-  const handleDownloadReport = () => {
-    const rows = [
-      ["Documento", "Status", "Mensagem"],
-      ...items.map((i) => [i.title, i.status, i.message || ""]),
-    ];
-    const csv = rows.map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(",")).join("\n");
-    const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url; a.download = `assinatura-lote-${Date.now()}.csv`; a.click();
-    setTimeout(() => URL.revokeObjectURL(url), 2000);
-  };
-
-  const total = items.length;
-  const completed = items.filter((i) => i.status === "done" || i.status === "error" || i.status === "skipped").length;
-  const okCount = items.filter((i) => i.status === "done").length;
-  const errCount = items.filter((i) => i.status === "error").length;
-  const progress = total ? Math.round((completed / total) * 100) : 0;
+  const noCertificate = !isLoading && usable.length === 0;
 
   return (
     <Dialog open={open} onOpenChange={(o) => { if (!running) onOpenChange(o); }}>
-      <DialogContent className="sm:max-w-[720px] max-h-[calc(100vh-2rem)] overflow-y-auto">
+      <DialogContent className="max-h-[calc(100vh-2rem)] overflow-y-auto sm:max-w-xl">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <PenLine className="h-5 w-5" /> Assinar PDFs em lote
+            <PenLine className="h-5 w-5" /> Assinatura digital em massa
           </DialogTitle>
           <DialogDescription>
-            {pdfs.length} PDF(s) selecionado(s){documents.length !== pdfs.length && ` · ${documents.length - pdfs.length} ignorado(s) (não-PDF)`}.
+            {pdfs.length} documento(s) PDF selecionado(s). A assinatura é aplicada no servidor com o seu
+            certificado A1.
           </DialogDescription>
         </DialogHeader>
 
-        {pdfs.length === 0 && (
-          <Alert variant="destructive">
-            <AlertDescription>Nenhum PDF entre os documentos selecionados.</AlertDescription>
+        {documents.length !== pdfs.length && (
+          <Alert>
+            <AlertDescription>
+              {documents.length - pdfs.length} arquivo(s) não são PDF e foram ignorados.
+            </AlertDescription>
           </Alert>
         )}
 
-        {pdfs.length > 0 && (
+        {isLoading ? (
+          <div className="flex items-center gap-2 text-sm text-muted-foreground py-4">
+            <Loader2 className="h-4 w-4 animate-spin" /> Carregando certificados...
+          </div>
+        ) : noCertificate ? (
+          <Alert variant="destructive">
+            <ShieldAlert className="h-4 w-4" />
+            <AlertDescription className="space-y-2">
+              <p>Nenhum certificado digital válido cadastrado.</p>
+              <Button asChild variant="outline" size="sm">
+                <Link to="/dashboard/certificados">Cadastrar certificado</Link>
+              </Button>
+            </AlertDescription>
+          </Alert>
+        ) : (
           <div className="space-y-4">
-            {/* Status do assinador */}
-            {pkiStatus === "checking" && (
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <Loader2 className="h-4 w-4 animate-spin" /> Verificando assinador...
-              </div>
-            )}
-            {(pkiStatus === "missing" || pkiStatus === "unpaired" || pkiStatus === "error") && (
-              <Alert variant="destructive">
-                <ShieldAlert className="h-4 w-4" />
-                <AlertDescription className="space-y-2">
-                  <p>
-                    {pkiStatus === "missing" && "Assinador desktop não localizado."}
-                    {pkiStatus === "unpaired" && "Assinador detectado, mas este navegador ainda não foi pareado."}
-                    {pkiStatus === "error" && (pkiErr || "Erro de comunicação com o assinador.")}
-                  </p>
-                  <Button asChild variant="outline" size="sm" className="gap-1">
-                    <Link to="/dashboard/assinador" target="_blank">
-                      Configurar assinador <ExternalLink className="h-3 w-3" />
-                    </Link>
-                  </Button>
-                </AlertDescription>
-              </Alert>
-            )}
+            <div className="space-y-2">
+              <Label>Certificado</Label>
+              <RadioGroup value={selectedId} onValueChange={setSelectedId} className="space-y-2">
+                {usable.map((cert) => (
+                  <label
+                    key={cert.id}
+                    htmlFor={`bulk-cert-${cert.id}`}
+                    className="flex items-start gap-3 rounded-md border p-3 cursor-pointer hover:bg-accent transition-colors"
+                  >
+                    <RadioGroupItem value={cert.id} id={`bulk-cert-${cert.id}`} className="mt-1" disabled={running} />
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2">
+                        <FileBadge2 className="h-4 w-4 text-primary" />
+                        <span className="font-medium text-sm">{cert.titular_nome}</span>
+                        <Badge variant="secondary" className="text-[10px]">
+                          {cert.owner_type === "USUARIO" ? "e-CPF" : "e-CNPJ"}
+                        </Badge>
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        Válido até {formatBrasiliaDateTime(cert.valido_ate)}
+                      </p>
+                    </div>
+                  </label>
+                ))}
+              </RadioGroup>
+            </div>
 
-            {pkiStatus === "ready" && !finished && (
-              <>
-                <div className="grid gap-2">
-                  <Label>Certificado</Label>
-                  <Select value={selectedThumb} onValueChange={setSelectedThumb} disabled={running}>
-                    <SelectTrigger><SelectValue placeholder="Selecione o certificado" /></SelectTrigger>
-                    <SelectContent>
-                      {certs.length === 0 && <div className="px-3 py-2 text-xs text-muted-foreground">Nenhum certificado válido</div>}
-                      {certs.map((c) => (
-                        <SelectItem key={c.thumbprint} value={c.thumbprint}>
-                          {c.subjectName}{c.validityEnd ? ` · até ${new Date(c.validityEnd).toLocaleDateString("pt-BR")}` : ""}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+            <div className="space-y-2">
+              <Label htmlFor="bulk-intent">Finalidade da assinatura (opcional)</Label>
+              <Textarea
+                id="bulk-intent"
+                value={intent}
+                onChange={(e) => setIntent(e.target.value)}
+                rows={2}
+                maxLength={500}
+                disabled={running}
+              />
+            </div>
 
-                <div className="grid gap-2">
-                  <Label>Intenção / justificativa (opcional)</Label>
-                  <Input
-                    value={intent}
-                    onChange={(e) => setIntent(e.target.value)}
-                    placeholder="Ex.: Aprovação de procedimentos do mês"
-                    disabled={running}
-                  />
-                </div>
-
-                <Alert>
-                  <AlertDescription className="text-xs">
-                    Cada PDF exigirá uma confirmação no app desktop (e PIN, no caso de token A3).
-                    O processo é sequencial e pode levar alguns minutos.
-                  </AlertDescription>
-                </Alert>
-              </>
-            )}
-
-            {/* Lista + progresso */}
             {(running || finished) && (
               <div className="space-y-2">
-                <div className="flex items-center justify-between text-sm">
-                  <span>{completed} de {total} processados</span>
-                  <span className="text-muted-foreground">{okCount} ok · {errCount} erro</span>
-                </div>
                 <Progress value={progress} />
+                <p className="text-xs text-muted-foreground">
+                  {processed}/{items.length} processado(s) · {succeeded} assinado(s) · {failed} com erro
+                </p>
               </div>
             )}
 
-            <ScrollArea className="max-h-[280px] border rounded-md">
-              <div className="divide-y">
-                {items.map((it) => (
-                  <div key={it.id} className="flex items-center gap-2 px-3 py-2 text-sm">
-                    <span className="flex-1 truncate">{it.title}</span>
-                    {it.status === "pending" && <span className="text-xs text-muted-foreground">aguardando</span>}
-                    {it.status === "signing" && <Loader2 className="h-4 w-4 animate-spin text-primary" />}
-                    {it.status === "done" && <CheckCircle2 className="h-4 w-4 text-emerald-600" />}
-                    {it.status === "error" && (
-                      <span className="flex items-center gap-1 text-xs text-destructive max-w-[260px] truncate" title={it.message}>
-                        <XCircle className="h-4 w-4" /> {it.message}
-                      </span>
+            <ScrollArea className="max-h-56 rounded-md border">
+              <ul className="divide-y">
+                {items.map((item) => (
+                  <li key={item.id} className="flex items-start gap-2 px-3 py-2 text-sm">
+                    {item.status === "done" && <CheckCircle2 className="h-4 w-4 text-emerald-600 mt-0.5" />}
+                    {item.status === "error" && <XCircle className="h-4 w-4 text-destructive mt-0.5" />}
+                    {item.status === "pending" && (
+                      <span className="h-4 w-4 rounded-full border mt-0.5" aria-hidden />
                     )}
-                    {it.status === "skipped" && <span className="text-xs text-muted-foreground">cancelado</span>}
-                  </div>
+                    <div className="min-w-0">
+                      <p className="truncate">{item.title}</p>
+                      {item.message && <p className="text-xs text-destructive">{item.message}</p>}
+                    </div>
+                  </li>
                 ))}
-              </div>
+              </ul>
             </ScrollArea>
           </div>
         )}
 
-        <DialogFooter className="gap-2">
-          {finished ? (
-            <>
-              <Button variant="outline" onClick={handleDownloadReport}>Baixar relatório CSV</Button>
-              <Button onClick={() => onOpenChange(false)}>Fechar</Button>
-            </>
-          ) : running ? (
-            <Button variant="destructive" onClick={handleCancel}>Cancelar</Button>
-          ) : (
-            <>
-              <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
-              <Button
-                onClick={handleStart}
-                disabled={pkiStatus !== "ready" || !selectedThumb || pdfs.length === 0}
-              >
-                Assinar {pdfs.length} documento(s)
-              </Button>
-            </>
-          )}
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={running}>
+            {finished ? "Fechar" : "Cancelar"}
+          </Button>
+          <Button onClick={handleStart} disabled={running || finished || noCertificate || !selectedId}>
+            {running ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <PenLine className="h-4 w-4 mr-2" />}
+            Assinar {items.length} documento(s)
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
