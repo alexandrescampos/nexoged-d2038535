@@ -163,7 +163,7 @@ Deno.serve(async (req) => {
 
     const parsed = BodySchema.safeParse(await req.json());
     if (!parsed.success) return json({ error: parsed.error.flatten().fieldErrors }, 400);
-    const { certificateId, documentIds, intent } = parsed.data;
+    const { certificateId, documentIds, intent, assinaturaId, tipo } = parsed.data;
 
     // Confere se o certificado pertence ao usuário/organização dele
     const { data: available } = await userClient.rpc("cert_list_available");
