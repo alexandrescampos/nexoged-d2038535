@@ -15,6 +15,9 @@ const BodySchema = z.object({
   certificateId: z.string().uuid(),
   documentIds: z.array(z.string().uuid()).min(1).max(50),
   intent: z.string().max(500).optional(),
+  // Quando informado, conclui uma etapa de assinatura do fluxo em vez de criar uma avulsa
+  assinaturaId: z.string().uuid().optional(),
+  tipo: z.enum(["SIMPLES", "AVANCADA", "QUALIFICADA"]).optional(),
 });
 
 function json(body: unknown, status = 200) {
