@@ -38,12 +38,54 @@ function attrsToMap(attributes: Array<{ name?: string; type?: string; value?: un
  */
 export function inspectPfx(pfxBase64: string, password: string): CertInspection {
   const binary = b64ToBinary(pfxBase64);
-  let p12;
+
+  let asn1;
   try {
-    p12 = forge.pkcs12.pkcs12FromAsn1(forge.asn1.fromDer(binary), false, password);
+    asn1 = forge.asn1.fromDer(binary);
   } catch (_e) {
+    // Não é um PKCS#12 válido (arquivo corrompido ou formato errado).
+    throw new Error("arquivo_invalido");
+  }
+
+  // Tenta variações comuns de codificação da senha antes de concluir que está errada.
+  // node-forge espera "binary string"; senhas com acentos vindas de UTF-8 falham
+  // se não forem convertidas para latin1.
+  const candidates = Array.from(
+    new Set([
+      password,
+      // UTF-8 -> binary string
+      Array.from(new TextEncoder().encode(password))
+        .map((b) => String.fromCharCode(b))
+        .join(""),
+      password.trim(),
+    ]),
+  );
+
+  let p12;
+  let lastError: unknown = null;
+  for (const candidate of candidates) {
+    try {
+      p12 = forge.pkcs12.pkcs12FromAsn1(asn1, false, candidate);
+      break;
+    } catch (e) {
+      lastError = e;
+    }
+  }
+
+  if (!p12) {
+    const msg = String((lastError as Error)?.message || "").toLowerCase();
+    // node-forge não suporta PKCS#12 com PBES2/AES (padrão em emissores recentes).
+    if (
+      msg.includes("unsupported") ||
+      msg.includes("algorithm") ||
+      msg.includes("oid") ||
+      msg.includes("cannot read")
+    ) {
+      throw new Error("formato_nao_suportado");
+    }
     throw new Error("senha_incorreta");
   }
+
 
   const certBags = p12.getBags({ bagType: forge.pki.oids.certBag })[forge.pki.oids.certBag] || [];
   const bag = certBags.find((b: { cert?: unknown }) => b.cert) ?? certBags[0];
