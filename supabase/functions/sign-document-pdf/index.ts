@@ -5,11 +5,38 @@ import { createClient } from "npm:@supabase/supabase-js@2";
 import { z } from "npm:zod@3.23.8";
 import { PDFDocument, StandardFonts, rgb } from "npm:pdf-lib@1.17.1";
 import { Buffer } from "node:buffer";
-import signpdfDefault from "npm:@signpdf/signpdf@3.2.4";
+import * as signpdfModule from "npm:@signpdf/signpdf@3.2.4";
 import { pdflibAddPlaceholder } from "npm:@signpdf/placeholder-pdf-lib@3.2.4";
 import { P12Signer } from "npm:@signpdf/signer-p12@3.2.4";
 
-const signpdf = (signpdfDefault as unknown as { sign: (b: Buffer, s: unknown) => Promise<Buffer> });
+type Signer = { sign: (b: Buffer, s: unknown) => Promise<Buffer> };
+
+/**
+ * O pacote @signpdf/signpdf expõe a classe `SignPdf` e uma instância padrão.
+ * Sob interop npm do Deno o `default` pode vir aninhado, então resolvemos
+ * defensivamente qualquer uma das formas possíveis.
+ */
+function resolveSignPdf(): Signer {
+  const mod = signpdfModule as unknown as Record<string, unknown>;
+  const candidates: unknown[] = [
+    mod.default,
+    (mod.default as Record<string, unknown> | undefined)?.default,
+    mod.signpdf,
+    mod,
+  ];
+  for (const c of candidates) {
+    if (c && typeof (c as Signer).sign === "function") return c as Signer;
+  }
+  const SignPdfClass =
+    (mod.SignPdf ?? (mod.default as Record<string, unknown> | undefined)?.SignPdf) as
+      | (new () => Signer)
+      | undefined;
+  if (typeof SignPdfClass === "function") return new SignPdfClass();
+  throw new Error("falha_assinatura_lib");
+}
+
+const signpdf = resolveSignPdf();
+
 
 const BodySchema = z.object({
   certificateId: z.string().uuid(),
