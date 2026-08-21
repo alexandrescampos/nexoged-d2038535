@@ -275,22 +275,32 @@ Deno.serve(async (req) => {
         });
         if (verErr) throw new Error("falha_versao");
 
-        const { error: signErr } = await userClient.rpc("sign_document_adhoc", {
-          p_documento_id: documentId,
-          p_versao_id: (newVersion as { id: string }).id,
-          p_hash: finalHash,
-          p_certificado: {
-            tipo: "A1",
-            origem: "servidor",
-            titular_nome: material.titular_nome,
-            titular_documento: material.titular_documento,
-            emissor: material.emissor,
-            serial_number: material.serial_number,
-            valido_ate: material.valido_ate,
-            certificado_id: certificateId,
-          },
-          p_intent: intent ?? null,
-        });
+        const certificadoInfo = {
+          tipo: "A1",
+          origem: "servidor",
+          titular_nome: material.titular_nome,
+          titular_documento: material.titular_documento,
+          emissor: material.emissor,
+          serial_number: material.serial_number,
+          valido_ate: material.valido_ate,
+          certificado_id: certificateId,
+          intent: intent ?? null,
+        };
+
+        const signErr = assinaturaId && documentIds.length === 1
+          ? (await userClient.rpc("sign_document", {
+              p_assinatura_id: assinaturaId,
+              p_tipo: tipo ?? "QUALIFICADA",
+              p_hash_evidencia: finalHash,
+              p_certificado: certificadoInfo,
+            })).error
+          : (await userClient.rpc("sign_document_adhoc", {
+              p_documento_id: documentId,
+              p_versao_id: (newVersion as { id: string }).id,
+              p_hash: finalHash,
+              p_certificado: certificadoInfo,
+              p_intent: intent ?? null,
+            })).error;
         if (signErr) throw new Error("falha_registro_assinatura");
 
         results.push({ documentId, ok: true });
