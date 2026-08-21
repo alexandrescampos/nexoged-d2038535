@@ -259,8 +259,115 @@ export function MultiFileUploader({
         }}
       />
 
+      {files.filter(f => f.status === 'pending' || f.status === 'error').length > 1 && (
+        <Card className="p-4 space-y-3 border-primary/30 bg-primary/5">
+          <div className="flex items-center justify-between gap-2">
+            <p className="text-xs font-semibold uppercase text-muted-foreground">
+              Preenchimento em massa ({files.filter(f => f.status === 'pending' || f.status === 'error').length} arquivos)
+            </p>
+            <Button
+              size="sm"
+              variant="secondary"
+              type="button"
+              disabled={isUploading}
+              onClick={() => {
+                setFiles(prev => prev.map(f =>
+                  (f.status === 'pending' || f.status === 'error')
+                    ? {
+                        ...f,
+                        description: bulkMeta.description || f.description,
+                        creationDate: bulkMeta.creationDate ?? f.creationDate,
+                        expirationDate: bulkMeta.expirationDate ?? f.expirationDate,
+                        customFields: { ...f.customFields, ...bulkMeta.customFields },
+                      }
+                    : f
+                ));
+                toast.success('Dados aplicados a todos os arquivos pendentes.');
+              }}
+            >
+              Aplicar a todos
+            </Button>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid gap-1.5">
+              <Label htmlFor="bulk-desc" className="text-xs">Descrição</Label>
+              <Input
+                id="bulk-desc"
+                placeholder="Descrição aplicada a todos..."
+                className="h-8 text-xs"
+                value={bulkMeta.description}
+                onChange={(e) => setBulkMeta(prev => ({ ...prev, description: e.target.value }))}
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-2">
+              {requiresCreationDate && (
+                <div className="grid gap-1.5">
+                  <Label className="text-xs">Criação</Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button variant="outline" size="sm" className="h-8 text-xs justify-start px-2 font-normal">
+                        <CalendarIcon className="mr-1 h-3 w-3" />
+                        {bulkMeta.creationDate ? format(new Date(bulkMeta.creationDate), "dd/MM/yy") : "Data"}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0">
+                      <Calendar
+                        mode="single"
+                        selected={bulkMeta.creationDate ? new Date(bulkMeta.creationDate) : undefined}
+                        onSelect={(date) => setBulkMeta(prev => ({ ...prev, creationDate: date?.toISOString() }))}
+                        locale={ptBR}
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+              )}
+
+              {requiresExpirationDate && (
+                <div className="grid gap-1.5">
+                  <Label className="text-xs">Vencimento</Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button variant="outline" size="sm" className="h-8 text-xs justify-start px-2 font-normal">
+                        <CalendarIcon className="mr-1 h-3 w-3" />
+                        {bulkMeta.expirationDate ? format(new Date(bulkMeta.expirationDate), "dd/MM/yy") : "Data"}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0">
+                      <Calendar
+                        mode="single"
+                        selected={bulkMeta.expirationDate ? new Date(bulkMeta.expirationDate) : undefined}
+                        onSelect={(date) => setBulkMeta(prev => ({ ...prev, expirationDate: date?.toISOString() }))}
+                        locale={ptBR}
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {associatedFields.length > 0 && (
+            <div className="border-t pt-3">
+              <p className="text-[10px] font-semibold uppercase text-muted-foreground mb-2">
+                Campos Específicos do Tipo de Documento
+              </p>
+              <CustomFieldsForm
+                fields={associatedFields}
+                values={bulkMeta.customFields}
+                onChange={(fieldId, value) =>
+                  setBulkMeta(prev => ({ ...prev, customFields: { ...prev.customFields, [fieldId]: value } }))
+                }
+              />
+            </div>
+          )}
+        </Card>
+      )}
+
       {files.length > 0 && (
         <Card className="overflow-hidden border-muted-foreground/20">
+
           <ScrollArea className="max-h-[450px]">
             <div className="p-4 space-y-4">
               {files.map((fileData) => (
