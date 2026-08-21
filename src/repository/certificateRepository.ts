@@ -36,11 +36,15 @@ export function fileToBase64(file: File): Promise<string> {
 
 const UPLOAD_ERRORS: Record<string, string> = {
   senha_incorreta: "Senha do certificado incorreta.",
+  arquivo_invalido: "Arquivo inválido: envie um certificado A1 no formato .pfx ou .p12.",
+  formato_nao_suportado:
+    "Certificado com criptografia não suportada (AES/PBES2). Reexporte o .pfx com compatibilidade legada (TripleDES-SHA1) e tente novamente.",
   certificado_nao_encontrado: "Não foi possível localizar um certificado válido no arquivo.",
   arquivo_muito_grande: "O arquivo excede o limite de 2 MB.",
   sem_organizacao: "Seu usuário não está vinculado a uma organização.",
   forbidden: "Você não tem permissão para cadastrar o certificado da organização.",
 };
+
 
 const SIGN_ERRORS: Record<string, string> = {
   certificado_indisponivel: "Certificado indisponível para o seu usuário.",
