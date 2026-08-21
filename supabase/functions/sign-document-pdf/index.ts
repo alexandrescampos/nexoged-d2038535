@@ -165,7 +165,10 @@ async function buildStampedPdf(
     contactInfo: contactInfo || "nexoged",
     name: signerName.slice(0, 90),
     location: "Nexo GED",
+    // Cadeias ICP-Brasil geram assinaturas grandes; 8192 (default) estoura.
+    signatureLength: 32768,
   });
+
 
   return await pdfDoc.save({ useObjectStreams: false });
 }
