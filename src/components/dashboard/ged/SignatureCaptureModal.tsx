@@ -1,388 +1,171 @@
-import { useEffect, useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { useEffect, useMemo, useState } from "react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Shield, KeyRound, FileBadge2, Loader2, ExternalLink, RefreshCw, Download } from "lucide-react";
-import { toast } from "sonner";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Badge } from "@/components/ui/badge";
+import { FileBadge2, Loader2, PenLine, ShieldAlert } from "lucide-react";
 import { Link } from "react-router-dom";
+import { toast } from "sonner";
+import { formatBrasiliaDateTime } from "@/lib/timezone";
+import { useDigitalCertificates, daysUntil } from "@/hooks/useDigitalCertificates";
+import { certificateRepository, describeSignError } from "@/repository/certificateRepository";
 import type { TipoAssinatura } from "@/repository/policyFlowRepository";
-import {
-  initPki,
-  listCertificates,
-  readCertificate,
-  signHash,
-  sha256Hex,
-  resetPki,
-  getPairToken,
-  setPairToken,
-  describeBridgeError,
-  SIGNER_INSTALL_URL,
-  type PkiCertificate,
-} from "@/lib/signerBridge";
-import { documentVersionRepository } from "@/repository/documentVersionRepository";
-import { supabase } from "@/integrations/supabase/client";
 
-interface Props {
+export interface SignatureCaptureModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  tipo: TipoAssinatura;
-  onConfirm: (payload: { hashEvidencia: string; certificado?: any }) => void;
-  isSigning: boolean;
+  /** Documento a ser assinado */
   documentId?: string;
-  versaoId?: string | null;
+  /** Etapa do fluxo de assinatura, quando houver */
+  assinaturaId?: string;
+  tipo?: TipoAssinatura;
+  /** Chamado após a assinatura ser concluída com sucesso */
+  onSigned?: () => void;
 }
-
-const sha256Text = async (input: string) => {
-  const buf = new TextEncoder().encode(input);
-  return sha256Hex(buf.buffer as ArrayBuffer);
-};
 
 export function SignatureCaptureModal({
   open,
   onOpenChange,
-  tipo,
-  onConfirm,
-  isSigning,
   documentId,
-  versaoId,
-}: Props) {
-  const [password, setPassword] = useState("");
-  const [govbrToken, setGovbrToken] = useState("");
+  assinaturaId,
+  tipo,
+  onSigned,
+}: SignatureCaptureModalProps) {
+  const { certificates, isLoading } = useDigitalCertificates();
+  const [selectedId, setSelectedId] = useState("");
   const [intent, setIntent] = useState("");
+  const [isSigning, setIsSigning] = useState(false);
 
-  // Lacuna state
-  const useToken = tipo === "QUALIFICADA" || tipo === "AVANCADA";
-  const [pkiStatus, setPkiStatus] = useState<"idle" | "loading" | "ready" | "not-installed" | "unpaired" | "error">("idle");
-  const [pkiError, setPkiError] = useState<string | null>(null);
-  const [certs, setCerts] = useState<PkiCertificate[]>([]);
-  const [selectedThumb, setSelectedThumb] = useState<string>("");
-  const [loadingCerts, setLoadingCerts] = useState(false);
-  const [pairInput, setPairInput] = useState<string>(getPairToken() || "");
-
-  const reset = () => {
-    setPassword("");
-    setGovbrToken("");
-    setIntent("");
-    setSelectedThumb("");
-    setCerts([]);
-    setPkiError(null);
-  };
-
-  const loadPki = async () => {
-    setPkiStatus("loading");
-    setPkiError(null);
-    try {
-      await initPki();
-      // tenta listar; se 401 (unpaired), mostra campo de pareamento
-      try {
-        await refreshCerts(true);
-        setPkiStatus("ready");
-      } catch (e: any) {
-        const msg = String(e?.message || e);
-        if (msg.includes("bridge-unpaired")) {
-          setPkiStatus("unpaired");
-        } else {
-          throw e;
-        }
-      }
-    } catch (e: any) {
-      const msg = String(e?.message || e);
-      if (msg.includes("bridge-not-running")) {
-        setPkiStatus("not-installed");
-      } else {
-        setPkiStatus("error");
-        setPkiError(describeBridgeError(e));
-      }
-    }
-  };
-
-  const refreshCerts = async (throwOnUnpaired = false) => {
-    setLoadingCerts(true);
-    try {
-      const list = await listCertificates();
-      const today = new Date();
-      const valid = list.filter((c: any) => {
-        const end = c.validityEnd ? new Date(c.validityEnd) : null;
-        return !end || end > today;
-      });
-      setCerts(valid);
-      if (valid.length === 1) setSelectedThumb(valid[0].thumbprint);
-    } catch (e: any) {
-      if (throwOnUnpaired) throw e;
-      toast.error("Falha ao listar certificados: " + describeBridgeError(e));
-    } finally {
-      setLoadingCerts(false);
-    }
-  };
-
-  const handlePair = async () => {
-    const t = pairInput.trim();
-    if (!/^\d{6}$/.test(t)) {
-      toast.error("Cole o código de 6 dígitos exibido na bandeja do assinador");
-      return;
-    }
-    setPairToken(t);
-    await loadPki();
-  };
+  const usable = useMemo(
+    () => certificates.filter((c) => daysUntil(c.valido_ate) >= 0),
+    [certificates],
+  );
 
   useEffect(() => {
-    if (open && useToken && pkiStatus === "idle") {
-      loadPki();
-    }
     if (!open) {
-      resetPki();
-      setPkiStatus("idle");
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, useToken]);
-
-  const handleSubmitSimple = async () => {
-    if ((tipo === "SIMPLES" || tipo === "NENHUMA") && !password) return;
-    if (tipo === "AVANCADA" && !govbrToken && pkiStatus !== "ready") return;
-    const src =
-      tipo === "AVANCADA"
-        ? `avancada:${govbrToken}:${Date.now()}`
-        : `simples:${password}:${Date.now()}`;
-    const hash = await sha256Text(src + "|" + intent);
-    onConfirm({ hashEvidencia: hash, certificado: undefined });
-    reset();
-  };
-
-  const handleSubmitToken = async () => {
-    if (!selectedThumb) {
-      toast.error("Selecione um certificado");
+      setIntent("");
+      setSelectedId("");
       return;
     }
-    if (!documentId) {
-      toast.error("Documento sem versão para assinar");
-      return;
-    }
+    if (usable.length === 1) setSelectedId(usable[0].id);
+  }, [open, usable]);
+
+  const handleSign = async () => {
+    if (!documentId || !selectedId) return;
+    setIsSigning(true);
     try {
-      console.log("[Sign] start", { documentId, versaoId, selectedThumb });
-      // 1. Buscar file_path da versão (fallback: última versão do documento)
-      let query = supabase
-        .from("ged_document_versions")
-        .select("id, file_path, file_name")
-        .eq("document_id", documentId);
-      if (versaoId) {
-        query = query.eq("id", versaoId);
-      } else {
-        query = query
-          .neq("status", "CANCELADA")
-          .order("version_number", { ascending: false })
-          .limit(1);
-      }
-      const { data: versao, error: vErr } = await query.maybeSingle();
-      console.log("[Sign] versao", { versao, vErr });
-      if (vErr) throw new Error("Versão: " + vErr.message);
-      if (!versao) throw new Error("Nenhuma versão ativa encontrada para o documento");
-
-      // 2. Download do arquivo
-      const url = await documentVersionRepository.getDownloadUrl(versao.file_path);
-      console.log("[Sign] signed url ok");
-      const fileRes = await fetch(url);
-      if (!fileRes.ok) throw new Error("Falha download HTTP " + fileRes.status);
-      const buffer = await fileRes.arrayBuffer();
-      console.log("[Sign] file bytes", buffer.byteLength);
-
-      // 3. SHA-256 do conteúdo
-      const docHash = await sha256Hex(buffer);
-      console.log("[Sign] hash", docHash);
-
-      // 4. Ler certificado + assinar hash via token
-      const cert = certs.find((c) => c.thumbprint === selectedThumb)!;
-      const certBase64 = await readCertificate(selectedThumb);
-      console.log("[Sign] cert read ok, length", certBase64?.length);
-      const signatureB64 = await signHash(selectedThumb, docHash);
-      console.log("[Sign] signature ok, length", signatureB64?.length);
-
-      // 5. Payload de evidência
-      const certificado = {
-        tipo: tipo === "QUALIFICADA" ? "ICP-Brasil A1/A3" : "ICP-Brasil",
-        subjectName: cert.subjectName,
-        issuerName: cert.issuerName,
-        email: cert.email,
-        validityStart: cert.validityStart,
-        validityEnd: cert.validityEnd,
-        thumbprint: cert.thumbprint,
-        serialNumber: (cert as any).serialNumber,
-        pkiBrazil: cert.pkiBrazil,
-        certificateBase64: certBase64,
-        signature: signatureB64,
-        signatureAlgorithm: "SHA256withRSA",
-        documentHash: docHash,
-        documentHashAlgorithm: "SHA-256",
-        intent,
-        signedAt: new Date().toISOString(),
-      };
-
-      onConfirm({ hashEvidencia: docHash, certificado });
-      reset();
-    } catch (e: any) {
-      console.error("[Sign] error", e);
-      toast.error("Erro ao assinar: " + (e?.message || JSON.stringify(e)));
+      const results = await certificateRepository.signDocuments({
+        certificateId: selectedId,
+        documentIds: [documentId],
+        intent: intent.trim() || undefined,
+        assinaturaId,
+        tipo,
+      });
+      const failure = results.find((r) => !r.ok);
+      if (failure) throw new Error(describeSignError(failure.error));
+      toast.success("Documento assinado digitalmente");
+      onSigned?.();
+      onOpenChange(false);
+    } catch (e) {
+      toast.error((e as Error).message || "Falha ao assinar o documento");
+    } finally {
+      setIsSigning(false);
     }
   };
 
-  const icon =
-    tipo === "QUALIFICADA" ? <FileBadge2 className="h-5 w-5" /> :
-    tipo === "AVANCADA" ? <Shield className="h-5 w-5" /> :
-    <KeyRound className="h-5 w-5" />;
-
-  const showToken = useToken;
+  const expiredOnly = certificates.length > 0 && usable.length === 0;
 
   return (
-    <Dialog open={open} onOpenChange={(o) => { if (!o) reset(); onOpenChange(o); }}>
-      <DialogContent className="max-w-md max-h-[calc(100vh-2rem)] overflow-y-auto">
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-h-[calc(100vh-2rem)] overflow-y-auto sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">{icon} Assinar Documento</DialogTitle>
+          <DialogTitle className="flex items-center gap-2">
+            <PenLine className="h-5 w-5" /> Assinar digitalmente
+          </DialogTitle>
           <DialogDescription>
-            Tipo exigido pela política: <strong>{tipo}</strong>
+            A assinatura é aplicada no servidor com o seu certificado A1 (ICP-Brasil).
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-4 py-2">
-          {(tipo === "SIMPLES" || tipo === "NENHUMA") && (
-            <div className="space-y-2">
-              <Label>Confirme sua senha</Label>
-              <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Senha atual" />
-              <p className="text-xs text-muted-foreground">Assinatura simples: confirmação por senha do usuário.</p>
-            </div>
-          )}
-
-          {showToken && (
-            <div className="space-y-3">
-              <Label className="flex items-center gap-2">
-                <FileBadge2 className="h-4 w-4" /> Certificado ICP-Brasil (Token A3 ou A1)
-              </Label>
-
-              {pkiStatus === "loading" && (
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <Loader2 className="h-4 w-4 animate-spin" /> Detectando NexoGED Assinador...
-                </div>
-              )}
-
-              {pkiStatus === "not-installed" && (
-                <Alert>
-                  <AlertDescription className="text-xs space-y-2">
-                    <p>O app <strong>NexoGED Assinador</strong> não está em execução nesta máquina.</p>
-                    <p>Baixe e instale o aplicativo desktop (Windows / macOS / Linux) — ele acessa seu certificado A1 ou token A3 com segurança.</p>
-                    <Link
-                      to={SIGNER_INSTALL_URL}
-                      className="inline-flex items-center gap-1 text-primary underline"
-                      onClick={() => onOpenChange(false)}
-                    >
-                      <Download className="h-3 w-3" /> Baixar NexoGED Assinador
-                    </Link>
-                    <div>
-                      <Button size="sm" variant="outline" onClick={() => loadPki()} className="mt-2">
-                        Já instalei e abri, tentar novamente
-                      </Button>
-                    </div>
-                  </AlertDescription>
-                </Alert>
-              )}
-
-              {pkiStatus === "unpaired" && (
-                <Alert>
-                  <AlertDescription className="text-xs space-y-2">
-                    <p>Assinador detectado. Cole o <strong>código de 6 dígitos</strong> exibido na bandeja do sistema (clique no ícone do NexoGED Assinador) para autorizar este navegador.</p>
-                    <div className="flex items-center gap-2">
-                      <Input
-                        value={pairInput}
-                        onChange={(e) => setPairInput(e.target.value.replace(/\D/g, "").slice(0, 6))}
-                        placeholder="000000"
-                        inputMode="numeric"
-                        maxLength={6}
-                        className="font-mono tracking-widest text-center"
-                      />
-                      <Button size="sm" onClick={handlePair}>Parear</Button>
-                    </div>
-                  </AlertDescription>
-                </Alert>
-              )}
-
-              {pkiStatus === "error" && (
-                <Alert variant="destructive">
-                  <AlertDescription className="text-xs">
-                    {pkiError}
-                    <Button size="sm" variant="outline" onClick={() => loadPki()} className="mt-2 ml-2">
-                      Tentar novamente
-                    </Button>
-                  </AlertDescription>
-                </Alert>
-              )}
-
-              {pkiStatus === "ready" && (
-                <>
-                  <div className="flex items-center gap-2">
-                    <Select value={selectedThumb} onValueChange={setSelectedThumb}>
-                      <SelectTrigger className="flex-1">
-                        <SelectValue placeholder={certs.length === 0 ? "Nenhum certificado encontrado" : "Selecione o certificado"} />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {certs.map((c) => (
-                          <SelectItem key={c.thumbprint} value={c.thumbprint}>
-                            <div className="flex flex-col">
-                              <span className="text-sm">{c.subjectName}</span>
-                              <span className="text-[10px] text-muted-foreground">
-                                {c.issuerName} · até {c.validityEnd ? new Date(c.validityEnd).toLocaleDateString("pt-BR") : "—"}
-                              </span>
-                            </div>
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <Button size="icon" variant="outline" onClick={() => refreshCerts()} disabled={loadingCerts} title="Atualizar lista">
-                      <RefreshCw className={`h-4 w-4 ${loadingCerts ? "animate-spin" : ""}`} />
-                    </Button>
-                  </div>
-                  {certs.length === 0 && !loadingCerts && (
-                    <p className="text-xs text-muted-foreground">
-                      Conecte o token/leitor e atualize. Para A1, verifique se o certificado está importado no repositório do sistema (Windows CertStore / macOS Keychain).
-                    </p>
-                  )}
-                </>
-              )}
-
-              {tipo === "AVANCADA" && pkiStatus !== "ready" && (
-                <div className="space-y-2 pt-2 border-t">
-                  <Label className="text-xs">Alternativa: Código Gov.br / OTP</Label>
-                  <Input value={govbrToken} onChange={(e) => setGovbrToken(e.target.value)} placeholder="Token recebido" />
-                </div>
-              )}
-            </div>
-          )}
-
-          <div className="space-y-2">
-            <Label>Intenção da assinatura (opcional)</Label>
-            <Textarea value={intent} onChange={(e) => setIntent(e.target.value)} placeholder="Ex.: Aprovo o conteúdo deste documento." rows={2} />
+        {isLoading ? (
+          <div className="flex items-center gap-2 text-sm text-muted-foreground py-6">
+            <Loader2 className="h-4 w-4 animate-spin" /> Carregando certificados...
           </div>
-        </div>
+        ) : usable.length === 0 ? (
+          <Alert variant="destructive">
+            <ShieldAlert className="h-4 w-4" />
+            <AlertDescription className="space-y-2">
+              <p>
+                {expiredOnly
+                  ? "Seu certificado está vencido."
+                  : "Nenhum certificado digital cadastrado para o seu usuário."}
+              </p>
+              <Button asChild variant="outline" size="sm">
+                <Link to="/dashboard/certificados">Cadastrar certificado</Link>
+              </Button>
+            </AlertDescription>
+          </Alert>
+        ) : (
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label>Certificado</Label>
+              <RadioGroup value={selectedId} onValueChange={setSelectedId} className="space-y-2">
+                {usable.map((cert) => (
+                  <label
+                    key={cert.id}
+                    htmlFor={`cert-${cert.id}`}
+                    className="flex items-start gap-3 rounded-md border p-3 cursor-pointer hover:bg-accent transition-colors"
+                  >
+                    <RadioGroupItem value={cert.id} id={`cert-${cert.id}`} className="mt-1" />
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2">
+                        <FileBadge2 className="h-4 w-4 text-primary" />
+                        <span className="font-medium text-sm">{cert.titular_nome}</span>
+                        <Badge variant="secondary" className="text-[10px]">
+                          {cert.owner_type === "USUARIO" ? "e-CPF" : "e-CNPJ"}
+                        </Badge>
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        Válido até {formatBrasiliaDateTime(cert.valido_ate)}
+                      </p>
+                    </div>
+                  </label>
+                ))}
+              </RadioGroup>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="sign-intent">Finalidade da assinatura (opcional)</Label>
+              <Textarea
+                id="sign-intent"
+                value={intent}
+                onChange={(e) => setIntent(e.target.value)}
+                placeholder="Ex.: Aprovação do contrato de prestação de serviços"
+                rows={3}
+                maxLength={500}
+              />
+            </div>
+          </div>
+        )}
 
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
-          {showToken && pkiStatus === "ready" && certs.length > 0 ? (
-            <Button onClick={handleSubmitToken} disabled={isSigning || !selectedThumb}>
-              {isSigning ? "Assinando..." : "Assinar com Token"}
-            </Button>
-          ) : (
-            <Button
-              onClick={handleSubmitSimple}
-              disabled={
-                isSigning ||
-                ((tipo === "SIMPLES" || tipo === "NENHUMA") && !password) ||
-                (tipo === "AVANCADA" && !govbrToken) ||
-                tipo === "QUALIFICADA"
-              }
-            >
-              {isSigning ? "Assinando..." : "Confirmar Assinatura"}
-            </Button>
-          )}
+          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isSigning}>
+            Cancelar
+          </Button>
+          <Button onClick={handleSign} disabled={!selectedId || isSigning || usable.length === 0}>
+            {isSigning ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <PenLine className="h-4 w-4 mr-2" />}
+            Assinar
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
