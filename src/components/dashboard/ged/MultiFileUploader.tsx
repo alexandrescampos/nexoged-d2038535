@@ -176,6 +176,19 @@ export function MultiFileUploader({
     setFiles(prev => prev.map(f => f.id === id ? { ...f, ...updates } : f));
   };
 
+  /**
+   * Combina os metadados em massa com os do arquivo. Os dados individuais
+   * têm prioridade; o preenchimento em massa é usado como fallback para que
+   * o usuário não precise clicar em "Aplicar a todos" antes de enviar.
+   */
+  const mergeWithBulk = (f: FileWithProgress) => ({
+    file: f.file,
+    description: f.description?.trim() ? f.description : bulkMeta.description,
+    creationDate: f.creationDate ?? bulkMeta.creationDate,
+    expirationDate: f.expirationDate ?? bulkMeta.expirationDate,
+    customFields: { ...bulkMeta.customFields, ...f.customFields },
+  });
+
   const handleUpload = async () => {
     const pendingFiles = files.filter(f => f.status === 'pending' || f.status === 'error');
     if (pendingFiles.length === 0) return;
@@ -187,13 +200,7 @@ export function MultiFileUploader({
           : f
       ));
 
-      await onUpload(pendingFiles.map(f => ({
-        file: f.file,
-        description: f.description,
-        creationDate: f.creationDate,
-        expirationDate: f.expirationDate,
-        customFields: f.customFields
-      })));
+      await onUpload(pendingFiles.map(mergeWithBulk));
       
       setFiles(prev => prev.map(f => 
         f.status === 'uploading' ? { ...f, status: 'completed', progress: 100 } : f
