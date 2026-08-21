@@ -119,6 +119,81 @@ export type Database = {
           },
         ]
       }
+      digital_certificates: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          emissor: string | null
+          fingerprint: string | null
+          id: string
+          organization_id: string
+          owner_type: string
+          pfx_enc: string
+          senha_enc: string
+          serial_number: string | null
+          status: string
+          titular_documento: string | null
+          titular_nome: string
+          updated_at: string
+          user_id: string | null
+          valido_ate: string
+          valido_de: string | null
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          emissor?: string | null
+          fingerprint?: string | null
+          id?: string
+          organization_id: string
+          owner_type: string
+          pfx_enc: string
+          senha_enc: string
+          serial_number?: string | null
+          status?: string
+          titular_documento?: string | null
+          titular_nome: string
+          updated_at?: string
+          user_id?: string | null
+          valido_ate: string
+          valido_de?: string | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          emissor?: string | null
+          fingerprint?: string | null
+          id?: string
+          organization_id?: string
+          owner_type?: string
+          pfx_enc?: string
+          senha_enc?: string
+          serial_number?: string | null
+          status?: string
+          titular_documento?: string | null
+          titular_nome?: string
+          updated_at?: string
+          user_id?: string | null
+          valido_ate?: string
+          valido_de?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "digital_certificates_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organization_usage"
+            referencedColumns: ["organization_id"]
+          },
+          {
+            foreignKeyName: "digital_certificates_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       documento_aprovacao: {
         Row: {
           aprovador_id: string | null
@@ -2892,6 +2967,52 @@ export type Database = {
       cancel_document_version: {
         Args: { p_reason?: string; p_version_id: string }
         Returns: undefined
+      }
+      cert_get_material: {
+        Args: { p_id: string }
+        Returns: {
+          emissor: string
+          organization_id: string
+          owner_type: string
+          pfx_b64: string
+          senha: string
+          serial_number: string
+          titular_documento: string
+          titular_nome: string
+          user_id: string
+          valido_ate: string
+        }[]
+      }
+      cert_list_available: {
+        Args: never
+        Returns: {
+          emissor: string
+          id: string
+          organization_id: string
+          owner_type: string
+          status: string
+          titular_documento: string
+          titular_nome: string
+          valido_ate: string
+          valido_de: string
+        }[]
+      }
+      cert_upsert: {
+        Args: {
+          p_emissor: string
+          p_fingerprint: string
+          p_organization_id: string
+          p_owner_type: string
+          p_pfx_b64: string
+          p_senha: string
+          p_serial_number: string
+          p_titular_documento: string
+          p_titular_nome: string
+          p_user_id: string
+          p_valido_ate: string
+          p_valido_de: string
+        }
+        Returns: string
       }
       check_password_is_not_repeated: {
         Args: { p_new_password: string; p_user_id: string }
