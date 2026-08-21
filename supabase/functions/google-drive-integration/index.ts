@@ -174,6 +174,51 @@ Deno.serve(async (req) => {
 
 
 
+    // Expand a folder into its files (optionally recursive, BFS)
+    if (action === "folder-files") {
+      const folderId = url.searchParams.get("folderId");
+      if (!folderId) {
+        return new Response(JSON.stringify({ error: "Missing folderId" }), {
+          status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" }
+        });
+      }
+      const recursive = url.searchParams.get("recursive") === "true";
+      const maxFilesRaw = parseInt(url.searchParams.get("maxFiles") || "100", 10);
+      const maxFiles = Number.isFinite(maxFilesRaw) ? Math.min(Math.max(maxFilesRaw, 1), 500) : 100;
+      const FOLDER_MIME = "application/vnd.google-apps.folder";
+      const MAX_DEPTH = 5;
+
+      const collected: any[] = [];
+      const seen = new Set<string>();
+      let truncated = false;
+      let queue: { id: string; depth: number }[] = [{ id: folderId, depth: 0 }];
+
+      while (queue.length > 0 && collected.length < maxFiles) {
+        const current = queue.shift()!;
+        const res = await fetchAllPages(`'${current.id}' in parents and trashed = false`, {}, 10);
+        if (!res.ok) {
+          return new Response(JSON.stringify({ error: "Falha ao listar pasta", details: res.body }), {
+            status: res.status, headers: { ...corsHeaders, "Content-Type": "application/json" }
+          });
+        }
+        for (const f of res.files) {
+          if (f.mimeType === FOLDER_MIME) {
+            if (recursive && current.depth < MAX_DEPTH) queue.push({ id: f.id, depth: current.depth + 1 });
+            continue;
+          }
+          if (seen.has(f.id)) continue;
+          if (collected.length >= maxFiles) { truncated = true; break; }
+          seen.add(f.id);
+          collected.push(f);
+        }
+      }
+      if (queue.length > 0 && collected.length >= maxFiles) truncated = true;
+
+      return new Response(JSON.stringify({ files: collected, truncated }), {
+        status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" }
+      });
+    }
+
     if (action === "download") {
       const fileId = url.searchParams.get("fileId");
       if (!fileId) {
