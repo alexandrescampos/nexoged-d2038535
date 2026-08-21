@@ -32,6 +32,58 @@ function attrsToMap(attributes: Array<{ name?: string; type?: string; value?: un
   return map;
 }
 
+/** UTF-8 -> "binary string" (1 byte por caractere), formato exigido pelo forge. */
+function toUtf8Binary(value: string): string {
+  return Array.from(new TextEncoder().encode(value))
+    .map((b) => String.fromCharCode(b))
+    .join("");
+}
+
+/**
+ * Abre o PKCS#12 tentando as combinações de codificação de senha aceitas na prática.
+ *
+ * Porquê: o node-forge trata a senha de formas diferentes em cada etapa —
+ * o MAC e o PBES1 (PKCS#12 KDF) usam os code points do texto, enquanto o PBES2
+ * (AES/PBKDF2, padrão do OpenSSL 3) espera os bytes UTF-8. Com senha acentuada
+ * nenhuma string única funciona nas duas etapas, e o erro resultante era
+ * reportado como "senha_incorreta". Aqui aplicamos um patch temporário no
+ * pbkdf2 para converter a senha em UTF-8 apenas nessa etapa.
+ */
+function openPkcs12(asn1: unknown, password: string): any {
+  const pwVariants = Array.from(new Set([password, password.trim(), toUtf8Binary(password)]));
+  const originalPbkdf2 = forge.pkcs5.pbkdf2;
+
+  let lastError: unknown = null;
+  for (const utf8Pbkdf2 of [true, false]) {
+    // deno-lint-ignore no-explicit-any
+    (forge.pkcs5 as any).pbkdf2 = utf8Pbkdf2
+      ? (pw: string, ...rest: unknown[]) =>
+        // deno-lint-ignore no-explicit-any
+        (originalPbkdf2 as any)(toUtf8Binary(pw), ...rest)
+      : originalPbkdf2;
+    try {
+      for (const candidate of pwVariants) {
+        try {
+          return forge.pkcs12.pkcs12FromAsn1(asn1, false, candidate);
+        } catch (e) {
+          lastError = e;
+        }
+      }
+    } finally {
+      // deno-lint-ignore no-explicit-any
+      (forge.pkcs5 as any).pbkdf2 = originalPbkdf2;
+    }
+  }
+
+  const msg = String((lastError as Error)?.message || "").toLowerCase();
+  // node-forge não suporta alguns algoritmos de PKCS#12 (ex.: RC2 antigo).
+  if (msg.includes("unsupported") || msg.includes("cannot read")) {
+    throw new Error("formato_nao_suportado");
+  }
+  throw new Error("senha_incorreta");
+}
+
+
 /**
  * Abre o PKCS#12 e extrai metadados do certificado do titular.
  * Lança "senha_incorreta" quando a senha não abre o arquivo.
@@ -47,44 +99,8 @@ export function inspectPfx(pfxBase64: string, password: string): CertInspection 
     throw new Error("arquivo_invalido");
   }
 
-  // Tenta variações comuns de codificação da senha antes de concluir que está errada.
-  // node-forge espera "binary string"; senhas com acentos vindas de UTF-8 falham
-  // se não forem convertidas para latin1.
-  const candidates = Array.from(
-    new Set([
-      password,
-      // UTF-8 -> binary string
-      Array.from(new TextEncoder().encode(password))
-        .map((b) => String.fromCharCode(b))
-        .join(""),
-      password.trim(),
-    ]),
-  );
+  const p12 = openPkcs12(asn1, password);
 
-  let p12;
-  let lastError: unknown = null;
-  for (const candidate of candidates) {
-    try {
-      p12 = forge.pkcs12.pkcs12FromAsn1(asn1, false, candidate);
-      break;
-    } catch (e) {
-      lastError = e;
-    }
-  }
-
-  if (!p12) {
-    const msg = String((lastError as Error)?.message || "").toLowerCase();
-    // node-forge não suporta PKCS#12 com PBES2/AES (padrão em emissores recentes).
-    if (
-      msg.includes("unsupported") ||
-      msg.includes("algorithm") ||
-      msg.includes("oid") ||
-      msg.includes("cannot read")
-    ) {
-      throw new Error("formato_nao_suportado");
-    }
-    throw new Error("senha_incorreta");
-  }
 
 
   const certBags = p12.getBags({ bagType: forge.pki.oids.certBag })[forge.pki.oids.certBag] || [];
