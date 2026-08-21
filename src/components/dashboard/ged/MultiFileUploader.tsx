@@ -66,15 +66,26 @@ export function MultiFileUploader({
   const [files, setFiles] = useState<FileWithProgress[]>([]);
   const [isDrivePickerOpen, setIsDrivePickerOpen] = useState(false);
 
+  // Metadados aplicáveis a todos os arquivos da fila (importação em massa)
+  const [bulkMeta, setBulkMeta] = useState<{
+    description: string;
+    creationDate?: string;
+    expirationDate?: string;
+    customFields: Record<string, any>;
+  }>({ description: '', customFields: {} });
+
   const addFilesToQueue = useCallback((newFilesList: File[]) => {
+    const rejected: string[] = [];
     const validatedFiles = newFilesList.filter(file => {
       const mimeType = file.type;
       const extension = `.${file.name.split('.').pop()?.toLowerCase()}`;
-      
+
       const isMimeAllowed = Object.keys(acceptedFileTypes).includes(mimeType);
       const isExtAllowed = Object.values(acceptedFileTypes).flat().includes(extension);
-      
-      return isMimeAllowed || isExtAllowed;
+
+      const allowed = isMimeAllowed || isExtAllowed;
+      if (!allowed) rejected.push(`${file.name} (${file.type || 'tipo desconhecido'})`);
+      return allowed;
     });
 
     const formattedFiles = validatedFiles.map(file => ({
@@ -89,6 +100,18 @@ export function MultiFileUploader({
     }));
 
     setFiles(prev => [...prev, ...formattedFiles]);
+
+    // Nunca descartar arquivos silenciosamente: o usuário precisa saber
+    // por que selecionou N arquivos e apenas M entraram na fila.
+    if (rejected.length > 0) {
+      const acceptedExts = Array.from(
+        new Set(Object.values(acceptedFileTypes).flat().map(e => e.replace(/^\./, '').toUpperCase()))
+      ).sort().join(', ');
+      toast.error(`${rejected.length} arquivo(s) não suportado(s)`, {
+        description: `${rejected.slice(0, 5).join(', ')}${rejected.length > 5 ? '…' : ''} • Formatos aceitos: ${acceptedExts}`,
+        duration: 10000,
+      });
+    }
   }, [acceptedFileTypes]);
 
   const onDrop = useCallback((acceptedFiles: File[], fileRejections: FileRejection[]) => {
