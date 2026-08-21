@@ -134,16 +134,36 @@ export function GoogleDrivePicker({ isOpen, onOpenChange, onFileSelect }: Google
     });
   };
 
-  /** Downloads a single Drive file and returns it as a browser File. */
+  /**
+   * Downloads a single Drive file and returns it as a browser File.
+   * Uses a raw fetch (not functions.invoke) because supabase-js decodes any
+   * non-octet-stream response as text, which corrupts binary files (DOCX/PDF).
+   */
   const fetchDriveFile = async (driveFile: GoogleDriveFile): Promise<File> => {
-    const { data, error } = await supabase.functions.invoke(
-      `google-drive-integration?action=download&fileId=${driveFile.id}`,
-      { method: 'GET' }
-    );
-    if (error) throw error;
-    const blob = data as Blob;
-    return new (window as any).File([blob], driveFile.name, { type: driveFile.mimeType }) as File;
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) throw new Error('Sessão expirada');
+
+    const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/google-drive-integration?action=download&fileId=${encodeURIComponent(driveFile.id)}`;
+    const res = await fetch(url, {
+      method: 'GET',
+      headers: {
+        Authorization: `Bearer ${session.access_token}`,
+        apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+      },
+    });
+    if (!res.ok) {
+      const detail = await res.text();
+      throw new Error(`Falha no download (${res.status}): ${detail}`);
+    }
+
+    const headerName = res.headers.get('X-File-Name');
+    const name = headerName ? decodeURIComponent(headerName) : driveFile.name;
+    const blob = await res.blob();
+    return new (window as any).File([blob], name, {
+      type: blob.type || driveFile.mimeType,
+    }) as File;
   };
+
 
   const downloadFile = async (driveFile: GoogleDriveFile) => {
     if (downloadingIds.has(driveFile.id)) return;
