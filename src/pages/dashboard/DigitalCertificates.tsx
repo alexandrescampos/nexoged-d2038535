@@ -152,10 +152,7 @@ function CertificateCard({
 }
 
 export default function DigitalCertificatesPage() {
-  const { isOrgAdmin, isSuperAdmin } = useAuth() as unknown as {
-    isOrgAdmin?: boolean;
-    isSuperAdmin?: boolean;
-  };
+  const { isOrgAdmin, isSuperAdmin } = useAuth();
   const { userCertificate, orgCertificate, isLoading, upload, remove } = useDigitalCertificates();
   const canManageOrg = Boolean(isOrgAdmin || isSuperAdmin);
 
