@@ -112,7 +112,7 @@ const menuGroups: MenuGroup[] = [
     label: "Configurações",
     items: [
       { title: "Configurações", url: "/dashboard/settings", icon: Settings, hideForUser: true },
-      { title: "Assinador", url: "/dashboard/assinador", icon: PenLine, userAllowed: true },
+      { title: "Certificados Digitais", url: "/dashboard/certificados", icon: PenLine, userAllowed: true },
       { title: "Google Drive", url: "/dashboard/integrations/google-drive", icon: Cloud, adminOnly: true },
       { title: "Sobre", url: "/dashboard/about", icon: Info },
     ],

@@ -233,7 +233,6 @@ export default function DocumentsPage() {
   const [shareDoc, setShareDoc] = useState<{ id: string; title: string } | null>(null);
   const [workflowDoc, setWorkflowDoc] = useState<any | null>(null);
   const [signDoc, setSignDoc] = useState<{ id: string; title: string; versionId?: string } | null>(null);
-  const [isSigningAdhoc, setIsSigningAdhoc] = useState(false);
   const [selectionMode, setSelectionMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [bulkSignOpen, setBulkSignOpen] = useState(false);
