@@ -33,6 +33,7 @@ import SuperAdminProfile from "./pages/super-admin/Profile";
 import AuditLogPage from "./pages/super-admin/AuditLog";
 
 import ChatbotAnalyticsPage from "./pages/super-admin/ChatbotAnalytics";
+import OrgStatisticsPage from "./pages/super-admin/OrgStatistics";
 
 
 
@@ -117,6 +118,7 @@ const App = () => {
             >
               <Route index element={<SuperAdminDashboard />} />
               <Route path="organizations" element={<OrganizationsPage />} />
+              <Route path="statistics" element={<OrgStatisticsPage />} />
               <Route path="plans" element={<PlansPage />} />
               <Route path="stripe" element={<StripeSettingsPage />} />
               <Route path="users" element={<UsersPage />} />

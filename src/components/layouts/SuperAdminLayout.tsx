@@ -27,7 +27,7 @@ import {
   SidebarTrigger,
   useSidebar,
 } from "@/components/ui/sidebar";
-import { LayoutDashboard, Building2, CreditCard, Users, Settings, LogOut, HelpCircle, ChevronDown, User, FileText, Shield, LucideIcon, Info, MessageSquare } from "lucide-react";
+import { LayoutDashboard, Building2, CreditCard, Users, Settings, LogOut, HelpCircle, ChevronDown, User, FileText, Shield, LucideIcon, Info, MessageSquare, BarChart3 } from "lucide-react";
 import { TabsProvider, useTabs } from "@/contexts/TabsContext";
 import { TabsBar } from "@/components/TabsBar";
 import { SupportChatWidget } from "@/components/dashboard/SupportChatWidget";
@@ -54,6 +54,7 @@ const menuGroups: MenuGroup[] = [
     label: "Gestão",
     items: [
       { title: "Organizações", url: "/super-admin/organizations", icon: Building2 },
+      { title: "Estatísticas", url: "/super-admin/statistics", icon: BarChart3 },
       { title: "Usuários", url: "/super-admin/users", icon: Users },
       { title: "Documentos Legais", url: "/super-admin/legal", icon: FileText },
       { title: "Auditoria", url: "/super-admin/audit", icon: Shield },
