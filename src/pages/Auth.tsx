@@ -69,6 +69,13 @@ export default function Auth() {
           return;
         }
 
+        // Preserva o destino solicitado (ex.: tela de consentimento OAuth).
+        const nextParam = new URLSearchParams(window.location.search).get("next");
+        if (nextParam && nextParam.startsWith("/") && !nextParam.startsWith("//")) {
+          navigate(nextParam, { replace: true });
+          return;
+        }
+
         if (roles.includes("super_admin")) {
           navigate("/super-admin");
         } else if (roles.includes("org_admin") || roles.includes("user")) {
@@ -81,6 +88,7 @@ export default function Auth() {
       return () => clearTimeout(timer);
     }
   }, [user, roles, profile, authLoading, navigate]);
+
 
   const onLogin = async (data: LoginForm) => {
     setIsLoading(true);

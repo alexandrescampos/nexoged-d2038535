@@ -14,7 +14,9 @@ import { PermissionProtectedRoute } from "@/components/PermissionGate";
 import Auth from "./pages/Auth";
 import ResetPassword from "./pages/ResetPassword";
 import PublicShare from "./pages/PublicShare";
+import OAuthConsent from "./pages/OAuthConsent";
 import NotFound from "./pages/NotFound";
+
 
 // Layouts
 import SuperAdminLayout from "./components/layouts/SuperAdminLayout";
@@ -100,7 +102,9 @@ const App = () => {
             <Route path="/auth" element={<Auth />} />
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/s/:token" element={<PublicShare />} />
+            <Route path="/.lovable/oauth/consent" element={<OAuthConsent />} />
             <Route path="/" element={<Navigate to="/auth" replace />} />
+
 
             {/* Super Admin Routes */}
             <Route
