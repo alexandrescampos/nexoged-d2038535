@@ -102,7 +102,9 @@ const App = () => {
             <Route path="/auth" element={<Auth />} />
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/s/:token" element={<PublicShare />} />
+            <Route path="/.lovable/oauth/consent" element={<OAuthConsent />} />
             <Route path="/" element={<Navigate to="/auth" replace />} />
+
 
             {/* Super Admin Routes */}
             <Route
