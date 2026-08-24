@@ -1,0 +1,155 @@
+{
+  "version": 1,
+  "sdk_version": "0.28.0",
+  "path": "/mcp",
+  "auth": {
+    "type": "oauth",
+    "issuer": "https://qxziabldmmhlugyvssyi.supabase.co/auth/v1",
+    "accepted_audiences": [
+      "authenticated"
+    ]
+  },
+  "mcp": {
+    "server": {
+      "name": "nexo-ged",
+      "version": "0.1.0",
+      "title": "Nexo GED"
+    },
+    "tools": [
+      {
+        "name": "whoami",
+        "title": "Usuário conectado",
+        "description": "Retorna o usuário autenticado e a organização à qual ele pertence.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {}
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "search_documents",
+        "title": "Buscar documentos",
+        "description": "Busca documentos do GED visíveis para o usuário autenticado, por texto no título/descrição, status ou tipo.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "query": {
+              "type": "string",
+              "description": "Texto para buscar no título ou descrição."
+            },
+            "status": {
+              "type": "string",
+              "description": "Filtra pelo status do documento (ex.: ATIVO)."
+            },
+            "document_type": {
+              "type": "string",
+              "description": "Filtra pelo tipo de documento (texto)."
+            },
+            "limit": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 50,
+              "description": "Máximo de resultados (padrão 20)."
+            }
+          },
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "get_document",
+        "title": "Detalhar documento",
+        "description": "Retorna os metadados completos de um documento do GED pelo seu ID.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "document_id": {
+              "type": "string",
+              "format": "uuid",
+              "description": "ID (UUID) do documento."
+            }
+          },
+          "required": [
+            "document_id"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "list_expiring_documents",
+        "title": "Documentos a vencer",
+        "description": "Lista documentos com data de validade dentro dos próximos N dias (inclui os já vencidos, se solicitado).",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "days": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 365,
+              "description": "Janela em dias (padrão 30)."
+            },
+            "include_expired": {
+              "type": "boolean",
+              "description": "Inclui documentos já vencidos (padrão true)."
+            },
+            "limit": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "description": "Máximo de resultados (padrão 50)."
+            }
+          },
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "list_document_types",
+        "title": "Listar tipos de documento",
+        "description": "Lista os tipos de documento configurados na organização do usuário autenticado.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "only_active": {
+              "type": "boolean",
+              "description": "Retorna apenas os tipos ativos (padrão true)."
+            }
+          },
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      }
+    ]
+  }
+}
