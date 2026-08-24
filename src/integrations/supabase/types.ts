@@ -3267,6 +3267,25 @@ export type Database = {
         Returns: undefined
       }
       sum_org_document_size: { Args: { p_org_id: string }; Returns: number }
+      super_admin_org_stats: {
+        Args: never
+        Returns: {
+          active_users: number
+          contracted_pages: number
+          contracted_storage_gb: number
+          created_at: string
+          documents_last_30d: number
+          organization_id: string
+          organization_name: string
+          plan: string
+          status: Database["public"]["Enums"]["org_status"]
+          total_documents: number
+          total_users: number
+          used_pages: number
+          used_storage_bytes: number
+          used_storage_gb: number
+        }[]
+      }
       trigger_ocr_queue: { Args: never; Returns: undefined }
       unaccent: { Args: { "": string }; Returns: string }
       validate_document_share: {
